@@ -2,8 +2,9 @@
 Builds a regression tree from the input, picking features partly at random.
 */
  
-#include "mex.h"
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>	// for bool
 #include <math.h>
 
 #if !defined(MAX)
@@ -234,19 +235,19 @@ void Rcritval_cat(const double *x, const double *Ycum, const int* rows, int nX, 
     int n = nrows + 1;
     
 	/*=== Allocate Memory for Auxiliary Arrays. */
-    int *t = mxCalloc(n,sizeof(int));
-    int *sorder = mxCalloc(n,sizeof(int));
-    int *diff_t = mxCalloc(n,sizeof(int));
-    int *n1 = mxCalloc(n-1,sizeof(int));
-    int *maxlocs = mxCalloc(n-1,sizeof(int));
+    int *t = calloc(n,sizeof(int));
+    int *sorder = calloc(n,sizeof(int));
+    int *diff_t = calloc(n,sizeof(int));
+    int *n1 = calloc(n-1,sizeof(int));
+    int *maxlocs = calloc(n-1,sizeof(int));
     
-    double *B = mxCalloc(n,sizeof(double));
-	double *catmeans = mxCalloc(n,sizeof(double));
-	double *Ysplit1 = mxCalloc(n-1,sizeof(double));
-	double *allx = mxCalloc(n,sizeof(double));
-	double *mu1 = mxCalloc(n-1,sizeof(double));
-	double *mu2 = mxCalloc(n-1,sizeof(double));
-	double *ssx = mxCalloc(n-1,sizeof(double));
+    double *B = calloc(n,sizeof(double));
+	double *catmeans = calloc(n,sizeof(double));
+	double *Ysplit1 = calloc(n-1,sizeof(double));
+	double *allx = calloc(n,sizeof(double));
+	double *mu1 = calloc(n-1,sizeof(double));
+	double *mu2 = calloc(n-1,sizeof(double));
+	double *ssx = calloc(n-1,sizeof(double));
     
     int maxnumlocs, maxloc;
 
@@ -421,19 +422,19 @@ void Rcritval_cat(const double *x, const double *Ycum, const int* rows, int nX, 
 	xright[3] = 5;
 */
 	/*=== Free Memory for Auxiliary Arrays. */
-	mxFree(t);
-	mxFree(sorder);
-	mxFree(diff_t);
-	mxFree(n1);
-	mxFree(maxlocs);
+	free(t);
+	free(sorder);
+	free(diff_t);
+	free(n1);
+	free(maxlocs);
 
-	mxFree(B);
-	mxFree(catmeans);
-	mxFree(Ysplit1);
-	mxFree(allx);
-	mxFree(mu1);
-	mxFree(mu2);
-	mxFree(ssx);
+	free(B);
+	free(catmeans);
+	free(Ysplit1);
+	free(allx);
+	free(mu1);
+	free(mu2);
+	free(ssx);
 }
 
 void Rcritval_cont(const double *x, const double *Ycum, const int* rows, int nX, int nrows, double *critval_res, double *cutval_res){
@@ -442,12 +443,12 @@ void Rcritval_cont(const double *x, const double *Ycum, const int* rows, int nX,
 	int n = nrows + 1;
 
 	/*=== Allocate Memory for Auxiliary Arrays. */
-    int *maxlocs = mxCalloc(n-1,sizeof(int));
+    int *maxlocs = calloc(n-1,sizeof(int));
     
-	double *Ysplit1 = mxCalloc(n-1,sizeof(double));
-	double *mu1 = mxCalloc(n-1,sizeof(double));
-	double *mu2 = mxCalloc(n-1,sizeof(double));
-	double *ssx = mxCalloc(n-1,sizeof(double));
+	double *Ysplit1 = calloc(n-1,sizeof(double));
+	double *mu1 = calloc(n-1,sizeof(double));
+	double *mu2 = calloc(n-1,sizeof(double));
+	double *ssx = calloc(n-1,sizeof(double));
     
     int maxnumlocs, maxloc, cutloc;
     double u;
@@ -515,76 +516,98 @@ void Rcritval_cont(const double *x, const double *Ycum, const int* rows, int nX,
     	cutval_res[0] = ((1-u)*(x[cutloc]+1e-6) + u*(x[cutloc+1]-1e-6));
         if( cutval_res[0] < x[cutloc]+1e-8 || cutval_res[0] > x[cutloc+1]-1e-8 ){
             printf("below: %lf, above: %lf, u: %lf, chosen: %lf\n", x[cutloc], x[cutloc+1], u, cutval_res[0]);
-            mexErrMsgTxt("random splitpoint has to lie in between the upper and lower limit");
+            //mexErrMsgTxt("random splitpoint has to lie in between the upper and lower limit");
         }
     }
     
 
 	/*=== Free Memory for Auxiliary Arrays. */
-	mxFree(Ysplit1);
-	mxFree(mu1);
-	mxFree(mu2);
-	mxFree(ssx);
-	mxFree(maxlocs);
+	free(Ysplit1);
+	free(mu1);
+	free(mu2);
+	free(ssx);
+	free(maxlocs);
 }
 
 
 
-void buildTheTree(	const double* X, const double* y, const int* cens,
-					const int SplitMin, const double percentageFeatures,
-					const int* iscat, const mxArray* domains_cat, 
-					const int N, const int nvars, const double kappa,
-					int* nodenumber, int* parent, mxArray* ysub,
-					mxArray* censsub, int* cutvar, double* cutpoint,
-					int* leftchildren, int* rightchildren,
-					double* resuberr, int* nodesize, mxArray* catsplit,
-					int* numNodes, int* numNcatsplit) {
-
-	int i, j, k, p, dims_left[2], dims_right[2], dims[2];
+void buildTheTree(	const double* X,				// the data points
+					const double* y,				// the response values
+					//const int* cens,				// related to cesoring -> removed
+					const int SplitMin, 			// minimum number of points in a node to split
+					const double percentageFeatures,// determines the number of features used for this particular tree
+					const int* iscat, 				// encodes which features are categorical
+//					const mxArray* domains_cat, 
+					const int N, 					// the number of data points
+					const int nvars, 				// the number of features
+					const double kappa, 			// (??)
+					int* nodenumber,				// stores the node number
+					int* parent,					// stores the parent of each node
+//					mxArray* ysub,					// (??)
+					//mxArray* censsub,				// encodes censoring -> removed
+					int* cutvar,					// stores the index of the variable that the split uses
+					double* cutpoint,				// stores the split value for continous variables
+					int* leftchildren,				// stores the left child (node number or index?)
+					int* rightchildren,				// same for the right child
+					double* resuberr,				// (??)
+					int* nodesize,					// number of data points in the sub-tree
+//					mxArray* catsplit,				// stores the values for splits on categoricals
+					int* numNodes,					// (??)
+					int* numNcatsplit				// (??)
+					) {
+	
+	//int p;	// unused
+	int i, j, k, dims_left[2], dims_right[2], dims[2];
     
     /*=== Allocate Memory for Auxiliary Arrays to avoid doing so inside the loops*/
-    int *noderows = mxCalloc(N,sizeof(int));
-    int *assignednode = mxCalloc(N,sizeof(int));
-    double *ynode = mxCalloc(N,sizeof(double));
-    int *censnode = mxCalloc(N,sizeof(int));
-    double *xvars = mxCalloc(N,sizeof(double));
-    int *idx = mxCalloc(N,sizeof(int));
-    double *x = mxCalloc(N,sizeof(double));
-    int *rows = mxCalloc(N,sizeof(int));
-    double *ycum = mxCalloc(N,sizeof(double));
+    int *noderows = calloc(N,sizeof(int));
+    int *assignednode = calloc(N,sizeof(int));
+    double *ynode = calloc(N,sizeof(double));
+    int *censnode = calloc(N,sizeof(int));
+    double *xvars = calloc(N,sizeof(double));
+    int *idx = calloc(N,sizeof(int));
+    double *x = calloc(N,sizeof(double));
+    int *rows = calloc(N,sizeof(int));
+    double *ycum = calloc(N,sizeof(double));
     
-    int *randomPermutation = mxCalloc(nvars,sizeof(int));
+    int *randomPermutation = calloc(nvars,sizeof(int));
     
-    int *xleft = mxCalloc(N,sizeof(int));
-    int *xright = mxCalloc(N,sizeof(int));
+    int *xleft = calloc(N,sizeof(int));
+    int *xright = calloc(N,sizeof(int));
     
-    int *numLeftPointer = mxCalloc(1,sizeof(int));
-	int *numRightPointer = mxCalloc(1,sizeof(int));
-    int *bestleft = mxCalloc(N,sizeof(int));
-    int *bestright = mxCalloc(N,sizeof(int));
-    double *cutvalPointer = mxCalloc(1,sizeof(double));
-    double *critvalPointer = mxCalloc(1,sizeof(double));
+    int *numLeftPointer = calloc(1,sizeof(int));
+	int *numRightPointer = calloc(1,sizeof(int));
+    int *bestleft = calloc(N,sizeof(int));
+    int *bestright = calloc(N,sizeof(int));
+    double *cutvalPointer = calloc(1,sizeof(double));
+    double *critvalPointer = calloc(1,sizeof(double));
     
-    int *leftside = mxCalloc(N,sizeof(int));
-    int *rightside = mxCalloc(N,sizeof(int));
+    int *leftside = calloc(N,sizeof(int));
+    int *rightside = calloc(N,sizeof(int));
+
+/*  Whole block of variables is not used in the code
+    int *period = calloc(N,sizeof(int));					
+    double *period_time = calloc(N+1,sizeof(double));		
+    int *N_all = calloc(N,sizeof(int));
+    int *C_all = calloc(N,sizeof(int));
+    int *O_all = calloc(N,sizeof(int));
     
-    int *period = mxCalloc(N,sizeof(int));
-    double *period_time = mxCalloc(N+1,sizeof(double));
-    int *N_all = mxCalloc(N,sizeof(int));
-    int *C_all = mxCalloc(N,sizeof(int));
-    int *O_all = mxCalloc(N,sizeof(int));
-    
-    double *ynode_idx = mxCalloc(N,sizeof(double));
-    int *censnode_idx = mxCalloc(N,sizeof(int));
-    int *period_idx = mxCalloc(N,sizeof(int));
+    double *ynode_idx = (double *) calloc(N,sizeof(double));
+    int *censnode_idx = (int *) calloc(N,sizeof(int));
+    int *period_idx = (int *)calloc(N,sizeof(int));
+
+*/
 
     int ncatsplit, tnode, nextunusednode, Nnode, numUncensNode, bestvar, numBestLeft, numBestRight;
     int nextvar, xcat, offset, numrows, nleft, nright;
     double ybar, sst, mincost, bestcrit, bestcut;
-    bool hascens, impure, ismember;
+    //bool hascens;		//unused
+    bool impure, ismember;
 
+	/*
     int num_periods, curr_period;
     double last_time, this_time;
+    */ 
 
     int currnode, parent_node, num_compatible, num_missing_to_left, num_missing_to_right;
     double catsplit_index;
@@ -602,13 +625,6 @@ void buildTheTree(	const double* X, const double* y, const int* cens,
     /*number of categorical splits*/
     ncatsplit = 0;
     
-    hascens = false;
-	for(i=0; i<N; i++){
-        if (cens[i] != 0) {
-            hascens = true;
-            break;
-        }
-    }
     
 	/*=== Keep processing nodes until done.*/
     /* tnode is the id of the current node indexed from 0 in a breadth first manner*/
@@ -678,94 +694,10 @@ void buildTheTree(	const double* X, const double* y, const int* cens,
 			bestcut = 0;
 
 			/*Matlab: randomPermutation = randperm(nRandom);*/
-			for(i=0; i<nvars; i++){
-				randomPermutation[i] = i;
-			}
+			for(i=0; i<nvars; i++)
+							randomPermutation[i] = i;
 			shuffle(randomPermutation, nvars);   /*take out for debugging */
             
-            /* begin special logrank code */         
-            /* First, compute period for uncensored data. (Censored data with same y value could be before or after the first uncensored one in the ordering, thus we need 2 passes.) */
-            num_periods=0;
-            if (hascens) {
-                ptr_to_double_array_for_qsort = ynode;
-                for(j=0; j<Nnode; j++){
-                    idx[j] = j;
-                }
-                dp_quick_sort(idx, Nnode);
-                
-                last_time=-1e10;
-                for(j=0; j<Nnode; j++){
-                    i = idx[j];
-    /*                printf("j=%d, i=%d\n", j, i);*/
-                    if( censnode[i] == 0 ){
-                        if( ynode[i] > last_time + 1e-6 ){
-                            num_periods++;
-                            period_time[num_periods] = ynode[i];
-                            last_time = ynode[i];
-                        }
-                        period[i] = num_periods; /* Matlab indexing, period starts at 1 */
-                    }
-    /*                printf("period[i]=%d\n", period[i]);*/
-                }
-/*
-                printf("num_periods=%d, period:\n", num_periods);
-                printMatrixInt(period, Nnode, 1);
-                printf("\n\n"); 
-*/            
-                /* Then, fill in period for censored data. */
-            
-                curr_period = 0;
-                this_time = 0;
-                for(j=0; j<Nnode; j++){
-                    i = idx[j];
-                    if(censnode[i]==1){
-                        if( curr_period == num_periods ){
-                            this_time = 1e9;
-                        } else {
-                            this_time = period_time[curr_period+1];
-                        }
-                        while ( ynode[i] > this_time-1e-6 ){ /* i.e. >= */
-                            curr_period++;
-                            if( curr_period == num_periods ){
-                                this_time = 1e9;
-                            } else {
-                                this_time = period_time[curr_period+1];
-                            }
-                        }
-                        period[i] = curr_period;
-                    }
-                }
-        /*            
-                printf("num_periods=%d, period:\n", num_periods);
-                printMatrixInt(period, Nnode, 1);
-                printf("\n\n"); 
-        */
-                /* Compute initial logrank counters when all data in 2nd group. */
-                for(p=0; p<num_periods; p++){
-                    O_all[p] = 0;
-                    C_all[p] = 0;
-                }
-
-                /* Go through data points, and collect the events. */
-                for(i=0; i<Nnode; i++){
-                    p = period[i];
-                    if(censnode[i] == 0){
-                        O_all[p-1]++;
-                    } else {
-                        if (p>0){
-                            C_all[p-1]++;
-                        } /* else the point counts as if it hadn't even happened */
-                    }
-                }
-
-                /* Go through periods, and collect N. */
-                N_all[0] = Nnode;
-                for(p=1; p<num_periods; p++){
-                    N_all[p] = N_all[p-1] - O_all[p-1] - C_all[p-1];
-                }
-            }
-            /* End of this part of special logrank code. */
-
 			/*=== Try splitting each variable at least split point and pick best split*/
             for(i=0; i < nvars; i++){
 				nextvar=randomPermutation[i];
@@ -810,28 +742,17 @@ void buildTheTree(	const double* X, const double* y, const int* cens,
 				}
 
 				/*=== Do the core work: get the best split of the variable and its quality.*/
-                if (hascens) {
-                    for(j=0; j<Nnode; j++){
-                        ynode_idx[j] = ynode[idx[j]];
-                        censnode_idx[j] = censnode[idx[j]];
-                        period_idx[j] = period[idx[j]];
-                    }
-                    if (xcat==1){
-                        Rcritval_cat_logrank(x, Nnode, ynode_idx, censnode_idx, rows, numrows, period_idx, num_periods, N_all, O_all, kappa, critvalPointer, xleft, xright, numLeftPointer, numRightPointer);
-                    } else {
-                        Rcritval_cont_logrank(x, Nnode, censnode_idx, rows, numrows, period_idx, num_periods, N_all, O_all, critvalPointer, cutvalPointer);                    
-                    }
-                } else {
-                    /*Matlab: ycum = cumsum(ynode(idx,:) - ybar);  % centered response cum. sum*/
-                    ycum[0] = ynode[idx[0]] - ybar;
-                    for (j=1; j<Nnode; j++){
-                        ycum[j] = ycum[j-1] + ynode[idx[j]] - ybar; /* % centered response cum. sum */
-                    }
-                    if (xcat==1){
-                        Rcritval_cat(x, ycum, rows, Nnode, numrows, critvalPointer, xleft, xright, numLeftPointer, numRightPointer);
-                    } else {
-                        Rcritval_cont(x, ycum, rows, Nnode, numrows, critvalPointer, cutvalPointer);
-                    }
+				
+				/*Matlab: ycum = cumsum(ynode(idx,:) - ybar);  % centered response cum. sum*/
+                ycum[0] = ynode[idx[0]] - ybar;
+                for (j=1; j<Nnode; j++){
+                     ycum[j] = ycum[j-1] + ynode[idx[j]] - ybar; /* % centered response cum. sum */
+                 }
+                 if (xcat==1){
+                     Rcritval_cat(x, ycum, rows, Nnode, numrows, critvalPointer, xleft, xright, numLeftPointer, numRightPointer);
+                 } else {
+                     Rcritval_cont(x, ycum, rows, Nnode, numrows, critvalPointer, cutvalPointer);
+                }
                     /*
                         printf("numleft=%d, xleft:\n", numLeftPointer[0]);
                         printMatrixInt(xleft, numLeftPointer[0], 1);
@@ -841,7 +762,6 @@ void buildTheTree(	const double* X, const double* y, const int* cens,
                         printMatrixInt(xright, numRightPointer[0], 1);
                         printf("\n\n");
                     */
-				}
 
 				/*=== Change best split if this one is best so far.*/
 				if (critvalPointer[0] > bestcrit + 1e-10){
@@ -871,9 +791,8 @@ void buildTheTree(	const double* X, const double* y, const int* cens,
                 }
                 */
                 /*printf("i=%d, bestcrit=%lf\n",i,bestcrit);*/
-                if (i >= MAX(1, (int) floor(percentageFeatures*nvars)) - 1 && bestcrit > -1e11) {
-                    break;    
-                }
+                if (i >= MAX(1, (int) floor(percentageFeatures*nvars)) - 1 && bestcrit > -1e11)
+                    break;
 			}
             
 			/*=== Best split point has been found. Split this node using the best rule found.*/
@@ -1086,158 +1005,160 @@ void buildTheTree(	const double* X, const double* y, const int* cens,
 	numNcatsplit[0] = ncatsplit;
 }
 
-void mexFunction( int nlhs, mxArray *plhs[],
-                  int nrhs, const mxArray *prhs[] ) {
-	double *X, *y, *cutpoint, *resuberr, percentageFeatures, kappa;
-	int *cens, *iscat, *nodenumber, *parent, *cutvar, *leftchildren, *rightchildren, *nodesize, *numNodes, *numNcatsplit, *seeds_for_result;
-	int N, nvars, Splitmin;
+
+
+//void mexFunction( int nlhs, mxArray *plhs[],
+                  //int nrhs, const mxArray *prhs[] ) {
+	//double *X, *y, *cutpoint, *resuberr, percentageFeatures, kappa;
+	//int *cens, *iscat, *nodenumber, *parent, *cutvar, *leftchildren, *rightchildren, *nodesize, *numNodes, *numNcatsplit, *seeds_for_result;
+	//int N, nvars, Splitmin;
     
-    double *tmp_double_ptr;
-    int *tmp_int_ptr, i, j, mrows, ncols, dim[1], dims[2];
-    int domains_cat_idx, ysub_idx, cat_split_idx, censsub_idx;
+    //double *tmp_double_ptr;
+    //int *tmp_int_ptr, i, j, mrows, ncols, dim[1], dims[2];
+    //int domains_cat_idx, ysub_idx, cat_split_idx, censsub_idx;
     
-  /* Check for proper number of arguments. */
-  if(nrhs!=9 || nlhs != 13) {
-    mexErrMsgTxt("USAGE: [nodenumber, parent, ysub, censsub, cutvar, cutpoint, leftchildren, rightchildren, resuberr, nodesize, catsplit, numNodes, ncatsplit] = fh_random_regtreefit_big_leaves_twofeaturetypes_dist(X, y, cens, Splitmin, percentageFeatures, iscat, kappa, domains_cat, seed).");
-  }
+  ///* Check for proper number of arguments. */
+  //if(nrhs!=9 || nlhs != 13) {
+    //mexErrMsgTxt("USAGE: [nodenumber, parent, ysub, censsub, cutvar, cutpoint, leftchildren, rightchildren, resuberr, nodesize, catsplit, numNodes, ncatsplit] = fh_random_regtreefit_big_leaves_twofeaturetypes_dist(X, y, cens, Splitmin, percentageFeatures, iscat, kappa, domains_cat, seed).");
+  //}
   
-  /* Check each argument for proper form and dimensions. */
-  i = 0; 
+  ///* Check each argument for proper form and dimensions. */
+  //i = 0; 
     
-  N = mxGetM(prhs[i]);
-  nvars = mxGetN(prhs[i]);
-  if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) ) {
-    mexErrMsgTxt("X must be a noncomplex double matrix.");
-  }
-  X = mxGetPr(prhs[i]);
+  //N = mxGetM(prhs[i]);
+  //nvars = mxGetN(prhs[i]);
+  //if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) ) {
+    //mexErrMsgTxt("X must be a noncomplex double matrix.");
+  //}
+  //X = mxGetPr(prhs[i]);
 
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==N) || !(ncols==1) ) {
-    mexErrMsgTxt("y must be a noncomplex double column vector of the same length as size(X,1).");
-  }
-  y = mxGetPr(prhs[i]);
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==N) || !(ncols==1) ) {
+    //mexErrMsgTxt("y must be a noncomplex double column vector of the same length as size(X,1).");
+  //}
+  //y = mxGetPr(prhs[i]);
 
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==N) || !(ncols==1) ) {
-    mexErrMsgTxt("cens must be a noncomplex int column vector of the same length as size(X,1).");
-  }
-  cens = (int*) mxGetData(prhs[i]);
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==N) || !(ncols==1) ) {
+    //mexErrMsgTxt("cens must be a noncomplex int column vector of the same length as size(X,1).");
+  //}
+  //cens = (int*) mxGetData(prhs[i]);
   
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
-    mexErrMsgTxt("Splitmin must be a noncomplex int scalar (cast it to int!).");
-  }
-  tmp_int_ptr = (int*) mxGetPr(prhs[i]);
-  Splitmin = tmp_int_ptr[0];
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
+    //mexErrMsgTxt("Splitmin must be a noncomplex int scalar (cast it to int!).");
+  //}
+  //tmp_int_ptr = (int*) mxGetPr(prhs[i]);
+  //Splitmin = tmp_int_ptr[0];
   
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
-    mexErrMsgTxt("percentageFeatures must be a noncomplex double scalar.");
-  }
-  tmp_double_ptr = mxGetPr(prhs[i]);
-  percentageFeatures = tmp_double_ptr[0];
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
+    //mexErrMsgTxt("percentageFeatures must be a noncomplex double scalar.");
+  //}
+  //tmp_double_ptr = mxGetPr(prhs[i]);
+  //percentageFeatures = tmp_double_ptr[0];
   
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==nvars) || !(ncols==1) ) {
-    mexErrMsgTxt("iscat must be a noncomplex int column vector of the same length as size(X,2).");
-  }
-  iscat = (int*) mxGetPr(prhs[i]);
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==nvars) || !(ncols==1) ) {
+    //mexErrMsgTxt("iscat must be a noncomplex int column vector of the same length as size(X,2).");
+  //}
+  //iscat = (int*) mxGetPr(prhs[i]);
   
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
-    mexErrMsgTxt("kappa must be a noncomplex double scalar.");
-  }
-  tmp_double_ptr = mxGetPr(prhs[i]);
-  kappa = tmp_double_ptr[0];
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsDouble(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
+    //mexErrMsgTxt("kappa must be a noncomplex double scalar.");
+  //}
+  //tmp_double_ptr = mxGetPr(prhs[i]);
+  //kappa = tmp_double_ptr[0];
 
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsCell(prhs[i]) || !(ncols==1) || (!mrows==nvars) ) {
-    mexErrMsgTxt("domain_sizes_cat must be a nvars x 1 cell array (empty entries for cont. dimensions)");
-  }
-  domains_cat_idx = i;
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsCell(prhs[i]) || !(ncols==1) || (!mrows==nvars) ) {
+    //mexErrMsgTxt("domain_sizes_cat must be a nvars x 1 cell array (empty entries for cont. dimensions)");
+  //}
+  //domains_cat_idx = i;
   
-  i++;
-  mrows = mxGetM(prhs[i]);
-  ncols = mxGetN(prhs[i]);
-  if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
-    mexErrMsgTxt("seed must be a noncomplex int scalar.");
-  }
-  tmp_int_ptr = (int*) mxGetData(prhs[i]);
-  seed = tmp_int_ptr[0];
-  srand ( seed );
+  //i++;
+  //mrows = mxGetM(prhs[i]);
+  //ncols = mxGetN(prhs[i]);
+  //if( !mxIsInt32(prhs[i]) || mxIsComplex(prhs[i]) || !(mrows==1) || !(ncols==1) ) {
+    //mexErrMsgTxt("seed must be a noncomplex int scalar.");
+  //}
+  //tmp_int_ptr = (int*) mxGetData(prhs[i]);
+  //seed = tmp_int_ptr[0];
+  //srand ( seed );
   
-  /* Create vectors for return arguments and assign pointers. */
-  /* These have to be of size 2*N since the number of nodes can be that big (well, 2N-1) */
-  dim[0] = 2*N;
+  ///* Create vectors for return arguments and assign pointers. */
+  ///* These have to be of size 2*N since the number of nodes can be that big (well, 2N-1) */
+  //dim[0] = 2*N;
 
-  i=0;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  nodenumber = (int*) mxGetData(plhs[i]); 
+  //i=0;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //nodenumber = (int*) mxGetData(plhs[i]); 
 
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  parent = (int*) mxGetPr(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //parent = (int*) mxGetPr(plhs[i]);
 
-  i++;
-  plhs[i] = mxCreateCellArray(1, dim); /*ysub*/
-  ysub_idx = i;
+  //i++;
+  //plhs[i] = mxCreateCellArray(1, dim); /*ysub*/
+  //ysub_idx = i;
   
-  i++;
-  plhs[i] = mxCreateCellArray(1, dim); /*censsub*/
-  censsub_idx = i;
+  //i++;
+  //plhs[i] = mxCreateCellArray(1, dim); /*censsub*/
+  //censsub_idx = i;
 
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  cutvar = (int*) mxGetData(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //cutvar = (int*) mxGetData(plhs[i]);
 
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxDOUBLE_CLASS, mxREAL);
-  cutpoint = mxGetPr(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxDOUBLE_CLASS, mxREAL);
+  //cutpoint = mxGetPr(plhs[i]);
 
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  leftchildren = (int*) mxGetData(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //leftchildren = (int*) mxGetData(plhs[i]);
 
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  rightchildren = (int*) mxGetData(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //rightchildren = (int*) mxGetData(plhs[i]);
   
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxDOUBLE_CLASS, mxREAL);
-  resuberr = mxGetPr(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxDOUBLE_CLASS, mxREAL);
+  //resuberr = mxGetPr(plhs[i]);
   
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  nodesize = (int*) mxGetData(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //nodesize = (int*) mxGetData(plhs[i]);
 
-  i++;
-  dims[0] = N;
-  dims[1] = 2;
-  plhs[i] = mxCreateCellArray(2, dims); /* catsplit */
-  cat_split_idx = i;
+  //i++;
+  //dims[0] = N;
+  //dims[1] = 2;
+  //plhs[i] = mxCreateCellArray(2, dims); /* catsplit */
+  //cat_split_idx = i;
   
-  i++;
-  dim[0] = 1;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  numNodes = (int*) mxGetData(plhs[i]);
+  //i++;
+  //dim[0] = 1;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //numNodes = (int*) mxGetData(plhs[i]);
 
-  i++;
-  plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
-  numNcatsplit = (int*) mxGetData(plhs[i]);
+  //i++;
+  //plhs[i] = mxCreateNumericArray(1, dim, mxINT32_CLASS, mxREAL);
+  //numNcatsplit = (int*) mxGetData(plhs[i]);
   
-  buildTheTree(X, y, cens, Splitmin, percentageFeatures, iscat, prhs[domains_cat_idx], N, nvars, kappa, nodenumber, parent, plhs[ysub_idx], plhs[censsub_idx], cutvar, cutpoint, leftchildren, rightchildren, resuberr, nodesize, plhs[cat_split_idx], numNodes, numNcatsplit);  
-}
+  //buildTheTree(X, y, cens, Splitmin, percentageFeatures, iscat, prhs[domains_cat_idx], N, nvars, kappa, nodenumber, parent, plhs[ysub_idx], plhs[censsub_idx], cutvar, cutpoint, leftchildren, rightchildren, resuberr, nodesize, plhs[cat_split_idx], numNodes, numNcatsplit);  
+//}
