@@ -598,7 +598,7 @@ void buildTheTree(	const double* X,				// the data points
 
 */
 
-    int ncatsplit, tnode, nextunusednode, Nnode, numUncensNode, bestvar, numBestLeft, numBestRight;
+    int ncatsplit, tnode, nextunusednode, Nnode, bestvar, numBestLeft, numBestRight;
     int nextvar, xcat, offset, numrows, nleft, nright;
     double ybar, sst, mincost, bestcrit, bestcut;
     //bool hascens;		//unused
@@ -613,7 +613,7 @@ void buildTheTree(	const double* X,				// the data points
     double catsplit_index;
     int *compatible_values, *missing_values_for_left, *missing_values_for_right, *xleftForResult, *xrightForResult, *censsub_for_result;
     double *ysub_for_result;
-    mxArray *mx_to_get_compatible_values, *mx_xleft, *mx_xright, *mx_ysub, *mx_censsub;
+    mxArray *mx_to_get_compatible_values, *mx_xleft, *mx_xright, *mx_ysub;
 
     /*which node the given data point is assigned to*/
     for(i=0; i<N; i++){
@@ -651,11 +651,6 @@ void buildTheTree(	const double* X,				// the data points
                /*responce values in this node*/
                ynode[Nnode] = y[i];
                ybar += y[i];
-               
-               censnode[Nnode] = cens[i];
-               if (cens[i]==0) {
-                   numUncensNode++;
-               }
 			   Nnode++;
 	       }
 		}
@@ -689,7 +684,7 @@ void buildTheTree(	const double* X,				// the data points
         bestcrit 			= -1e12;
         
         /*=== Consider splitting this node.*/
-		if ( impure && numUncensNode >= SplitMin ){ /*split only impure nodes with more than a threshold of uncensored values*/
+		if ( impure && nNode >= SplitMin ){ /*split only impure nodes with more than a threshold of uncensored values*/
             bestvar = -1;
 			bestcut = 0;
 
@@ -753,15 +748,6 @@ void buildTheTree(	const double* X,				// the data points
                  } else {
                      Rcritval_cont(x, ycum, rows, Nnode, numrows, critvalPointer, cutvalPointer);
                 }
-                    /*
-                        printf("numleft=%d, xleft:\n", numLeftPointer[0]);
-                        printMatrixInt(xleft, numLeftPointer[0], 1);
-                        printf("\n\n");
-
-                        printf("numright=%d, xright:\n", numRightPointer[0]);
-                        printMatrixInt(xright, numRightPointer[0], 1);
-                        printf("\n\n");
-                    */
 
 				/*=== Change best split if this one is best so far.*/
 				if (critvalPointer[0] > bestcrit + 1e-10){
@@ -780,17 +766,7 @@ void buildTheTree(	const double* X,				// the data points
 						bestcut = cutvalPointer[0];
 					}
 				}
-                /*
-                printf("n=%d, jvar = %d, xcat = %d, bestcrit = %lf, bestvar = %d, critval = %lf, ", tnode, nextvar, xcat, bestcrit, bestvar, critvalPointer[0]);
 
-                if (iscat[bestvar]){
-                    printf("numBestLeft=%d, ", numBestLeft);
-                    printf("numBestRight=%d\n", numBestRight);
-                } else {
-                    printf("bestcut=%lf\n", bestcut);
-                }
-                */
-                /*printf("i=%d, bestcrit=%lf\n",i,bestcrit);*/
                 if (i >= MAX(1, (int) floor(percentageFeatures*nvars)) - 1 && bestcrit > -1e11)
                     break;
 			}
@@ -803,14 +779,12 @@ void buildTheTree(	const double* X,				// the data points
             
 			if (bestvar == -1){
 				/* Terminal node */
-		        /*printf("Terminal node %d with %d data points and impure=%d\n", tnode, Nnode, impure?1:0);*/
         	} else {
 				for (j=0; j<Nnode; j++){
 					x[j] = X[noderows[j] + bestvar*N];
 				}
 				
     			if (iscat[bestvar]){
-                    /*printf("splitting on cat %d\n", bestvar);*/
 					cutvar[tnode] = -(bestvar+1);          /*negative indicates cat. var. split*/
 					ncatsplit++;  	   /*index into catsplit cell array*/
 					cutpoint[tnode] = ncatsplit;
@@ -820,6 +794,12 @@ void buildTheTree(	const double* X,				// the data points
                      * take the initial domain of that parameter.
                      */
                     currnode = tnode;
+                    
+                    // SF: has to come first otherwise it is always executed
+                    if (currnode == 0){
+                        /*printf("currnode = 0\n");*/
+                        mx_to_get_compatible_values = mxGetCell(domains_cat, bestvar);
+                    }
                     while (currnode > 0){
                         /*printf("currnode = %d\n", currnode);*/
                         parent_node = parent[currnode];
@@ -841,15 +821,11 @@ void buildTheTree(	const double* X,				// the data points
                         }
                         currnode = parent_node;
                     }
-                    if (currnode == 0){
-                        /*printf("currnode = 0\n");*/
-                        mx_to_get_compatible_values = mxGetCell(domains_cat, bestvar);
-                    }
+
                     /*Get compatible values from mx_to_get_compatible_values.*/
                     num_compatible = mxGetNumberOfElements(mx_to_get_compatible_values);
                     compatible_values = (int*) mxGetData(mx_to_get_compatible_values);
                     
-                    /*printf("num_compatible=%d\n",num_compatible);*/
                     /* 2: For each compatible but missing value choose a side u.a.r.*/
                     missing_values_for_left = mxCalloc(num_compatible,sizeof(int));
                     missing_values_for_right = mxCalloc(num_compatible,sizeof(int));
@@ -873,10 +849,6 @@ void buildTheTree(	const double* X,				// the data points
                             }
                         }
                     }
-                    /*
-                      printf("num_missing_to_left=%d\n",num_missing_to_left);
-                      printf("num_missing_to_right=%d\n",num_missing_to_right);
-                    */
                     
                     /* 3: Merge the determined and the randomly assigned missing values*/
                     for (i=num_missing_to_left; i<num_missing_to_left+numBestLeft; i++){
@@ -988,14 +960,10 @@ void buildTheTree(	const double* X,				// the data points
             ysub_for_result = mxGetPr(mx_ysub);
             mxSetCell(ysub, tnode, mx_ysub);
             
-            mx_censsub = mxCreateNumericArray(2, dims, mxINT32_CLASS, mxREAL);
-            censsub_for_result = (int*) mxGetData(mx_censsub);
-            mxSetCell(censsub, tnode, mx_censsub);
                         
             /* Save *runtimes*, not losses. */
             for(i=0; i<Nnode; i++){
                 ysub_for_result[i] = ynode[i];
-                censsub_for_result[i] = censnode[i];
     		}
        }
        tnode++;
