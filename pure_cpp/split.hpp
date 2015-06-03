@@ -1,41 +1,35 @@
 #include <vector>
 #include <set>
 #include <algorithm>
-#include <iostream>
-#include <random>
+#include <numeric>
+
+#include "boost/variant/variant.hpp"
+#include "boost/bind.hpp"
+
+#include <limits>
 
 
-template<class T>
-void print_vector(std::vector<T> &v){
-	for(auto it = v.begin(); it!=v.end(); it++)
-		std::cout<<*it<<" ";
-	std::cout<<std::endl;
-}
+class apply_split: public boost::static_visitor<>{
+  public:
+	bool operator()(float & feature_value, float & split_value) {return feature_value < split_value;}
+	bool operator()(float & feature_value, std::set<int> split_set) {return ((bool) (split_set.count ((int) std::lround(feature_value)))  );}
+};
 
 
+static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required");
 
 template <class f_type>
-class continuous_split{
+class split{
   public:
 	int feature_index;
-	f_type split_value;
+	boost::variant<f_type, std::set<int> > split_criterion;
 	std::vector<int> indices;
 	std::vector<int>::iterator split_index_iterator;
 
 	
-	//return the quality of the best
-	f_type best_split ( std::vector<f_type> & features, std::vector<f_type> responses, int feature_indx, const std::vector<int>::iterator & indices_start, const std::vector<int>::iterator &indices_end){
-		
-		feature_index = feature_indx;
-		
-		// copy the indices so we can manipulate them
-		indices = std::vector<int>(indices_start, indices_end);
+	//returns the quality of the best split
+	f_type best_split_continuous ( std::vector<f_type> & features, std::vector<f_type> & responses){
 
-		// sort the indices by the value in feature vector
-		std::sort(	indices.begin(), indices.end(),
-					[&](size_t a, size_t b){return features[a] < features[b];}
-		);
-		
 		// find the best split by looking at any meaningful value for the feature 
 		// first some temporary variables
 		f_type S_y_left(0), S_y2_left(0);
@@ -57,9 +51,9 @@ class continuous_split{
 
 		// now we can increase the splitting value incrementaly
 		while (psii != indices.end()){
-			auto psv = features[*psii]; // potential split value
+			auto psv = features[*psii] + 1e-10; // potential split value
 			// combine data points that are very close
-			while ((psii != indices.end()) &&(features[*psii] - psv < 1e-10)){
+			while ((psii != indices.end()) &&(features[*psii] - psv < 0)){
 
 				// change the <y> and <y^2> for left and right accordingly
 				S_y_left  += responses[*psii];
@@ -76,25 +70,144 @@ class continuous_split{
 			// the right leaf could be empty!
 			if (N_right > 0)
 				score  -=  (S_y2_right - (S_y_right*S_y_right)/N_right);
-			std::cout<<score<<std::endl;
+			std::cout<<N_left<<" "<<score<<std::endl;
 			
 			// store the best split
 			if (score > best_score){
 				best_score = score;
-				split_value = psv;
+				split_criterion = psv;
 				split_index_iterator = psii;
 			}
 		}
 		return(best_score);
 	}
 	
+
+
+	f_type best_split_categorical ( std::vector<f_type> & features, std::vector<f_type> & responses, int num_categories){
+
+		std::cout<<"Splitting a categorical variable!\n";
+		std::vector<int> category_ranking(num_categories);
+		
+		std::vector<f_type> N_points_in_category(num_categories,0);
+		std::vector<f_type> S_y(num_categories, 0);
+		std::vector<f_type> S_y2(num_categories, 0);
+
+		
+		for (size_t i = 0; i<responses.size() ; i++){
+			// find the category for each entry
+			int cat = (int) std::lround(features[i]);
+			std::cout<<"element of category "<< cat<<" with response "<< responses[i] <<"\n";
+			// collect all the data to compute the score
+			S_y[cat]  += responses[i];
+			S_y2[cat] += responses[i]*responses[i];
+			N_points_in_category[cat] += 1;
+		}
+
+		// take care b/c certain categories might not be encountered
+		// sort the categories by whether there were samples or not
+		auto it1 = category_ranking.begin();
+		auto it2 = category_ranking.end();	// will point to the first category not represented after we are done here
+		for (auto i = 0; i < num_categories; i++){
+			if (N_points_in_category[i] == 0) {
+				it2--;
+				*it2 = i;
+			}
+			else{
+				*it1 = i;
+				it1++;
+			}
+		}
+
+		// sort the categories by their individual mean. only consider the ones with actual specimen here
+		std::sort(	category_ranking.begin(), it2,
+					[&](size_t a, size_t b){return ( (S_y[a]/N_points_in_category[a]) < (S_y[b]/N_points_in_category[b]) );});		// C++11 lambda function, how exciting :)
+
+
+		// auxiliary variables
+		f_type S_y_left = 0, S_y2_left = 0, N_left = 0;
+		f_type S_y_right = 0, S_y2_right = 0, N_right= 0;
+		
+		f_type current_score = 0, best_score = 0;
+		
+		
+		// put one category in the left leaf
+		auto it_best_split = category_ranking.begin();
+		S_y_left  = S_y[*it_best_split];
+		S_y2_left = S_y2[*it_best_split];
+		N_left    = N_points_in_category[*it_best_split];
+		it_best_split++;
+
+		// the rest goes into the right leaf
+		for (it1 = it_best_split; it1!=it2; it1++){
+			S_y_right  = S_y[*it1];
+			S_y2_right = S_y2[*it1];
+			N_right    = N_points_in_category[*it1];
+		}
+
+		best_score = 	- (S_y2_right - (S_y_right*S_y_right)/N_right) 
+						- (S_y2_left - (S_y_left*S_y_left)/N_left);
+
+
+		// now move one category at a time to the left leaf and recompute the score
+		for (it1 = it_best_split; it1 != it2; it1++){
+			
+			
+			
+			// keep the best split
+		}
+
+		// create the split set for the left leaf
+
+		// add unobserved values randomly to the split_set
+
+
+		std::vector<f_type> scores(num_categories, 0);
+		
+		for (auto i = 0; i < num_categories; i++)
+			scores[i] = (S_y2[i] - ((S_y[i]*S_y[i])/N_points_in_category[i]));
+
+		print_vector<float>(S_y);
+		print_vector<float>(S_y2);
+		print_vector<float>(N_points_in_category);
+		print_vector<float>(scores);
+		print_vector<int>(category_ranking);
+
+	return(0.0);
+	}
+
+
+	f_type best_split ( std::vector<f_type> & features, std::vector<f_type> & responses, int feature_indx, int feature_type, const std::vector<int>::iterator & indices_start, const std::vector<int>::iterator &indices_end){
+
+		// store the feature index right away
+		feature_index = feature_indx;
+		
+		// copy the indices so we can manipulate them
+		indices = std::vector<int>(indices_start, indices_end);
+
+
+		// sort the indices by the value in feature vector
+		std::sort(	indices.begin(), indices.end(),
+					[&](size_t a, size_t b){return features[a] < features[b];}		// C++11 lambda function, how exciting :)
+		);
+
+
+		// feature_type zero means that it is a continous variable
+		if (feature_type == 0)
+			return(best_split_continuous(features,responses));
+		// a positive feature type encodes the number of possible values
+		if (feature_type > 0)
+			return(best_split_categorical(features, responses, feature_type));
+		
+		return (-1*std::numeric_limits<f_type>::infinity());
+	}
 	
 	void remove_temp_data(){
 		indices.clear();
 	}
 
-	int apply ( f_type &value){
-		return(value > split_value);
+	bool apply ( f_type &value){
+		return(boost::apply_visitor( boost::bind(apply_split(), value, _1), split_criterion ));
 	};
 };
 
@@ -106,45 +219,3 @@ class categorical_split{
 	std::set<f_type> values_set;
   public:
 };
-
-
-
-
-
-int main(){
-	
-	std::default_random_engine gen;
-	std::uniform_real_distribution<float> dist(1,6);
-	
-	int feature_index = 0;
-	int N = 100;
-	
-	
-	std::vector<float> features(N);
-	std::vector<float> responses(N);
-	std::vector<int> indices(N);
-	
-	for (size_t i = 0; i<indices.size(); i++) indices[i] = i;
-	
-	
-	for (auto it = features.begin(); it != features.end(); it++){
-		*it=dist(gen);
-	}
-	
-	for (auto it = responses.begin(); it != responses.end(); it++){
-		*it=dist(gen);
-	}
-	
-	print_vector<float>(features);
-	
-	
-	
-	
-	continuous_split<float> split_test;
-	
-	std::cout<<split_test.best_split(features, responses, feature_index, indices.begin(), indices.end());
-	std::cout<<"\n"<<split_test.split_value;
-	
-	
-	return(0);
-}
