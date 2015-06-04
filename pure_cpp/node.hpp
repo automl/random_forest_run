@@ -1,7 +1,9 @@
 
 #include "split.h"
 
-
+/* TODO:
+ * one generic node class that handles leafs and internal nodes all at once
+ */
 
 
 
