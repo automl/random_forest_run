@@ -1,45 +1,77 @@
+#ifndef RFR_SPLIT_HPP
+#define RFR_SPLIT_HPP
+
 #include <vector>
 #include <set>
 #include <algorithm>
 #include <numeric>
 #include <random>
 
-
-#include "boost/variant/variant.hpp"
+#include "boost/variant.hpp"
 #include "boost/bind.hpp"
 
-#include <limits>
+#include "data_container.hpp"
 
+
+namespace rfr{
+
+// in case we need quite nans:
+//#include <limits>
+//static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required");
 
 /* TODO:
  * replacing boost::variant by adding both splitting criteria to the private variables and checking which one is not meaningful
- * changing the features data type from std::vector<f_type> to f_type* with information about the dimenions (and maybe strides)
+ * changing the features data type from std::vector<num_type> to num_type* with information about the dimenions (and maybe strides)
  * same for the response data
  */
 
 
+/* this class determines whether a given value falls into the left (true) or right child (false)
+ * for both possible splitting criteria:
+ * 		1. a single float, representing a numerical split (continuous or integer)
+ *  	2. a vector of numbers, representing a categorical split
+ * 			(assumption: few categories so that a vector is faster than a set)
+ */ 
+template <class num_type>
+struct split_static_visitor : public boost::static_visitor<bool> // template argument has to be the same as return type of methods!
+{
+	// necessary as the static visitor cannot take any arguments other than the content of the boost::variant
+	num_type value_to_split;
+	explicit split_static_visitor (const num_type &val): value_to_split(val) {}
+
+	bool operator()(const num_type &split_val) const{
+		 return(value_to_split <= split_val);
+	}
+	bool operator()(const std::vector<num_type> &split_set) const {
+		 return( std::find(split_set.begin(), split_set.end(), value_to_split) != split_set.end());
+	}
+};
 
 
-static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required");
 
-template <class f_type>
+
+
+template <class num_type>
 class split{
   public:
 	int feature_index;
-	boost::variant<f_type, std::set<int> > split_criterion;
-	std::vector<int> indices;
-	std::vector<int>::iterator split_index_iterator;
-
+	boost::variant<num_type, std::vector<num_type> > split_criterion;
 	
-	//returns the quality of the best split
-	f_type best_split_continuous ( std::vector<f_type> & features, std::vector<f_type> & responses){
+	// computes the best possible split given:
+	// 	- a single feature vector (sorted according to the responses)
+	//  - the corresponding responses
+	//  - a reference to a vector of all indices (sorted with respect to the responses) and an iterator where to split it
+	num_type best_split_continuous(	const std::vector<num_type> & features,
+									const std::vector<num_type> & responses,
+									std::vector<int> &indices,
+									std::vector<int>::iterator &split_indices_it){
 
 		// find the best split by looking at any meaningful value for the feature 
 		// first some temporary variables
-		f_type S_y_left(0), S_y2_left(0);
-		f_type S_y_right(0), S_y2_right(0);
-		f_type N_left(0), N_right(indices.size());
-		f_type loss(0), best_loss(0);
+		num_type S_y_left(0), S_y2_left(0);
+		num_type S_y_right(0), S_y2_right(0);
+		num_type N_left(0), N_right(indices.size());
+		num_type loss(0), best_loss(0);
 		
 		// we start out with everything in the right child
 		// so we compute the mean and the variance for that case
@@ -47,6 +79,8 @@ class split{
 			S_y_right  += responses[*it];
 			S_y2_right += responses[*it]*responses[*it];
 		}
+		std::cout<<"initial values: "<< S_y_right<<" and "<<S_y2_right<<std::endl;
+		
 		std::vector<int>::iterator psii = indices.begin();	// potential split index iterator
 
 		loss = (S_y2_right - (S_y_right*S_y_right)/N_right);
@@ -54,7 +88,7 @@ class split{
 
 		// now we can increase the splitting value incrementaly
 		while (psii != indices.end()){
-			auto psv = features[*psii] + 1e-10; // potential split value
+			auto psv = features[*psii] + 1e-10; // potential split value add small delta for numerical inaccuracy
 			// combine data points that are very close
 			while ((psii != indices.end()) &&(features[*psii] - psv <= 0)){
 
@@ -79,21 +113,25 @@ class split{
 			if (loss < best_loss){
 				best_loss = loss;
 				split_criterion = psv;
-				split_index_iterator = psii;
+				split_indices_it = psii;
 			}
 		}
 		
-		std::cout<<"best split at feature <= "<<boost::get<f_type>(split_criterion)<<"\n";
+		std::cout<<"best split at feature <= "<<boost::get<num_type>(split_criterion)<<"\n";
 		return(best_loss);
 	}
 
-	f_type best_split_categorical ( std::vector<f_type> & features, std::vector<f_type> & responses, int num_categories){
+	num_type best_split_categorical(const std::vector<num_type> & features,
+									const std::vector<num_type> & responses,
+									const int num_categories,
+									std::vector<int> &indices,
+									std::vector<int>::iterator &split_indices_it){
 
 		// auxiliary variables
 		std::vector<int> category_ranking(num_categories);
-		std::vector<f_type> N_points_in_category(num_categories,0);
-		std::vector<f_type> S_y(num_categories, 0);
-		std::vector<f_type> S_y2(num_categories, 0);
+		std::vector<num_type> N_points_in_category(num_categories,0);
+		std::vector<num_type> S_y(num_categories, 0);
+		std::vector<num_type> S_y2(num_categories, 0);
 		
 		for (size_t i = 0; i<responses.size() ; i++){
 			// find the category for each entry and make it a proper int
@@ -105,7 +143,7 @@ class split{
 			N_points_in_category[cat] += 1;
 		}
 
-		// take care b/c certain categories might not be encountered (maybe there was a split on the same variable further up in the tree...)
+		// take care b/c certain categories might not be encountered (maybe there was a split on the same variable further up the tree...)
 		// sort the categories by whether there were samples or not
 		auto it1 = category_ranking.begin();
 		auto it2 = category_ranking.end();	// will point to the first category not represented after we are done here
@@ -126,9 +164,9 @@ class split{
 
 
 		//more auxiliary variables
-		f_type S_y_left = 0, S_y2_left = 0, N_left = 0;
-		f_type S_y_right = 0, S_y2_right = 0, N_right= 0;
-		f_type current_loss = 0, best_loss = 0;
+		num_type S_y_left = 0, S_y2_left = 0, N_left = 0;
+		num_type S_y_right = 0, S_y2_right = 0, N_right= 0;
+		num_type current_loss = 0, best_loss = 0;
 		
 		// put one category in the left leaf
 		auto it_best_split = category_ranking.begin();
@@ -144,9 +182,8 @@ class split{
 			N_right    += N_points_in_category[*it1];
 		}
 
-		best_loss = 	 (S_y2_right - (S_y_right*S_y_right)/N_right) 
+		best_loss = (S_y2_right - (S_y_right*S_y_right)/N_right) 
 						+ (S_y2_left - (S_y_left*S_y_left)/N_left);
-
 
 		// now move one category at a time to the left leaf and recompute the loss
 		
@@ -178,13 +215,9 @@ class split{
 		it2++;
 
 		// create the split set for the left leaf
-		std::set<int> split_set;
+		std::vector<num_type> split_set;
 		for (it1 = category_ranking.begin(); it1 != it_best_split; it1++)
-			split_set.insert(*it1);
-
-		std::cout<<"Original Split set: ";
-		std::vector<int> tmp(split_set.begin(), split_set.end());
-		print_vector<int>(tmp);
+			split_set.push_back(*it1);
 
 		// add unobserved values randomly to the split_set
 		// TODO: consider using one RNG across everything by passing it along.
@@ -194,62 +227,68 @@ class split{
 
 			for (it1 = it2; it1 != category_ranking.end(); it1++){
 				if (dist(rng))
-					split_set.insert(*it1);
+					split_set.push_back(*it1);
 			}
 		}
 		split_criterion = split_set;
 
+		//rearrange indices according to their category and in which leaf they go
+		std::vector<int> tmp (indices.size());
+		
+		// variable recycling!! I know it is bad, but it1 and it2 are not descriptive names to begin with
+		it1 = tmp.begin();
+		it2 = tmp.end();
+		
+		for (auto i = 0; i < indices.size(); i++){
+			if (apply(responses[i])){
+				*it1 = indices[i];
+				it1++;
+			}
+			else{
+				it2--;
+				*it2 = indices[i];
+			}
+		}
+		tmp.swap(indices);
+		//adjust the iterator storing the split point for the offsprings
+		split_indices_it = it2;
+
 		std::cout<<"Split set: ";
-		tmp.assign(split_set.begin(), split_set.end());
-		print_vector<int>(tmp);
+		print_vector<num_type>(split_set);
 		return(best_loss);
 	}
 
-
-	f_type best_split ( std::vector<f_type> & features, std::vector<f_type> & responses, int feature_indx, int feature_type, const std::vector<int>::iterator & indices_start, const std::vector<int>::iterator &indices_end){
+	split (
+		const std::vector<num_type> & features,
+		const std::vector<num_type> & responses,
+		int feature_indx, int feature_type,
+		std::vector<int> & indices,
+		std::vector<int>::iterator & split_indices_it,
+		num_type &score){
 
 		// store the feature index right away
 		feature_index = feature_indx;
-		
-		// copy the indices so we can manipulate them
-		indices = std::vector<int>(indices_start, indices_end);
-
 
 		// sort the indices by the value in feature vector
 		std::sort(	indices.begin(), indices.end(),
 					[&](size_t a, size_t b){return features[a] < features[b];}		// C++11 lambda function, how exciting :)
 		);
 
+		score = (-1*std::numeric_limits<num_type>::infinity());
 
 		// feature_type zero means that it is a continous variable
 		if (feature_type == 0)
-			return(best_split_continuous(features,responses));
+			score = best_split_continuous(features,responses, indices, split_indices_it);
 		// a positive feature type encodes the number of possible values
 		if (feature_type > 0)
-			return(best_split_categorical(features, responses, feature_type));
-		
-		return (-1*std::numeric_limits<f_type>::infinity());
+			score = best_split_categorical(features,responses, feature_type, indices, split_indices_it);
 	}
 	
-	void remove_temp_data(){
-		indices.clear();
-	}
-
-	bool apply ( f_type & value){
-		//return(boost::apply_visitor( boost::bind(apply_split(), value, _1), split_criterion ));
-		
-		if ( float* pf = boost::get<float>( &split_criterion ) )
-			return( value <=  *pf);
-		std::set<int> *ps  = boost::get<std::set<int> > (&split_criterion);
-		return((bool) (ps->count ((int) std::lround(value)))  );
+	bool apply ( const num_type & value){
+		return( boost::apply_visitor(split_static_visitor<num_type>(value), split_criterion));
 	};
 };
 
 
-template <class f_type = float>
-class categorical_split{
-  private:
-	int feature_index;
-	std::set<f_type> values_set;
-  public:
-};
+}//namespace rfr
+#endif

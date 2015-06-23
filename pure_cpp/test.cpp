@@ -2,6 +2,8 @@
 #include <random>
 
 
+#include<map>
+
 #include "boost/variant.hpp"
 
 
@@ -90,5 +92,8 @@ void test_continuous_split(){
 }
 
 int main(){
-	test_continuous_split();
+	//test_continuous_split();
+	std::cout<<sizeof(int)<<"\n";
+	std::cout<<sizeof(std::map<int, int>)<<"\n";
+	std::cout<<sizeof(std::vector<int> (5));
 }
