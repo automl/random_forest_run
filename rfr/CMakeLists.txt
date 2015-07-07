@@ -40,6 +40,15 @@ set_property(TARGET ut_data_containers PROPERTY CXX_STANDARD 11)
 set_property(TARGET ut_data_containers PROPERTY CXX_STANDARD_REQUIRED ON)
 target_link_libraries(ut_data_containers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
-add_test (BoostTestDataContainers ut_data_containers "${PROJECT_SOURCE_DIR}/test_data_sets/")
-set_tests_properties (BoostTestDataContainers
-	PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+add_test (UTDataContainers ut_data_containers "${PROJECT_SOURCE_DIR}/test_data_sets/")
+set_tests_properties (UTDataContainers PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+
+
+
+add_executable(ut_binary_splits "${PROJECT_SOURCE_DIR}/src/tests/unit_test_binary_splits.cpp")
+set_property(TARGET ut_binary_splits PROPERTY CXX_STANDARD 11)
+set_property(TARGET ut_binary_splits PROPERTY CXX_STANDARD_REQUIRED ON)
+target_link_libraries(ut_binary_splits ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
+add_test (UTBinarySplits ut_binary_splits "${PROJECT_SOURCE_DIR}/test_data_sets/")
+set_tests_properties (UTBinarySplits PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")

@@ -55,7 +55,7 @@ std::vector< std::vector<num_type> > read_csv_file( const char* filename){
 }
 
 template<class T>
-void print_vector(std::vector<T> &v){
+void print_vector(const std::vector<T> &v) {
 	for(auto it = v.begin(); it!=v.end(); it++)
 		std::cout<<*it<<" ";
 	std::cout<<std::endl;
@@ -63,7 +63,7 @@ void print_vector(std::vector<T> &v){
 
 
 template<class T>
-void print_matrix(std::vector<std::vector<T> > &v){
+void print_matrix(const std::vector<std::vector<T> > &v) {
 	for(auto it = v.begin(); it!=v.end(); it++)
 		print_vector<T>(*it);
 }

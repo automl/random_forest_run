@@ -9,7 +9,8 @@
 #include "boost/variant.hpp"
 
 #include "data_containers/data_container_base.hpp"
-#include "binary_split_base.hpp"
+#include "data_containers/data_container_utils.hpp"
+#include "splits/binary_split_base.hpp"
 
 namespace rfr{
 
@@ -32,92 +33,146 @@ namespace rfr{
  */
 
 
-template <typename num_type = float, typename index_type = unsigned int>
-class binary_split_one_feature_rss_loss: binary_split_base{
+template <typename data_container_type, typename num_type = float, typename index_type = unsigned int>
+class binary_split_one_feature_rss_loss: rfr::binary_split_base<num_type, index_type> {
   private:
-	int feature_index;
+	
+	int feature_index;	//!< split needs to know which feature it uses
+	
+	//!< The split criterion contains its type (first element = 0 for numerical, =1 for categoricals), and the 
 	std::vector<num_type> split_criterion; //!< one could consider to use a dynamically sized array here to save some memory (vector stores size and capacity + it might allocate more memory than needed!)
   public:
 
-    /** \brief constructor that only initializes the feature index
-     *
-     * The reason why we don't use the constructor directly to figure out the best split right away is that we want some return values indicating the quality of the split
-     *
-     * \param feature_indx specifies the feature which this split uses
-     *
-     */
- 	split (index_type feature_indx): feature_index(feature_indx){};
+	/** \brief the constructor for a binary split using only one feature minimizing the RSS loss
+	 *
+	 * The best binary split is determined among all allowed features. For a continuous feature the split is a single value.
+	 * For catergoricals, the split criterion is a "set" (actual implementation might use a different datatype for performance).
+	 * In both cases the split is computed as efficiently as possible exploiting properties of the RSS loss (optimal split for categoricals
+	 * can be found in polynomial rather than exponential time in the number of possible values).
+	 * The constructor assumes that the data should be split. Testing whether the number of points and their values allow further splitting is checked by the tree
+	 * 
+	 * \param data the container holding the training data
+	 * \param features_to_try a vector with the indices of all the features that can be considered for this split
+	 * \param indices a vector containing the subset of data point indices to be considered (output!)
+	 * \param an iterator into this vector that says where to split the data for the two children
+	 * 
+	 */
+	 binary_split_one_feature_rss_loss(	const data_container_type &data,
+					const std::vector<index_type> &features_to_try,
+					std::vector<index_type> & indices,
+					typename std::vector<index_type>::const_iterator &split_indices_it){
+		
+		std::vector<index_type> indices_copy(indices);
+		num_type best_loss = std::numeric_limits<num_type>::infinity();
+		
+		rfr::print_vector<index_type>(indices_copy);
+		std::cout<<indices_copy.size()<<std::endl;
+		
+		for (int fi : features_to_try){ //! > uses C++11 range based loop
 
+			std::vector<num_type> split_criterion_copy;
+			typename std::vector<index_type>::const_iterator split_indices_it_copy = indices_copy.begin();
+			num_type loss;
 
-    /** \brief function to find the optimal split criterion given the data and a subset of data_point indices to use
-     *
-     * \param data the container holding the training data
-     * \param indices a vector with all the sample indices ought to be used
-     * \param split_indices_it an iterator that indicates where indices would be split
-     *
-     * \return float the loss of this split (Residual Sum of Squares for both children)
-     */
-    num_type find_optimal_split_criterion(  const data_container_base<num_type, index_type> &data,
-                                            std::vector<int> & indices,
-                                            std::vector<int>::iterator & split_indices_it){
+			// sort the indices by the value in feature vector
+			std::sort(	indices_copy.begin(), indices_copy.end(),
+						[&](index_type a, index_type b){return data.feature(fi,a) < data.feature(fi, b);}		//! > uses C++11 lambda function, how exciting :)
+			);
+			rfr::print_vector<index_type>(indices_copy);
 
-
-		// sort the indices by the value in feature vector
-		std::sort(	indices.begin(), indices.end(),
-					[&](size_t a, size_t b){return data.feature(feature_index,a) < data.features(feature_index, b);}		// C++11 lambda function, how exciting :)
-		);
-
-        // may be this should be +\infty, depending whether we maximize or minimize the score
-		num_type loss = std::numeric_limits<num_type>::infinity();
-
-        index_type feature_type = data.get_type_of_feature(feature_index);
-		// feature_type zero means that it is a continous variable
-		if (feature_type == 0){
-            split_criterion.assign(2, 0);
-			loss = best_split_continuous(data, indices, split_indices_it);
+			index_type ft = data.get_type_of_feature(fi);
+			// feature_type zero means that it is a continous variable
+			if (ft == 0){
+				split_criterion_copy.assign(2, 0);
+				// find best split for the current feature_index
+				loss = best_split_continuous(data, fi, split_criterion_copy, indices_copy, split_indices_it_copy);
+			}
+			// a positive feature type encodes the number of possible values
+			if (ft > 0){
+				split_criterion_copy.assign(1,ft);
+				// find best split for the current feature_index
+				loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy);
+			}
+			// check if this split is the best so far
+			if (loss < best_loss){
+				best_loss = loss;
+				feature_index = fi;
+				split_criterion.swap(split_criterion_copy);
+				indices.swap(indices_copy);
+				split_indices_it = split_indices_it_copy;
+			}
 		}
-		// a positive feature type encodes the number of possible values
-		if (feature_type > 0)
-            split_criterion.assign(1,feature_type);
-			loss = best_split_categorical(data, indices, split_indices_it, feature_type);
-
-        return(loss);
 	}
 
-	// computes the best possible split given:
-	// 	- a single feature vector (sorted according to the responses)
-	//  - the corresponding responses
-	//  - a reference to a vector of all indices (sorted with respect to the responses) and an iterator where to split it
-	num_type best_split_continuous(	const data_container_base<num_type, index_type> & data,
-									std::vector<int> &indices,
-									std::vector<int>::iterator &split_indices_it){
+
+	/** \brief this operator tells into which child the given feature vector falls
+	 * 
+	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
+	 * 
+	 * \return bool whether the feature_vector falls into the left (true) or right (false) child
+	 */
+	virtual bool operator() (num_type *feature_vector) {
+		auto it = split_criterion.begin();
+		
+		// handle categorical features
+		if (*it == (num_type) 1){
+			// check if the value is contained in the split 'set'
+			it++;
+			it = std::find(it, split_criterion.end(), feature_vector[feature_index]);
+			return( it != split_criterion.end());
+		}
+		
+		// simple case of a numerical feature
+		return(feature_vector[feature_index] <= split_criterion[1]);
+	}
+
+
+	/** \brief member function to find the best possible split for a single (continuous) feature
+	 * 
+	 * 
+	 * \param data pointer to the the data container
+	 * \param fi the index of the feature to be used
+	 * \param split_criterion_copy a reference to store the split criterion
+	 * \param indices_copy a const reference to the indices (const b/c it has already been sorted)
+	 * \param split_indices_it_copy an iterator that will point to the first element of indices_copy that would go into the right child
+	 * 
+	 * \return float the loss of this split
+	 */
+	num_type best_split_continuous(	const data_container_type & data,
+									const index_type & fi,
+									std::vector<num_type> &split_criterion_copy,
+									const std::vector<index_type> &indices_copy,
+									typename std::vector<index_type>::const_iterator &split_indices_it_copy){
+
+		rfr::print_vector<index_type>(indices_copy);
 
 		// find the best split by looking at any meaningful value for the feature
 		// first some temporary variables
 		num_type S_y_left(0), S_y2_left(0);
 		num_type S_y_right(0), S_y2_right(0);
-		num_type N_left(0), N_right(indices.size());
-		num_type loss(0), best_loss(0);
+		num_type N_left(0), N_right(indices_copy.size());
+		num_type loss, best_loss = std::numeric_limits<num_type>::infinity();;
 
 		// we start out with everything in the right child
 		// so we compute the mean and the variance for that case
-		for (auto it = indices.begin(); it != indices.end(); it++){
+		for (auto it = indices_copy.begin(); it != indices_copy.end(); it++){
 			S_y_right  += data.response(*it);
 			S_y2_right += data.response(*it)*data.response(*it);
 		}
 		std::cout<<"initial values: "<< S_y_right<<" and "<<S_y2_right<<std::endl;
 
-		std::vector<int>::iterator psii = indices.begin();	// potential split index iterator
+		auto psii = indices_copy.begin();	// potential split index iterator
 
-		loss = (S_y2_right - (S_y_right*S_y_right)/N_right);
-		best_loss = loss;
-
-		// now we can increase the splitting value
-		while (psii != indices.end()){
-			auto psv = data.feature(feature_index, *psii) + 1e-10; // potential split value add small delta for numerical inaccuracy
+		// now we can increase the splitting value to move data points from the right to the left child
+		// this way we do not consider a split with everything in the right child
+		while (psii != indices_copy.end()){
+			num_type psv = data.feature(fi, *psii) + 1e-10; // potential split value add small delta for numerical inaccuracy
+			std::cout<<"current split value: "<<psv<<std::endl;
+			std::cout<<"smallest feature in right child "<< data.feature(fi,*psii)<<std::endl;
 			// combine data points that are very close
-			while ((psii != indices.end()) &&(data.feature(feature_index,*psii) - psv <= 0)){
+			while ((psii != indices_copy.end()) && (data.feature(fi,*psii) - psv < 0)){
 
+				std::cout<<"moving another data point to the left child\n";
 				// change the Sum(y) and Sum(y^2) for left and right accordingly
 				S_y_left  += data.response(*psii);
 				S_y_right -= data.response(*psii);
@@ -128,38 +183,46 @@ class binary_split_one_feature_rss_loss: binary_split_base{
 				N_left++;
 				psii++;
 			}
+			std::cout<<"smallest feature in right child "<< data.feature(fi,*psii)<<std::endl;
+			// stop if all data points are now in the left child as this is not a meaningful split
+			if (N_right == 0) break;
+
 			// compute the loss
-			loss = (S_y2_left - (S_y_left*S_y_left)/N_left);
-			// the right leaf could be empty!
-			if (N_right > 0)
-				loss  +=  (S_y2_right - (S_y_right*S_y_right)/N_right);
-			std::cout<<N_left<<" "<<loss<<" "<<psv<<std::endl;
+			loss = (S_y2_left  - (S_y_left *S_y_left )/N_left) 
+			     + (S_y2_right - (S_y_right*S_y_right)/N_right);
+
+			std::cout<<N_left<<"/"<<N_right<<"\t"<<loss<<"\t"<<psv<<std::endl;
 
 			// store the best split
 			if (loss < best_loss){
 				best_loss = loss;
-				split_criterion = psv;
-				split_indices_it = psii;
+				split_criterion_copy[1] = psv;
+				split_indices_it_copy = psii;
 			}
 		}
-		std::cout<<"best split at feature <= "<<boost::get<num_type>(split_criterion)<<"\n";
+		std::cout<<"best split at feature <= "<<split_criterion_copy[1]<<"\n\n\n";
 		return(best_loss);
 	}
 
-	num_type best_split_categorical(const data_container_base<num_type, index_type> &data,
-									std::vector<index_type> &indices,
-									typename std::vector<index_type>::iterator &split_indices_it,
-									const index_type &num_categories){
+
+
+	num_type best_split_categorical(const data_container_type &data,
+									const index_type &fi,
+									const index_type &num_categories,
+									std::vector<num_type> &split_criterion_copy,
+									std::vector<index_type> &indices_copy,
+									typename std::vector<index_type>::const_iterator &split_indices_it_copy){
 
 		// auxiliary variables
-		std::vector<int> category_ranking(num_categories);
-		std::vector<num_type> N_points_in_category(num_categories,0);
+		std::vector<index_type> category_ranking(num_categories);
+		std::vector<index_type> N_points_in_category(num_categories,0);
 		std::vector<num_type> S_y(num_categories, 0);
 		std::vector<num_type> S_y2(num_categories, 0);
 
-		for (size_t i = 0; i< data.num_samples() ; i++){
-			// find the category for each entry and make it a proper int
-			int cat = (int) std::lround(data.feature(feature_index,i));
+		for (size_t i = 0; i< data.num_data_points() ; i++){
+			// find the category for each entry as a proper int
+			//! >assumes that the features for categoricals have been properly rounded so casting them to ints results in the right value!
+			int cat = data.feature(fi,i)-1;	// subtracked a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
 			std::cout<<"element of category "<< cat<<" with response "<< data.response(i) <<"\n";
 			// collect all the data to compute the loss
 			S_y[cat]  += data.response(i);
@@ -182,9 +245,11 @@ class binary_split_one_feature_rss_loss: binary_split_base{
 			}
 		}
 
+		rfr::print_vector<index_type>(N_points_in_category);
+
 		// sort the categories by their individual mean. only consider the ones with actual specimen here
 		std::sort(	category_ranking.begin(), it2,
-					[&](size_t a, size_t b){return ( (S_y[a]/N_points_in_category[a]) < (S_y[b]/N_points_in_category[b]) );});		// C++11 lambda function, how exciting :)
+					[&](index_type a, index_type b){return ( (S_y[a]/N_points_in_category[a]) < (S_y[b]/N_points_in_category[b]) );});		// C++11 lambda function, how exciting :)
 
 
 		//more auxiliary variables
@@ -240,7 +305,7 @@ class binary_split_one_feature_rss_loss: binary_split_base{
 
 		// store the split set for the left leaf
 		for (it1 = category_ranking.begin(); it1 != it_best_split; it1++)
-			split_criterion.push_back(*it1);
+			split_criterion.push_back(*it1+1);	// add a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
 
 		// add unobserved values randomly to the split_set
 		//!<  TODO: consider using one RNG across everything by passing it along.
@@ -250,40 +315,19 @@ class binary_split_one_feature_rss_loss: binary_split_base{
 
 			for (it1 = it2; it1 != category_ranking.end(); it1++){
 				if (dist(rng))
-					split_criterion.push_back(*it1);
+					split_criterion.push_back(*it1+1);	// add a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
 			}
 		}
-
-		//rearrange indices according to their category and in which leaf they go
-		std::vector<int> tmp (indices.size());
-
-		// variable recycling!! I know it is bad, but it1 and it2 are not descriptive names to begin with
-		it1 = tmp.begin();
-		it2 = tmp.end();
-
-		for (auto i = 0; i < indices.size(); i++){
-			if (apply(data.response(i))){
-				*it1 = indices[i];
-				it1++;
-			}
-			else{
-				it2--;
-				*it2 = indices[i];
-			}
-		}
-		tmp.swap(indices);
-		//adjust the iterator storing the split point for the offsprings
-		split_indices_it.swap(it2);
 
 		std::cout<<"Split set: ";
 		print_vector<num_type>(split_criterion);
+
+		//rearrange indices according to their category and in which leaf they go
+		split_indices_it_copy = std::partition( 
+					indices_copy.begin(), indices_copy.end(),
+					[&](size_t i){return(std::find(split_criterion_copy.begin(), split_criterion_copy.end(), data.feature(fi, i)) != split_criterion_copy.end());});
 		return(best_loss);
 	}
-
-
-	bool apply ( const num_type & value){
-		return( boost::apply_visitor(split_static_visitor<num_type>(value), split_criterion));
-	};
 };
 
 

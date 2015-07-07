@@ -29,11 +29,12 @@ class mostly_contiuous_data : rfr::data_container_base<num_type, index_type>{
   public:
 
 
-    virtual num_type feature (int feature_index, int sample_index){
+    virtual num_type feature  (int feature_index, int sample_index) const {
+		return(feature_values.at(feature_index).at(sample_index));
         return(feature_values[feature_index][sample_index]);
     }
 
-    virtual num_type response (int sample_index){
+    virtual num_type response (int sample_index) const{
         return(response_values[sample_index]);
     }
 
@@ -58,7 +59,7 @@ class mostly_contiuous_data : rfr::data_container_base<num_type, index_type>{
      * \return int type of the feature: 0 - numerical value (float or int); n>0 - categorical value with n different values {1,2,...,n}
      *
      */
-    virtual index_type get_type_of_feature (index_type feature_index){
+    virtual index_type get_type_of_feature (index_type feature_index) const{
   		auto it = categorical_ranges.find(feature_index);
 		if ( it == categorical_ranges.end())
 			return(0);
@@ -75,8 +76,8 @@ class mostly_contiuous_data : rfr::data_container_base<num_type, index_type>{
 	}
 
 
-    virtual index_type num_features(){return(feature_values.size());}
-	virtual index_type num_data_points(){return(feature_values[0].size());}
+    virtual index_type num_features() const {return(feature_values.size());}
+	virtual index_type num_data_points() const {return(feature_values[0].size());}
 
 
     // some helper functions (might be worth including some of them into the base class, as performance does not really matter here)
