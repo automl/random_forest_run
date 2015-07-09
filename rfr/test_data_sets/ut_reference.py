@@ -28,6 +28,9 @@ losses = list(map(loss1, features[:,0]))
 best_index = (np.argmin(losses))
 
 print(losses[best_index], features[best_index,0])
+tmp = np.array(features[:,0] <= features[best_index,0],dtype=np.int)
+print("Reference for the () operator")
+print(",".join(map(str, tmp)))
 
 
 # find best split for the categorical second feature
@@ -53,3 +56,9 @@ for conf in (itertools.product([0,1], [0], [0,1])):
 	print(calc_loss(left_indices, right_indices))
 
 print("So the final split set has to contain 1 and 2")
+tmp = np.array(features[:,1] <= 2,dtype=np.int)
+print("Reference for the () operator")
+print(",".join(map(str, tmp)))
+
+
+
