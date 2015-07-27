@@ -10,7 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "data_containers/mostly_continous_data_container.hpp"
+#include "data_containers/mostly_continuous_data_container.hpp"
 #include "splits/binary_split_one_feature_rss_loss.hpp"
 
 typedef float num_type;

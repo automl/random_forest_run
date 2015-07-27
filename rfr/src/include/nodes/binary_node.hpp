@@ -2,24 +2,26 @@
 #define RFR_BINARY_NODES_HPP
 
 #include <vector>
+#include <utility>	// for std::pair
 
+#include "data_containers/data_container_base.hpp"
 #include "splits/binary_split_base.hpp"
-
+#include "nodes/temporary_node.hpp"
 
 
 #include <iostream>
-#include "splits/binary_split_one_feature_rss_loss.hpp"
-#include "data_containers/mostly_continuous_data_container.hpp"
 
 
-typedef rfr::binary_split_one_feature_rss_loss<rfr::mostly_contiuous_data<> > split_t;
+
+namespace rfr{
+
 
 template <typename index_type = unsigned int>
 struct leaf_node_data{
 	std::vector<index_type> data_indices;
 };
 
-template <class split_type, typename num_type = float, typename index_type = unsigned int>
+template <typename split_type, typename num_type = float, typename index_type = unsigned int>
 struct internal_node_data{
 	index_type left_child_index;
 	index_type right_child_index;
@@ -28,26 +30,44 @@ struct internal_node_data{
 
 
 
-template < class split_type, typename num_type = float, typename index_type = unsigned int>
+template < typename split_type, typename num_type = float, typename index_type = unsigned int>
 class binary_node{
   private:
 	index_type parent_index;
 	bool is_leaf;
 	union{
 		leaf_node_data<index_type> leaf;
-		internal_node_data<split_type> internal_node;
+		internal_node_data<split_type, num_type, index_type> internal_node;
 	};
+
+  public:
+
+	/** \brief If the temporary node should be split further, this member turns this node into an internal node.
+	* 
+	*
+	* \return A pair of new temporary nodes that will become its children
+	*/ 
+	std::pair<rfr::temporary_node<num_type, index_type>, rfr::temporary_node<num_type, index_type> >
+		make_internal_node(rfr::temporary_node<num_type, index_type> tmp_node, rfr::, std::vector<index_type> features_to_try){
+		
+	}
+	
+	
+	/** \brief Member function that turns this node into a leaf node based on a temporary node.
+	*
+	*  
+	*
+	* \param tmp_node the internal representation for a temporary node
+	* \return The data in a 2d 'array' ready to be used by the data container classes
+	*
+	*/
+	void make_leaf_node(rfr::temporary_node<num_type, index_type> tmp_node){
+		
+	}
+
 };
 
 
 
-
-int main(){
-	std::cout<<sizeof(leaf_node_data<>)<<"\n";
-	std::cout<<sizeof(internal_node_data<split_t>)<<"\n";
-	std::cout<<sizeof(binary_node<split_t, float, unsigned int >)<<"\n";
 }
-
-
-
 #endif

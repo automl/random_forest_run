@@ -186,7 +186,18 @@ class binary_split_one_feature_rss_loss: rfr::binary_split_base<data_container_t
 		return(best_loss);
 	}
 
-
+	/** \brief member function to find the best possible split for a single (categorical) feature
+	 * 
+	 * 
+	 * \param data pointer to the the data container
+	 * \param fi the index of the feature to be used
+	 * \param num_categories how many different values this variable can take
+	 * \param split_criterion_copy a reference to store the split criterion
+	 * \param indices_copy a const reference to the indices (const b/c it has already been sorted)
+	 * \param split_indices_it_copy an iterator that will point to the first element of indices_copy that would go into the right child
+	 * 
+	 * \return float the loss of this split
+	 */
 	num_type best_split_categorical(const data_container_type &data,
 									const index_type &fi,
 									const index_type &num_categories,

@@ -3,6 +3,8 @@
 
 #include <vector>
 
+namespace rfr{
+
 
 
 template <typename num_type = float, typename index_type = unsigned int>
@@ -14,13 +16,13 @@ struct temporary_node{
 
 	temporary_node (index_type node_id,
 					index_type parent_id,
-					std::vector<index_type>::iterator start,
-					std::vector<index_type>::iterator end):
-		node_index(node_id), parent_node_index(parent_id)
+					typename std::vector<index_type>::iterator start,
+					typename std::vector<index_type>::iterator end):
+		node_index(node_id), parent_index(parent_id)
 	{
-		indices.assign(start, end);
+		data_indices.assign(start, end);
 	}
 };
 
-
+}
 #endif
