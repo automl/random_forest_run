@@ -2,33 +2,17 @@
 #define RFR_BINARY_SPLIT_RSS_HPP
 
 #include <vector>
+#include <array>
 #include <algorithm>
-#include <numeric>
-#include <random>
-
-#include "boost/variant.hpp"
 
 #include "data_containers/data_container_base.hpp"
-#include "data_containers/data_container_utils.hpp"
-#include "splits/binary_split_base.hpp"
+#include "splits/split_base.hpp"
 
 namespace rfr{
 
-// in case we need quite nans:
-//#include <limits>
-//static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 required");
 
-
-/* this class determines whether a given value falls into the left (true) or right child (false)
- * for both possible splitting criteria:
- * 		1. a single float, representing a numerical split (continuous or integer)
- *  	2. a vector of numbers, representing a categorical split
- * 			(assumption: few categories so that a vector is faster than a set)
- */
-
-
-template <typename data_container_type, typename num_type = float, typename index_type = unsigned int>
-class binary_split_one_feature_rss_loss: rfr::binary_split_base<data_container_type, num_type, index_type> {
+template <typename num_type = float, typename index_type = unsigned int>
+class binary_split_one_feature_rss_loss: public rfr::split_base<2,num_type, index_type> {
   private:
 	
 	int feature_index;	//!< split needs to know which feature it uses
@@ -51,10 +35,10 @@ class binary_split_one_feature_rss_loss: rfr::binary_split_base<data_container_t
 	 * \param an iterator into this vector that says where to split the data for the two children
 	 * 
 	 */
-	 virtual num_type find_best_split(	const data_container_type &data,
+	 virtual num_type find_best_split(	const rfr::data_container_base<num_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
-									typename std::vector<index_type>::iterator &split_indices_it){
+									std::array<typename std::vector<index_type>::iterator, 1> &split_indices_it){
 		
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
@@ -89,7 +73,7 @@ class binary_split_one_feature_rss_loss: rfr::binary_split_base<data_container_t
 				feature_index = fi;
 				split_criterion.swap(split_criterion_copy);
 				indices.swap(indices_copy);
-				split_indices_it = split_indices_it_copy;
+				split_indices_it[0] = split_indices_it_copy;
 			}
 		}
 		std::sort(++split_criterion.begin(), split_criterion.end());
@@ -102,9 +86,9 @@ class binary_split_one_feature_rss_loss: rfr::binary_split_base<data_container_t
 	 * 
 	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
 	 * 
-	 * \return bool whether the feature_vector falls into the left (true) or right (false) child
+	 * \return int whether the feature_vector falls into the left (true) or right (false) child
 	 */
-	virtual bool operator() (num_type *feature_vector) {
+	virtual index_type operator() (num_type *feature_vector) {
 		auto it = split_criterion.begin();
 		
 		// handle categorical features
@@ -132,7 +116,7 @@ class binary_split_one_feature_rss_loss: rfr::binary_split_base<data_container_t
 	 * 
 	 * \return float the loss of this split
 	 */
-	num_type best_split_continuous(	const data_container_type & data,
+	num_type best_split_continuous( const rfr::data_container_base<num_type, index_type> &data,
 									const index_type & fi,
 									std::vector<num_type> &split_criterion_copy,
 									std::vector<index_type> &indices_copy,
@@ -198,7 +182,7 @@ class binary_split_one_feature_rss_loss: rfr::binary_split_base<data_container_t
 	 * 
 	 * \return float the loss of this split
 	 */
-	num_type best_split_categorical(const data_container_type &data,
+	num_type best_split_categorical(const rfr::data_container_base<num_type, index_type> &data,
 									const index_type &fi,
 									const index_type &num_categories,
 									std::vector<num_type> &split_criterion_copy,

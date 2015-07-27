@@ -2,26 +2,21 @@
 #define RFR_BINARY_SPLIT_BASE_HPP
 
 #include <vector>
-#include <algorithm>
-#include <numeric>
-#include <random>
-
-#include "boost/variant.hpp"
-
+#include <array>
 #include "data_containers/data_container_base.hpp"
 
 
 
 namespace rfr{
 
-template <typename data_container_type, typename num_type = float, typename index_type = unsigned int>
-class binary_split_base{
+template <const int k, typename num_type = float, typename index_type = unsigned int>
+class split_base{
   public:
-	/** \brief member function to find the optimal binary split for a subset of the data and features
+	/** \brief member function to find the optimal split for a subset of the data and features
 	 *
-	 * Defining the interface that every binary_split has to implement. Unfortunately, virtual constructors are
+	 * Defining the interface that every split has to implement. Unfortunately, virtual constructors are
 	 * not allowed in C++, so this function is called instead. Code in the nodes and the tree will only use the 
-	 * default constructor and this method during construction.
+	 * default constructor and the methods below for training and prediction.
 	 * 
 	 * \param data the container holding the training data
 	 * \param features_to_try a vector with the indices of all the features that can be considered for this split
@@ -30,18 +25,18 @@ class binary_split_base{
 	 * 
 	 * \return float the loss of the found split
 	 */
-	virtual num_type find_best_split(	const data_container_type &data,
+	virtual num_type find_best_split(const rfr::data_container_base<num_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
-									typename std::vector<index_type>::iterator &split_indices_it) = 0;
+									std::array<typename std::vector<index_type>::iterator, k-1> &split_indices_it) = 0;
 
 	/** \brief operator telling into which child the given feature vector falls
 	 * 
 	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
 	 * 
-	 * \return bool whether the feature_vector falls into the left (true) or right (false) child
+	 * \return index_type index of the child into which this feature falls
 	 */
-	virtual bool operator() (num_type *feature_vector) = 0;
+	virtual index_type operator() (num_type *feature_vector) = 0;
 };
 
 

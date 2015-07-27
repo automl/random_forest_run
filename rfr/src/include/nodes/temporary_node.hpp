@@ -6,7 +6,6 @@
 namespace rfr{
 
 
-
 template <typename num_type = float, typename index_type = unsigned int>
 struct temporary_node{
 	index_type node_index;

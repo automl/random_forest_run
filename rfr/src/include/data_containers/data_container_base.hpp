@@ -7,7 +7,7 @@ namespace rfr{
  */
 template <typename num_type = float, typename index_type = unsigned int>
 class data_container_base{
-
+  public:
     /** \brief member function for accessing a single feature value, consistency checks might be omitted for performance
      *
      * \param feature_index The index of the feature requested

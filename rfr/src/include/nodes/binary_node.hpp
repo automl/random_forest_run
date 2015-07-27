@@ -5,7 +5,7 @@
 #include <utility>	// for std::pair
 
 #include "data_containers/data_container_base.hpp"
-#include "splits/binary_split_base.hpp"
+#include "splits/split_base.hpp"
 #include "nodes/temporary_node.hpp"
 
 
@@ -48,7 +48,7 @@ class binary_node{
 	* \return A pair of new temporary nodes that will become its children
 	*/ 
 	std::pair<rfr::temporary_node<num_type, index_type>, rfr::temporary_node<num_type, index_type> >
-		make_internal_node(rfr::temporary_node<num_type, index_type> tmp_node, rfr::, std::vector<index_type> features_to_try){
+		make_internal_node(rfr::temporary_node<num_type, index_type> tmp_node, std::vector<index_type> features_to_try){
 		
 	}
 	

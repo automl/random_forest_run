@@ -20,7 +20,7 @@ namespace rfr{
  */
 
 template<typename num_type = float, typename index_type = unsigned int>
-class mostly_contiuous_data : rfr::data_container_base<num_type, index_type>{
+class mostly_contiuous_data : public rfr::data_container_base<num_type, index_type>{
   private:
 	std::vector< std::vector<num_type> > feature_values;//!< 2d vector to store the feature values
 	std::vector<num_type> response_values;              //!< the associated responses

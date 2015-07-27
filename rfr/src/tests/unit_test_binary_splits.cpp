@@ -7,6 +7,7 @@
 #include <cstring>
 #include <numeric>
 #include <vector>
+#include <array>
 
 #include <boost/test/unit_test.hpp>
 
@@ -35,10 +36,10 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
 
-	std::vector<index_type>::iterator indices_split_it;
+	std::array<std::vector<index_type>::iterator, 1>indices_split_it;
 	std::vector<index_type> features_to_try(1,0);
 
-	rfr::binary_split_one_feature_rss_loss<data_container_type, num_type, index_type> split1;
+	rfr::binary_split_one_feature_rss_loss<num_type, index_type> split1;
 	num_type loss = split1.find_best_split(data, features_to_try, indices, indices_split_it);
 
 	// actual loss independently computed in python
@@ -80,10 +81,10 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
 
-	std::vector<index_type>::iterator indices_split_it;
+	std::array<std::vector<index_type>::iterator, 1>indices_split_it;
 	std::vector<index_type> features_to_try(1,1);
 
-	rfr::binary_split_one_feature_rss_loss<data_container_type, num_type, index_type>split2;
+	rfr::binary_split_one_feature_rss_loss<num_type, index_type>split2;
 	num_type loss = split2.find_best_split(data, features_to_try, indices, indices_split_it);
 
 	// actual best split and loss independently computed in python
@@ -128,11 +129,11 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
 
-	std::vector<index_type>::iterator indices_split_it;
+	std::array<std::vector<index_type>::iterator, 1>indices_split_it;
 	std::vector<index_type> features_to_try({1,0});
 
 
-	rfr::binary_split_one_feature_rss_loss<data_container_type, num_type, index_type>split3;
+	rfr::binary_split_one_feature_rss_loss<num_type, index_type>split3;
 	num_type loss = split3.find_best_split(data, features_to_try, indices, indices_split_it);
 	BOOST_REQUIRE_CLOSE(loss, 23.33333333, 1e-4);
 	std::vector<num_type> split_criterion = split3.get_split_criterion();
