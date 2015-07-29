@@ -16,12 +16,15 @@
 
 
 typedef double my_num_type;
-typedef unsigned short my_index_type;
+typedef unsigned int my_index_type;
 
 
 typedef rfr::k_ary_node<2, rfr::binary_split_one_feature_rss_loss<my_num_type, my_index_type>, my_num_type, my_index_type> node_type;
 typedef rfr::temporary_node<my_num_type, my_index_type> tmp_node_type;
 
+
+// Test does not actually check the correctness of the split or anything.
+// It makes sure everything compiles and  runs
 BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 
 	rfr::mostly_contiuous_data<my_num_type, my_index_type> data;
@@ -41,24 +44,47 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 
 	tmp_node_type tmp_node(0, -1, 0, indices.begin(), indices.end());
 
-
 	node_type root_node1;
-	
 	
 	root_node1.make_leaf_node(tmp_node);
 	root_node1.print_info();
 	
 	
-	std::vector<node_type> nodes (1);
-	std::vector<tmp_node_type> tmp_nodes(0);
+	std::cout<<"done building first node\n";
+	
+	std::vector<node_type> nodes;
+	nodes.emplace_back();
+	
+	for (auto n: nodes)
+		n.print_info();
+	
+	std::vector<tmp_node_type> tmp_nodes;
 	
 	
-	std::vector<my_index_type> features_to_try = {0,1};
+	std::vector<my_index_type> features_to_try(2, 0);
+	std::iota(features_to_try.begin(), features_to_try.end(), 0);
+	
+
+	nodes[0].make_internal_node(tmp_node, data, features_to_try, nodes, tmp_nodes);
+	nodes[0].print_info();
 	
 	
-	node_type root_node2;	
-	root_node2.make_internal_node(tmp_node, data, features_to_try, nodes, tmp_nodes);
-	root_node2.print_info();
+	nodes.emplace_back();
+	nodes[1].make_leaf_node(tmp_nodes[0]);
+	
+	
+	nodes.emplace_back();
+	nodes[2].make_leaf_node(tmp_nodes[1]);	
+	
+	
+	BOOST_REQUIRE(
+	
+	for (std::vector<tmp_node_type>::iterator tn =  tmp_nodes.begin(); tn != tmp_nodes.end(); tn++){
+		tn->print_info();
+	}
+	
+	for (auto n: nodes)
+		n.print_info();
 	
 	
 }

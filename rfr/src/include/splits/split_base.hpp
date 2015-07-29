@@ -1,5 +1,5 @@
-#ifndef RFR_BINARY_SPLIT_BASE_HPP
-#define RFR_BINARY_SPLIT_BASE_HPP
+#ifndef RFR_SPLIT_BASE_HPP
+#define RFR_SPLIT_BASE_HPP
 
 #include <vector>
 #include <array>
@@ -10,7 +10,7 @@
 namespace rfr{
 
 template <const int k, typename num_type = float, typename index_type = unsigned int>
-class split_base{
+class k_ary_split_base{
   public:
 	/** \brief member function to find the optimal split for a subset of the data and features
 	 *

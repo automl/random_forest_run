@@ -1,0 +1,46 @@
+#ifndef RFR_TREE_BASE_HPP
+#define RFR_TREE_BASE_HPP
+
+#include "data_containers/data_container_base.hpp"
+
+
+
+namespace rfr{
+
+template <const int k, typename num_type = float, typename index_type = unsigned int>
+class tree_base{
+  public:
+	/** \brief member function to find the optimal split for a subset of the data and features
+	 *
+	 * Defining the interface that every split has to implement. Unfortunately, virtual constructors are
+	 * not allowed in C++, so this function is called instead. Code in the nodes and the tree will only use the 
+	 * default constructor and the methods below for training and prediction.
+	 * 
+	 * \param data the container holding the training data
+	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
+	 */
+	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
+			 const rfr::tree_options<num_type, index_type> tree_opts) = 0
+
+	/** \brief member function to predict the response value for a single feature vector
+	 * 
+	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
+	 * 
+	 * \return num_type the prediction of the response value (usually the mean of all responses in the corresponding leaf)
+	 */
+	virtual num_type predict (num_type *feature_vector) = 0;
+	
+	
+	/** \brief member function to predict the response values for a batch of  feature vectors stored in a data container
+	 * 
+	 * \param data a filled data container. For the prediction the (possibly empty) response values are ignored.
+	 * 
+	 * \return std::vector<num_type> the predictions for all points in a vector.
+	 */	
+	virtual std::vector<num_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
+};
+
+
+
+}//namespace rfr
+#endif

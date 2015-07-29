@@ -12,15 +12,15 @@ namespace rfr{
 
 
 template <typename num_type = float, typename index_type = unsigned int>
-class binary_split_one_feature_rss_loss: public rfr::split_base<2,num_type, index_type> {
+class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type, index_type> {
   private:
 	
-	int feature_index;	//!< split needs to know which feature it uses
+	index_type feature_index;	//!< split needs to know which feature it uses
 	
 	//!< The split criterion contains its type (first element = 0 for numerical, =1 for categoricals), and the split value in the second/ the categories that fall into the left child respectively
 	std::vector<num_type> split_criterion; //!< one could consider to use a dynamically sized array here to save some memory (vector stores size and capacity + it might allocate more memory than needed!)
   public:
-
+  	
 	/** \brief the implementation to find the best binary split using only one feature minimizing the RSS loss
 	 *
 	 * The best binary split is determined among all allowed features. For a continuous feature the split is a single value.
@@ -40,10 +40,11 @@ class binary_split_one_feature_rss_loss: public rfr::split_base<2,num_type, inde
 									std::vector<index_type> & indices,
 									std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it){
 		
+		print_vector(indices);
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
 		
-		for (int fi : features_to_try){ //! > uses C++11 range based loop
+		for (index_type fi : features_to_try){ //! > uses C++11 range based loop
 
 			std::vector<num_type> split_criterion_copy;
 			typename std::vector<index_type>::iterator split_indices_it_copy = indices_copy.begin();
@@ -73,13 +74,13 @@ class binary_split_one_feature_rss_loss: public rfr::split_base<2,num_type, inde
 				feature_index = fi;
 				split_criterion.swap(split_criterion_copy);
 				indices.swap(indices_copy);
-				split_indices_it[1] = split_indices_it_copy;
+				split_indices_it.at(1) = split_indices_it_copy;
 			}
 		}
-		split_indices_it[0] = indices.end();
+		split_indices_it[0] = indices.begin();
 		split_indices_it[2] = indices.end();
 		std::sort(++split_criterion.begin(), split_criterion.end());
-		split_criterion.shrink_to_fit();
+		//split_criterion.shrink_to_fit();
 		return(best_loss);
 	}
 
