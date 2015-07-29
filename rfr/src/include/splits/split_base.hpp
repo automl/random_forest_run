@@ -21,14 +21,14 @@ class split_base{
 	 * \param data the container holding the training data
 	 * \param features_to_try a vector with the indices of all the features that can be considered for this split
 	 * \param indices a vector containing the subset of data point indices to be considered (output!)
-	 * \param split_indices_it an iterator into indices specifying where to split the data for the two children
+	 * \param split_indices_it iterators into indices specifying where to split the data for the children. Number of iterators is k+1, for easier iteration
 	 * 
 	 * \return float the loss of the found split
 	 */
 	virtual num_type find_best_split(const rfr::data_container_base<num_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
-									std::array<typename std::vector<index_type>::iterator, k-1> &split_indices_it) = 0;
+									std::array<typename std::vector<index_type>::iterator, k+1> &split_indices_it) = 0;
 
 	/** \brief operator telling into which child the given feature vector falls
 	 * 

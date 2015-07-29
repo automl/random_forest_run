@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
 
-	std::array<std::vector<index_type>::iterator, 1>indices_split_it;
+	std::array<std::vector<index_type>::iterator, 3>indices_split_it;
 	std::vector<index_type> features_to_try(1,0);
 
 	rfr::binary_split_one_feature_rss_loss<num_type, index_type> split1;
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
 
-	std::array<std::vector<index_type>::iterator, 1>indices_split_it;
+	std::array<std::vector<index_type>::iterator, 3>indices_split_it;
 	std::vector<index_type> features_to_try(1,1);
 
 	rfr::binary_split_one_feature_rss_loss<num_type, index_type>split2;
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
 
-	std::array<std::vector<index_type>::iterator, 1>indices_split_it;
+	std::array<std::vector<index_type>::iterator, 3>indices_split_it;
 	std::vector<index_type> features_to_try({1,0});
 
 

@@ -38,7 +38,7 @@ class binary_split_one_feature_rss_loss: public rfr::split_base<2,num_type, inde
 	 virtual num_type find_best_split(	const rfr::data_container_base<num_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
-									std::array<typename std::vector<index_type>::iterator, 1> &split_indices_it){
+									std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it){
 		
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
@@ -73,9 +73,11 @@ class binary_split_one_feature_rss_loss: public rfr::split_base<2,num_type, inde
 				feature_index = fi;
 				split_criterion.swap(split_criterion_copy);
 				indices.swap(indices_copy);
-				split_indices_it[0] = split_indices_it_copy;
+				split_indices_it[1] = split_indices_it_copy;
 			}
 		}
+		split_indices_it[0] = indices.end();
+		split_indices_it[2] = indices.end();
 		std::sort(++split_criterion.begin(), split_criterion.end());
 		split_criterion.shrink_to_fit();
 		return(best_loss);
