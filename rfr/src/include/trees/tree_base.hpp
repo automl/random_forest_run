@@ -7,14 +7,14 @@
 
 namespace rfr{
 
-template <const int k, typename num_type = float, typename index_type = unsigned int>
+template <typename num_type = float, typename index_type = unsigned int>
 class tree_base{
   public:
-	/** \brief member function to find the optimal split for a subset of the data and features
+	/** \brief member function to fit the tree to the data
 	 *
-	 * Defining the interface that every split has to implement. Unfortunately, virtual constructors are
-	 * not allowed in C++, so this function is called instead. Code in the nodes and the tree will only use the 
-	 * default constructor and the methods below for training and prediction.
+	 * The interface is very general, and allows for deterministic and randomized decision tree at this point.
+	 * For a random forest, some randomness has to be introduced, and the number of features
+	 * considered for every step has to be set to be less than actual the number of features
 	 * 
 	 * \param data the container holding the training data
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
