@@ -7,6 +7,9 @@
 
 #include <numeric>
 #include <cstring>
+#include <vector>
+#include <deque>
+
 
 
 #include "data_containers/mostly_continuous_data_container.hpp"
@@ -42,44 +45,47 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 	std::vector<my_index_type> indices(data.num_data_points());
 	std::iota(indices.begin(),indices.end(), 0);
 
-	tmp_node_type tmp_node(0, -1, 0, indices.begin(), indices.end());
+	tmp_node_type tmp_node1(0, -1, 0, indices.begin(), indices.end());
 
 	node_type root_node1;
 	
-	root_node1.make_leaf_node(tmp_node);
+	root_node1.make_leaf_node(tmp_node1);
 	root_node1.print_info();
 	
 	
 	std::cout<<"done building first node\n";
-	
+
+
 	std::vector<node_type> nodes;
 	nodes.emplace_back();
 	
 	for (auto n: nodes)
 		n.print_info();
 	
-	std::vector<tmp_node_type> tmp_nodes;
+	std::deque<tmp_node_type> tmp_nodes;
 	
+	tmp_node_type tmp_node2(0, -1, 0, indices.begin(), indices.end());
+	tmp_nodes.push_back(tmp_node2);
 	
 	std::vector<my_index_type> features_to_try(2, 0);
 	std::iota(features_to_try.begin(), features_to_try.end(), 0);
 	
 
-	nodes[0].make_internal_node(tmp_node, data, features_to_try, nodes, tmp_nodes);
-	nodes[0].print_info();
-	
+	nodes[0].make_internal_node(tmp_nodes.front(), data, features_to_try, nodes.size(), tmp_nodes);
+	tmp_nodes.pop_front();
 	
 	nodes.emplace_back();
 	nodes[1].make_leaf_node(tmp_nodes[0]);
-	
+	tmp_nodes.pop_front();
 	
 	nodes.emplace_back();
-	nodes[2].make_leaf_node(tmp_nodes[1]);	
+	nodes[2].make_leaf_node(tmp_nodes[0]);	
+	tmp_nodes.pop_front();
+	
+	std::cout<<"\n\n Let's see:\n";
 	
 	
-	BOOST_REQUIRE(
-	
-	for (std::vector<tmp_node_type>::iterator tn =  tmp_nodes.begin(); tn != tmp_nodes.end(); tn++){
+	for (std::deque<tmp_node_type>::iterator tn =  tmp_nodes.begin(); tn != tmp_nodes.end(); tn++){
 		tn->print_info();
 	}
 	

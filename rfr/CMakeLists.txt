@@ -62,3 +62,13 @@ target_link_libraries(ut_binary_nodes ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_test (UTBinaryNodes ut_binary_nodes "${PROJECT_SOURCE_DIR}/test_data_sets/")
 set_tests_properties (UTBinaryNodes PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+
+
+
+add_executable(ut_binary_trees "${PROJECT_SOURCE_DIR}/src/tests/unit_test_binary_tree.cpp")
+set_property(TARGET ut_binary_trees PROPERTY CXX_STANDARD 11)
+set_property(TARGET ut_binary_trees PROPERTY CXX_STANDARD_REQUIRED ON)
+target_link_libraries(ut_binary_trees ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
+add_test (UTBinaryTrees ut_binary_trees "${PROJECT_SOURCE_DIR}/test_data_sets/")
+set_tests_properties (UTBinaryTrees PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")

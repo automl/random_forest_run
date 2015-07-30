@@ -79,7 +79,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 		}
 		split_indices_it[0] = indices.begin();
 		split_indices_it[2] = indices.end();
-		std::sort(++split_criterion.begin(), split_criterion.end());
+		//std::sort(++split_criterion.begin(), split_criterion.end());
 		//split_criterion.shrink_to_fit();
 		return(best_loss);
 	}
