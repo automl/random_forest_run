@@ -21,8 +21,9 @@ template <const int k,typename split_type, typename RNG_type, typename num_type 
 class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
   private:
 	std::vector< rfr::k_ary_node<k, split_type, num_type, index_type> > the_nodes;
-	
   public:
+	static RNG_type &rng;
+  
 	/** \brief fits a randomized decision tree to the data
 	 * 
 	 * At each node, if it is 'splitworthy', a random subset of all features is considered for the
@@ -33,15 +34,14 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 */
 	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
-					 const rfr::tree_options<num_type, index_type> tree_opts,
-					 RNG_type &rng){
+					 const rfr::tree_options<num_type, index_type> tree_opts){
 	    
 	    // storage for all the temporary nodes
 	    std::deque<temporary_node<num_type, index_type> > tmp_nodes;
 	    
 
 	    std::vector<index_type> feature_indices(data.num_features());
-	    std::iota(feature_indices.start(), feature_indices.end(), 0);
+	    std::iota(feature_indices.begin(), feature_indices.end(), 0);
 	    
 	    // add the root to the temporary nodes to get things started
 	    {
@@ -49,8 +49,8 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		// It is copied inside the temorary_node constructor, so
 		// we can discard it afterwards -> runs out of scope at the "}"
 		std::vector<index_type> data_indices(data.num_data_points());
-		std::iota(data_indices.start(), data.indices.end(), 0);
-		tmp_nodes.emplace_back(0, 0, 0, data_indices.start(), data_indices.end());
+		std::iota(data_indices.begin(), data_indices.end(), 0);
+		tmp_nodes.emplace_back(0, 0, 0, data_indices.begin(), data_indices.end());
 	    }
 	    
 	    // as long as there are potentially splittable nodes
@@ -96,10 +96,13 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 
 		    // Now, we have to check whether the split was legal
 		    bool illegal_split = false;
-		    ;
-		    for (auto tmp_it = std::next(tmp_nodes.back(),-k); tmp_it != tmp_nodes.end(); tmp_it++){
+		    auto tmp_it = tmp_nodes.back();
+		    for (auto i=0; i<k;i++)
+			tmp_it--;
+		    
+		    for (tmp_it; tmp_it != tmp_nodes.end(); tmp_it++){
 			
-			if ( tmp_it->data_indices.size() < tree_opts.min_samples_in_leaf){
+			if ( (*tmp_it).data_indices.size() < tree_opts.min_samples_in_leaf){
 			    illegal_split = true;
 			    break;
 			}
