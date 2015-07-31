@@ -21,8 +21,11 @@ template <const int k,typename split_type, typename RNG_type, typename num_type 
 class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
   private:
 	std::vector< rfr::k_ary_node<k, split_type, num_type, index_type> > the_nodes;
+	RNG_type *rng;
+	
   public:
-	static RNG_type &rng;
+  
+	k_ary_random_tree(RNG_type *rng_p): rng(rng_p) {}
   
 	/** \brief fits a randomized decision tree to the data
 	 * 
@@ -69,10 +72,10 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		    num_type ref = data.response(tmp_nodes.front().data_indices[0]);
 		    
 		    for(auto it = ++tmp_nodes.front().data_indices.begin(); it!= tmp_nodes.front().data_indices.begin(); it++){
-			if (abs(data.response(*it)- ref) > tree_opts.epsilon_purity){
-			    is_not_pure = true;
-			    break;
-			}
+				if (abs(data.response(*it)- ref) > tree_opts.epsilon_purity){
+					is_not_pure = true;
+					break;
+				}
 		    }
 		}
 		
@@ -84,7 +87,7 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		    ){
 		    
 		    // generate a subset of the features to try
-		    std::shuffle(feature_indices.begin(), feature_indices.end(), rng);
+		    std::shuffle(feature_indices.begin(), feature_indices.end(), *rng);
 		    std::vector<index_type> feature_subset(feature_indices.begin(), std::next(feature_indices.begin(), tree_opts.max_features));
 
 		    //split the node
@@ -96,11 +99,12 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 
 		    // Now, we have to check whether the split was legal
 		    bool illegal_split = false;
-		    auto tmp_it = tmp_nodes.back();
+		    //typename std::deque<temporary_node<num_type, index_type> >::iterator
+		    auto tmp_it = tmp_nodes.end();
 		    for (auto i=0; i<k;i++)
 			tmp_it--;
 		    
-		    for (tmp_it; tmp_it != tmp_nodes.end(); tmp_it++){
+		    for (; tmp_it != tmp_nodes.end(); tmp_it++){
 			
 			if ( (*tmp_it).data_indices.size() < tree_opts.min_samples_in_leaf){
 			    illegal_split = true;
@@ -149,8 +153,8 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	
 	
 	void print_info(){
-	    for (auto it : the_nodes){
-		it->print_info();
+	    for (auto n : the_nodes){
+		n.print_info();
 	    }
 	}
 

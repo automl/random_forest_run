@@ -27,7 +27,6 @@ typedef rfr::temporary_node<my_num_type, my_index_type> tmp_node_type;
 
 typedef rfr::k_ary_random_tree<2, my_split_type, rng_type, my_num_type, my_index_type> tree_type;
 
-
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and  runs
 BOOST_AUTO_TEST_CASE( binary_tree_test ){
@@ -44,14 +43,14 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
     data.read_response_file(filename);
 
 
-	rng_type rng_engine;
-	rfr::tree_options<my_num_type, my_index_type> tree_opts();
-	tree_type::rng = rng_engine;
-
-
-	tree_type the_tree;
 	
-//	the_tree.fit(data, tree_opts, rng_engine);
-//	the_tree.print_info()
+	rfr::tree_options<my_num_type, my_index_type> tree_opts;
+	rng_type rng_engine;
+
+
+	tree_type the_tree(&rng_engine);
+	
+	the_tree.fit(data, tree_opts);
+	the_tree.print_info();
 	
 }
