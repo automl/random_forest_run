@@ -38,6 +38,13 @@ class tree_base{
 	 * \return std::vector<num_type> the predictions for all points in a vector.
 	 */	
 	virtual std::vector<num_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
+	
+	
+	
+	virtual index_type number_of_nodes() = 0;
+	virtual index_type number_of_leafs() = 0;
+	virtual index_type depth() = 0;
+	
 };
 
 

@@ -31,7 +31,7 @@ typedef rfr::k_ary_random_tree<2, my_split_type, rng_type, my_num_type, my_index
 // It makes sure everything compiles and  runs
 BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
-	rfr::mostly_contiuous_data<my_num_type, my_index_type> data;
+    rfr::mostly_contiuous_data<my_num_type, my_index_type> data;
     char filename [1024];
 
     strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
@@ -44,13 +44,22 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
 
 	
-	rfr::tree_options<my_num_type, my_index_type> tree_opts;
-	rng_type rng_engine;
-
-
-	tree_type the_tree(&rng_engine);
+    rfr::tree_options<my_num_type, my_index_type> tree_opts;
 	
-	the_tree.fit(data, tree_opts);
-	the_tree.print_info();
+	
+    tree_opts.max_features = 1;
+    tree_opts.max_depth = 3;
+	
+    rng_type rng_engine;
+
+
+    tree_type the_tree(&rng_engine);
+	
+    the_tree.fit(data, tree_opts);
+    the_tree.print_info(data);
+	
+	
+	
+	
 	
 }

@@ -56,6 +56,11 @@ struct tree_options{
 	max_features =  static_cast<int>(std::sqrt(data.num_features()) + 0.5);
     }
     
+    
+    void adjust_limits_to_data (const rfr::data_container_base<num_type, index_type> &data){
+	max_features = std::min(max_features, data.num_features());
+    }
+    
 };
 
 }//namespace rfr

@@ -37,6 +37,8 @@ class k_ary_split_base{
 	 * \return index_type index of the child into which this feature falls
 	 */
 	virtual index_type operator() (num_type *feature_vector) = 0;
+	
+	virtual void print_info() = 0;
 };
 
 

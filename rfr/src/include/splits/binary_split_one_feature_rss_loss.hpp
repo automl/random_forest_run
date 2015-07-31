@@ -40,7 +40,6 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 									std::vector<index_type> & indices,
 									std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it){
 		
-		print_vector(indices);
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
 		
@@ -79,8 +78,8 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 		}
 		split_indices_it[0] = indices.begin();
 		split_indices_it[2] = indices.end();
-		//std::sort(++split_criterion.begin(), split_criterion.end());
-		//split_criterion.shrink_to_fit();
+		std::sort(++split_criterion.begin(), split_criterion.end());
+		split_criterion.shrink_to_fit();
 		return(best_loss);
 	}
 
@@ -294,6 +293,17 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 		return(best_loss);
 	}
 
+
+	virtual void print_info(){
+		if (split_criterion[0] == 0)
+			std::cout<<"split: f_"<<feature_index<<" < "<<split_criterion[1]<<"\n";
+		else{
+			std::cout<<"split: f_"<<feature_index<<" in {";
+			for (auto i = 1; i < split_criterion.size(); i++)
+				std::cout<<split_criterion[i]<<", ";
+			std::cout<<"\b\b}\n";
+		}
+	}
 	std::vector<num_type> get_split_criterion(){return(split_criterion);}
 
 };

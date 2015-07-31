@@ -61,19 +61,9 @@ class k_ary_node{
 		std::array<typename std::vector<index_type>::iterator, k+1> split_indices_it;
 		split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it);
 	
-		std::cout<<"children.size() = "<<children.size() <<"\n";
-		
 		// create an empty node, and a tmp node for each child
 		for (index_type i = 0; i < k; i++){
-			//print_vector(tmp_node.data_indices);
-			std::cout<<"node_index =  "<<tmp_node.node_index<<"\n";
-			std::cout<<"node_level = "<<tmp_node.node_level+1<<"\n";
-			std::cout <<"split_index = "<< (*split_indices_it[i])<<"\n";
-			
-			std::cout<<"setting up child["<<i<<"]\n";
-
 			tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
-			
 			children[i] = num_nodes + i;
 		}	
 	}
@@ -106,7 +96,7 @@ class k_ary_node{
 	
 	void print_info(){
 		if (is_leaf){
-			std::cout<<"status: leaf\nindices:\n";
+			std::cout<<"status: leaf\nindices: ";
 			rfr::print_vector(data_indices);
 		}
 		else{
@@ -117,6 +107,27 @@ class k_ary_node{
 			std::cout<<std::endl;
 		}
 	}
+	
+	
+		
+	void print_info(const rfr::data_container_base<num_type, index_type> &data){
+		if (is_leaf){
+			std::cout<<"status: leaf\nindices: ";
+			for (auto i=0; i< data_indices.size(); i++){
+				std::cout<<data_indices[i]<<"("<< data.response(data_indices[i]) <<") ";
+			}
+			std::cout<<std::endl;
+		}
+		else{
+			std::cout<<"status: internal node\n";
+			split.print_info();
+			std::cout<<"children: ";
+			for (auto i=0; i < k; i++)
+				std::cout<<children[i]<<" ";
+			std::cout<<std::endl;
+		}
+	}
+	
 	
 	
 };

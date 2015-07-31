@@ -21,11 +21,13 @@ template <const int k,typename split_type, typename RNG_type, typename num_type 
 class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
   private:
 	std::vector< rfr::k_ary_node<k, split_type, num_type, index_type> > the_nodes;
+	index_type num_leafs;
+	index_type actual_depth;
 	RNG_type *rng;
 	
   public:
   
-	k_ary_random_tree(RNG_type *rng_p): rng(rng_p) {}
+	k_ary_random_tree(RNG_type *rng_p): rng(rng_p), num_leafs(0), the_nodes(), actual_depth(0) {}
   
 	/** \brief fits a randomized decision tree to the data
 	 * 
@@ -37,7 +39,9 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 */
 	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
-					 const rfr::tree_options<num_type, index_type> tree_opts){
+					 rfr::tree_options<num_type, index_type> tree_opts){
+	    
+	    tree_opts.adjust_limits_to_data(data);
 	    
 	    // storage for all the temporary nodes
 	    std::deque<temporary_node<num_type, index_type> > tmp_nodes;
@@ -71,7 +75,7 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		{
 		    num_type ref = data.response(tmp_nodes.front().data_indices[0]);
 		    
-		    for(auto it = ++tmp_nodes.front().data_indices.begin(); it!= tmp_nodes.front().data_indices.begin(); it++){
+		    for(auto it = ++tmp_nodes.front().data_indices.begin(); it!= tmp_nodes.front().data_indices.end(); it++){
 				if (abs(data.response(*it)- ref) > tree_opts.epsilon_purity){
 					is_not_pure = true;
 					break;
@@ -119,15 +123,19 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 			    tmp_nodes.pop_back();
 			// and make this node a leaf
 			the_nodes[tmp_nodes.front().node_index].make_leaf_node(tmp_nodes.front());
+			actual_depth = std::max(actual_depth, tmp_nodes.front().node_level);
+			num_leafs++;
 		    }
 		}
 		// if it is not 'splitworthy', just turn it into a leaf
 		else{
 		    the_nodes[tmp_nodes.front().node_index].make_leaf_node(tmp_nodes.front());
+		    actual_depth = std::max(actual_depth, tmp_nodes.front().node_level);
+		    num_leafs++;
 		}
-		//
 		tmp_nodes.pop_front();
 	    }
+	    the_nodes.shrink_to_fit();
 	}
 
 	/** \brief member function to predict the response value for a single feature vector
@@ -152,9 +160,22 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	}
 	
 	
-	void print_info(){
-	    for (auto n : the_nodes){
-		n.print_info();
+	virtual index_type number_of_nodes() {return(the_nodes.size());}
+	virtual index_type number_of_leafs() {return(num_leafs);}
+	virtual index_type depth() {return(actual_depth);}
+	
+	
+	
+	
+	void print_info(const rfr::data_container_base<num_type, index_type> &data){
+	    
+	    std::cout<<"number of nodes ="<<number_of_nodes()<<"\n";
+	    std::cout<<"number of leafes="<<number_of_leafs()<<"\n";
+	    std::cout<<"      depth     ="<<depth()<<"\n";
+	    
+	    for (auto i = 0; i< the_nodes.size(); i++){
+		std::cout<<"=========================\nnode "<<i<<"\n";
+		the_nodes[i].print_info(data);
 	    }
 	}
 
