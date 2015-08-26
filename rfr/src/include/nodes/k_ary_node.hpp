@@ -4,6 +4,8 @@
 #include <vector>
 #include <deque>
 #include <array>
+#include <sstream>
+
 
 #include "data_containers/data_container_base.hpp"
 #include "data_containers/data_container_utils.hpp"
@@ -11,6 +13,7 @@
 
 
 #include <iostream>
+
 
 
 
@@ -42,7 +45,7 @@ class k_ary_node{
   
 	/** \brief If the temporary node should be split further, this member turns this node into an internal node.
 	*
-	* TODO: Think about taking to iterators for the features to try, so that copying can be avoided 
+	* TODO: Think about taking two iterators for the features to try, so that copying can be avoided 
 	* 
 	* \param tmp_node a temporary_node struct containing all the important information. It is not changed in this function.
 	* \param data a refernce to the data object that is used
@@ -64,6 +67,9 @@ class k_ary_node{
 		// create an empty node, and a tmp node for each child
 		for (index_type i = 0; i < k; i++){
 			tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
+			std::cout<<"..............................\n";
+			tmp_nodes.back().print_info();
+			std::cout<<"..............................\n";
 			children[i] = num_nodes + i;
 		}	
 	}
@@ -93,6 +99,9 @@ class k_ary_node{
 	
 	bool is_a_leaf(){return(is_leaf);}
 	index_type parent() {return(parent_index);}
+	std::array<index_type, k> get_children() {return(children);}
+	
+	
 	
 	void print_info(){
 		if (is_leaf){
@@ -108,8 +117,6 @@ class k_ary_node{
 		}
 	}
 	
-	
-		
 	void print_info(const rfr::data_container_base<num_type, index_type> &data){
 		if (is_leaf){
 			std::cout<<"status: leaf\nindices: ";
@@ -128,8 +135,23 @@ class k_ary_node{
 		}
 	}
 	
-	
-	
+	std::string latex_representation( int my_index){
+		std::stringstream str;
+			
+		if (is_leaf){
+			str << "node [rectangle] { index = " << my_index << "\\\\";			
+			for (auto tmp : data_indices){
+				str << tmp << "\\\\";
+			}
+			str << "\b\b}";
+			
+		}
+		else{
+			str << "node [circle split] { index = " << my_index << "\\nodepart{lower} {";
+			str << split.latex_representation() << "}}";
+		}
+		return(str.str());
+	}
 };
 
 

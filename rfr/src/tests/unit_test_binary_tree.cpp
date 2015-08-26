@@ -43,7 +43,8 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
     data.read_response_file(filename);
 
 
-	
+    data.set_type_of_feature(1, 3);
+    
     rfr::tree_options<my_num_type, my_index_type> tree_opts;
 	
 	
@@ -52,11 +53,13 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	
     rng_type rng_engine;
 
-
-    tree_type the_tree(&rng_engine);
-	
-    the_tree.fit(data, tree_opts);
-    the_tree.print_info(data);
+    for (auto i = 0; i <1; i++){
+	tree_type the_tree(&rng_engine);
+	the_tree.fit(data, tree_opts);
+	//the_tree.print_info(data);
+	std::cout<<"\n\n\n";
+	std::cout<<the_tree.latex_representation();
+    }
 	
 	
 	

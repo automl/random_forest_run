@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <array>
+#include <string>
 #include "data_containers/data_container_base.hpp"
 
 
@@ -39,6 +40,8 @@ class k_ary_split_base{
 	virtual index_type operator() (num_type *feature_vector) = 0;
 	
 	virtual void print_info() = 0;
+	
+	virtual std::string latex_representation () = 0;
 };
 
 

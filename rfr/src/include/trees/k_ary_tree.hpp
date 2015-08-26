@@ -3,9 +3,13 @@
 
 #include<vector>
 #include<deque>
+#include<stack>
+#include<utility>	// std::pair
 #include<algorithm>	// std::shuffle
 #include<numeric>	// std::iota
 #include<cmath>		// abs
+#include<iterator>	// std::advance
+#include<sstream>
 
 
 #include "data_containers/data_container_base.hpp"
@@ -103,21 +107,20 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 
 		    // Now, we have to check whether the split was legal
 		    bool illegal_split = false;
-		    //typename std::deque<temporary_node<num_type, index_type> >::iterator
+
 		    auto tmp_it = tmp_nodes.end();
-		    for (auto i=0; i<k;i++)
-			tmp_it--;
+		    std::advance(tmp_it, -k);
 		    
 		    for (; tmp_it != tmp_nodes.end(); tmp_it++){
-			
+			std::cout<<"num_points in child: "<<(*tmp_it).data_indices.size()<<"\n";
 			if ( (*tmp_it).data_indices.size() < tree_opts.min_samples_in_leaf){
 			    illegal_split = true;
 			    break;
 			}
 		    }
-		    // in case it was...
+		    // in case it wasn't ...
 		    if (illegal_split){
-			
+			std::cout<<"illegal split\n";
 			// we have to delete the k new temporary nodes
 			for (auto i = 0; i<k; i++)
 			    tmp_nodes.pop_back();
@@ -133,6 +136,9 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		    actual_depth = std::max(actual_depth, tmp_nodes.front().node_level);
 		    num_leafs++;
 		}
+		std::cout<<"===========================================\n";
+		the_nodes[tmp_nodes.front().node_index].print_info(data);
+		std::cout<<"===========================================\n";
 		tmp_nodes.pop_front();
 	    }
 	    the_nodes.shrink_to_fit();
@@ -149,7 +155,7 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	}
 	
 	
-	/** \brief member function to predict the response values for a batch of  feature vectors stored in a data container
+	/** \brief member function to predict the response values for a batch of feature vectors stored in a data container
 	 * 
 	 * \param data a filled data container. For the prediction the (possibly empty) response values are ignored.
 	 * 
@@ -167,6 +173,7 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	
 	
 	
+	
 	void print_info(const rfr::data_container_base<num_type, index_type> &data){
 	    
 	    std::cout<<"number of nodes ="<<number_of_nodes()<<"\n";
@@ -177,6 +184,48 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		std::cout<<"=========================\nnode "<<i<<"\n";
 		the_nodes[i].print_info(data);
 	    }
+	}
+	
+	virtual std::string latex_representation(){
+	    std::stringstream str;
+	    
+	    std::stack <typename std::pair<std::array<index_type, k>, index_type> > stack;
+	    
+	    // the root is somewhat special
+	    
+
+
+	    if (!the_nodes[0].is_a_leaf()){
+		
+		stack.emplace(typename std::pair<std::array<index_type, k>, index_type> (the_nodes[0].get_children(), 0));
+	    }
+	    
+	    
+	    
+	    while (!stack.empty()){
+		
+		if (stack.top().second == k){
+		    stack.pop();
+		    for (auto i=0; i<stack.size(); i++) str << "\t";
+		    str << "}\n";
+		}
+		else{
+		    auto current_index = stack.top().first[stack.top().second++];
+		    
+		    for (auto i=0; i<stack.size(); i++) str << "\t";
+		    str << "child{" << the_nodes[current_index].latex_representation(current_index);
+		    
+		    if (the_nodes[current_index].is_a_leaf()){
+
+			str << "}\n";
+		    }
+		    else{
+			str << "\n";
+			stack.emplace(typename std::pair<std::array<index_type, k>, index_type> (the_nodes[current_index].get_children(), 0));
+		    }
+		}
+	    }
+	    return(str.str());
 	}
 
 };
