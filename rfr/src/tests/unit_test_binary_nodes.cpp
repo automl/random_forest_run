@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 
 	node_type root_node1;
 	
-	root_node1.make_leaf_node(tmp_node1);
+	root_node1.make_leaf_node(tmp_node1, data);
 	root_node1.print_info();
 	
 	
@@ -75,11 +75,11 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 	tmp_nodes.pop_front();
 	
 	nodes.emplace_back();
-	nodes[1].make_leaf_node(tmp_nodes[0]);
+	nodes[1].make_leaf_node(tmp_nodes[0], data);
 	tmp_nodes.pop_front();
 	
 	nodes.emplace_back();
-	nodes[2].make_leaf_node(tmp_nodes[0]);	
+	nodes[2].make_leaf_node(tmp_nodes[0], data);	
 	tmp_nodes.pop_front();
 	
 	std::cout<<"\n\n Let's see:\n";

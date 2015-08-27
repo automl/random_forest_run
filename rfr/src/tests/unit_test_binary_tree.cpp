@@ -53,12 +53,13 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	
     rng_type rng_engine;
 
-    for (auto i = 0; i <1; i++){
+    for (auto i = 0; i <4; i++){
 	tree_type the_tree(&rng_engine);
 	the_tree.fit(data, tree_opts);
-	//the_tree.print_info(data);
-	std::cout<<"\n\n\n";
-	std::cout<<the_tree.latex_representation();
+	
+	char filename[100];
+	sprintf(filename, "/tmp/tree_%i.tex", i);
+	the_tree.save_latex_representation(filename);
     }
 	
 	

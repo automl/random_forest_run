@@ -19,15 +19,12 @@
 
 namespace rfr{
 
-
-
 /** \brief The node class for regular k-ary trees.
  * 
  * In a regular k-ary tree, every node has either zero (a leaf) or exactly k-children (an internal node).
  * In this case, one can try to gain some speed by replacing variable length std::vectors by std::arrays.
  * 
  */
-
 template <int k, typename split_type, typename num_type = float, typename index_type = unsigned int>
 class k_ary_node{
   private:
@@ -35,7 +32,7 @@ class k_ary_node{
 	bool is_leaf;
 
 	// for leaf nodes
-	std::vector<index_type> data_indices;
+	std::vector<num_type> response_values;
 
 	// for internal_nodes
 	std::array<index_type, k> children;
@@ -60,6 +57,7 @@ class k_ary_node{
 							index_type num_nodes,
 							std::deque<rfr::temporary_node<num_type, index_type> > &tmp_nodes){
 		is_leaf = false;
+		response_values.clear();
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<index_type>::iterator, k+1> split_indices_it;
 		split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it);
@@ -67,9 +65,6 @@ class k_ary_node{
 		// create an empty node, and a tmp node for each child
 		for (index_type i = 0; i < k; i++){
 			tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
-			std::cout<<"..............................\n";
-			tmp_nodes.back().print_info();
-			std::cout<<"..............................\n";
 			children[i] = num_nodes + i;
 		}	
 	}
@@ -80,33 +75,63 @@ class k_ary_node{
 	* \param tmp_node the internal representation for a temporary node. Node that the tmp_node instance is no longer valid after this function has been called!!
 	*
 	*/
-	void make_leaf_node(rfr::temporary_node<num_type, index_type> &tmp_node){
+	void make_leaf_node(rfr::temporary_node<num_type, index_type> &tmp_node,
+						const rfr::data_container_base<num_type, index_type> &data){
 		is_leaf = true;
 		parent_index = tmp_node.parent_index;
-		data_indices.swap(tmp_node.data_indices);
+		
+		response_values.resize(tmp_node.data_indices.size());
+		for (auto i = 0; i < tmp_node.data_indices.size(); i++){
+			response_values[i] = data.response(tmp_node.data_indices[i]);
+		}
+		std::sort(response_values.begin(), response_values.end());
 	}	
+
 	
 	/** \brief Member that returns the index of the child into which the provided sample falls
 	 * 
 	 * \param sample a feature vector of the appropriate size (not checked!)
 	 *
-	 * \return index of the child
+	 * \return index_type index of the child
 	 */
-	index_type falls_into_child(double * sample){
+	index_type falls_into_child(num_type * sample){
+		// could be removed if performance issues arise here, but that's not very likely
+		if (is_leaf)
+			return(std::numeric_limits<index_type>::quiet_NaN());
 		return(children[split(sample)]);
 	}
 	
-	
+
+	/** \brief calculate the mean of all response values in this leaf
+	 *
+	 * \return num_type the mean, or NaN if the node is not a leaf
+	 */
+	num_type mean(){
+		if (! is_leaf)
+			return(std::numeric_limits<num_type>::quiet_NaN());
+		
+		num_type m = 0;
+		for (auto v : response_values)
+			m += v;
+		return(m);
+	}
+
+
+	/** \brief to test whether this node is a leaf */
 	bool is_a_leaf(){return(is_leaf);}
+	/** \brief get nodes parent index */
 	index_type parent() {return(parent_index);}
+	/** \brief get indices of all children*/
 	std::array<index_type, k> get_children() {return(children);}
-	
-	
-	
+	/** \brief get reference to the response values*/	
+	const std::vector<num_type> & responses(){ return(response_values);}
+
+
+	/** \brief prints out some basic information abouth the node*/
 	void print_info(){
 		if (is_leaf){
-			std::cout<<"status: leaf\nindices: ";
-			rfr::print_vector(data_indices);
+			std::cout<<"status: leaf\nresponse values: ";
+			rfr::print_vector(response_values);
 		}
 		else{
 			std::cout<<"status: internal node\n";
@@ -116,39 +141,24 @@ class k_ary_node{
 			std::cout<<std::endl;
 		}
 	}
-	
-	void print_info(const rfr::data_container_base<num_type, index_type> &data){
-		if (is_leaf){
-			std::cout<<"status: leaf\nindices: ";
-			for (auto i=0; i< data_indices.size(); i++){
-				std::cout<<data_indices[i]<<"("<< data.response(data_indices[i]) <<") ";
-			}
-			std::cout<<std::endl;
-		}
-		else{
-			std::cout<<"status: internal node\n";
-			split.print_info();
-			std::cout<<"children: ";
-			for (auto i=0; i < k; i++)
-				std::cout<<children[i]<<" ";
-			std::cout<<std::endl;
-		}
-	}
-	
+
+
+	/** \brief generates a label for the node to be used in the LaTeX visualization*/
 	std::string latex_representation( int my_index){
 		std::stringstream str;
 			
 		if (is_leaf){
-			str << "node [rectangle] { index = " << my_index << "\\\\";			
-			for (auto tmp : data_indices){
-				str << tmp << "\\\\";
+			str << "{i = " << my_index << ": \\begin{tiny}"<<response_values[0];			
+			for (auto i=1; i<response_values.size(); i++){
+				str << "," << response_values[i];
 			}
-			str << "\b\b}";
+			str << "\\end{tiny}}";
 			
 		}
 		else{
-			str << "node [circle split] { index = " << my_index << "\\nodepart{lower} {";
-			str << split.latex_representation() << "}}";
+			str << "{ i = " << my_index << "\\nodepart{two} {";
+			str << split.latex_representation() << "}},rectangle split,rectangle split parts=2,draw";
+			
 		}
 		return(str.str());
 	}

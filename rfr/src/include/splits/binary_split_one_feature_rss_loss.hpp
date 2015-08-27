@@ -70,8 +70,6 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 				loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy);
 			}
 			// check if this split is the best so far
-			std::cout<<"This split on f_"<<fi<<" has loss "<<loss<<"\n";
-			rfr::print_vector(split_criterion_copy);
 			if (loss < best_loss){
 				best_loss = loss;
 				feature_index = fi;
@@ -195,18 +193,6 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 									std::vector<index_type> &indices_copy,
 									typename std::vector<index_type>::iterator &split_indices_it_copy){
 
-		rfr::print_vector(indices_copy);
-		
-		for (auto tmp: indices_copy){
-			std::cout<<data.response(tmp)<<" ";
-		}
-		std::cout<<"\n";
-
-		for (auto tmp: indices_copy){
-			std::cout<<data.feature(fi, tmp)<<" ";
-		}
-		std::cout<<"\n";
-		
 		// auxiliary variables
 		std::vector<index_type> category_ranking(num_categories);
 		std::iota(category_ranking.begin(), category_ranking.end(),0);
@@ -231,12 +217,9 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 		auto empty_categories_it = std::partition(category_ranking.begin(), category_ranking.end(),
 						[&](index_type a){return(N_points_in_category[a] > 0);});
 		
-		rfr::print_vector(category_ranking);
-
 		// sort the categories by their individual mean. only consider the ones with actual specimen here
 		std::sort(	category_ranking.begin(), empty_categories_it,
 					[&](index_type a, index_type b){return ( (S_y[a]/N_points_in_category[a]) < (S_y[b]/N_points_in_category[b]) );});		// C++11 lambda function, how exciting :)
-
 
 		//more auxiliary variables
 		num_type S_y_left = 0, S_y2_left = 0, N_left = 0;
@@ -257,17 +240,16 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 			N_right    += N_points_in_category[*it1];
 		}
 
-
 		// it can happen that the node is not pure wrt the response, but the
 		// feature at hand takes only one value in this node. By setting the
 		// best_loss to the largest possible value, this split will not be chosen.
 		// It also yields 
+		
 		if ( (N_right == 0) || (N_left == 0) )
 			best_loss = std::numeric_limits<num_type>::max();
 		else
 			best_loss = (S_y2_right - (S_y_right*S_y_right)/N_right)
 							+ (S_y2_left - (S_y_left*S_y_left)/N_left);
-
 
 		// now move one category at a time to the left child and recompute the loss
 		for (auto it1 = it_best_split; it1 != empty_categories_it; it1++){
@@ -285,7 +267,6 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 			// keep the best split
 			if (current_loss < best_loss){
 				best_loss = current_loss;
-				std::cout<<"would split "<<N_left<<"/"<<N_right<<"\n";
 				it_best_split = it1;
 				it_best_split++;
 			}
@@ -308,13 +289,11 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 			}
 		}
 
-		//rearrange indices according to their category and in which leaf they go
+		// rearrange indices according to their category and in which leaf they go
 		// std::partition is again exactly what we need here :)
 		split_indices_it_copy = std::partition( 
 					indices_copy.begin(), indices_copy.end(),
-					[&](size_t i){return(std::find(++split_criterion_copy.begin(), split_criterion_copy.end(), data.feature(fi, i)) == split_criterion_copy.end());});
-		rfr::print_vector(indices_copy);
-		std::cout<<"would split at index "<<*split_indices_it_copy<<"\n";
+					[&](size_t i){return(std::find(++split_criterion_copy.begin(), split_criterion_copy.end(), data.feature(fi, i)) != split_criterion_copy.end());});
 		return(best_loss);
 	}
 
@@ -329,18 +308,21 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 			std::cout<<"\b\b}\n";
 		}
 	}
-	
+	/** \brief member function to create a string representing the split criterion
+	 * 
+	 * \return std::string a label that characterizes the split
+	 */	
 	virtual std::string latex_representation(){
 		std::stringstream str;
 		if (split_criterion[0] == 0){
-			str << "split: $f_" << feature_index << " <= " << split_criterion[1] << "$";
+			str << "$f_" << feature_index << "<=" << split_criterion[1] << "$";
 		}
 		else{
-			str << "split: $f_" << feature_index << " \\in \\{";
-			for (auto i = 1; i < split_criterion.size(); i++){
-				str << split_criterion[i] << ", ";
+			str << "$f_" << feature_index << " \\in \\{"<< split_criterion[1];
+			for (auto i = 2; i < split_criterion.size(); i++){
+				str<<","<<split_criterion[i];
 			}
-			str << "\b\b\\}$";
+			str << "\\}$";
 		}
 		return(str.str());
 	}
