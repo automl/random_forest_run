@@ -6,11 +6,21 @@ set (RFR_VERSION_MAJOR 0)
 set (RFR_VERSION_MINOR 1)
 
 
+IF(NOT CMAKE_BUILD_TYPE)
+ SET(CMAKE_BUILD_TYPE "DEBUG")
+ #SET(CMAKE_BUILD_TYPE "RELEASE")
+ #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
+ #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
+ENDIF()
+
+
+
 enable_testing()
 
 
 # required libaries
-find_package(Boost COMPONENTS unit_test_framework REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework python3 REQUIRED)
+find_package(PythonLibs 3)
 find_package(Doxygen)
 
 
@@ -72,3 +82,12 @@ target_link_libraries(ut_binary_trees ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_test (UTBinaryTrees ut_binary_trees "${PROJECT_SOURCE_DIR}/test_data_sets/")
 set_tests_properties (UTBinaryTrees PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+
+
+
+IF(CMAKE_COMPILER_IS_GNUCXX)
+  ADD_DEFINITIONS("-Wall -fPIC")
+  #ADD_DEFINITIONS("-fPIC")
+ ELSE()
+  MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
+ENDIF()
