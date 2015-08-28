@@ -20,7 +20,7 @@ class tree_base{
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 */
 	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
-			 const rfr::tree_options<num_type, index_type> tree_opts) = 0;
+			 rfr::tree_options<num_type, index_type> tree_opts) = 0;
 
 	/** \brief member function to predict the response value for a single feature vector
 	 * 
@@ -37,7 +37,7 @@ class tree_base{
 	 * 
 	 * \return std::vector<num_type> the predictions for all points in a vector.
 	 */	
-	virtual std::vector<num_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
+	//virtual std::vector<num_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
 	
 	
 	

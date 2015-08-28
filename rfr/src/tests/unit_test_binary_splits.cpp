@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	// test the () operator for the trainings data
 	std::vector<bool> operator_test = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	
-	for (auto i=0; i<operator_test.size(); i++){
+	for (size_t i=0; i<operator_test.size(); i++){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
 		BOOST_REQUIRE(split1(tmp_feature_vector) == operator_test[i]);
 	}
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	// test the () operator for the trainings data
 	std::vector<bool> operator_test = {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	
-	for (auto i=0; i<operator_test.size(); i++){
+	for (size_t i=0; i<operator_test.size(); i++){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
 		BOOST_REQUIRE(split2(tmp_feature_vector) == operator_test[i]);
 	}

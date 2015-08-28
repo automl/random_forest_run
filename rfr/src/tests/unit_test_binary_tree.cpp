@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	the_tree.save_latex_representation(filename);
     }
 	
-	
+
 	
 	
 	

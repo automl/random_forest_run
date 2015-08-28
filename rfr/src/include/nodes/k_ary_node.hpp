@@ -6,15 +6,11 @@
 #include <array>
 #include <sstream>
 
-
 #include "data_containers/data_container_base.hpp"
 #include "data_containers/data_container_utils.hpp"
 #include "nodes/temporary_node.hpp"
 
-
 #include <iostream>
-
-
 
 
 namespace rfr{
@@ -69,7 +65,7 @@ class k_ary_node{
 		}	
 	}
 	
-	/** \brief Member function that turns this node into a leaf node based on a temporary node.
+	/** \brief  turns this node into a leaf node based on a temporary node.
 	*
 	*
 	* \param tmp_node the internal representation for a temporary node. Node that the tmp_node instance is no longer valid after this function has been called!!
@@ -81,14 +77,14 @@ class k_ary_node{
 		parent_index = tmp_node.parent_index;
 		
 		response_values.resize(tmp_node.data_indices.size());
-		for (auto i = 0; i < tmp_node.data_indices.size(); i++){
+		for (size_t i = 0; i < tmp_node.data_indices.size(); i++){
 			response_values[i] = data.response(tmp_node.data_indices[i]);
 		}
 		std::sort(response_values.begin(), response_values.end());
 	}	
 
 	
-	/** \brief Member that returns the index of the child into which the provided sample falls
+	/** \brief returns the index of the child into which the provided sample falls
 	 * 
 	 * \param sample a feature vector of the appropriate size (not checked!)
 	 *
@@ -111,15 +107,16 @@ class k_ary_node{
 			return(std::numeric_limits<num_type>::quiet_NaN());
 		
 		num_type m = 0;
-		for (auto v : response_values)
+		for (auto v : response_values){
 			m += v;
-		return(m);
+		}
+		return(m/((num_type) response_values.size()));
 	}
 
 
 	/** \brief to test whether this node is a leaf */
 	bool is_a_leaf(){return(is_leaf);}
-	/** \brief get nodes parent index */
+	/** \brief get the index of the node's parent */
 	index_type parent() {return(parent_index);}
 	/** \brief get indices of all children*/
 	std::array<index_type, k> get_children() {return(children);}
@@ -149,7 +146,7 @@ class k_ary_node{
 			
 		if (is_leaf){
 			str << "{i = " << my_index << ": \\begin{tiny}"<<response_values[0];			
-			for (auto i=1; i<response_values.size(); i++){
+			for (size_t i=1; i<response_values.size(); i++){
 				str << "," << response_values[i];
 			}
 			str << "\\end{tiny}}";

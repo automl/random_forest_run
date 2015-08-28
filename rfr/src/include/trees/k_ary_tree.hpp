@@ -31,9 +31,19 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	
   public:
 
-	k_ary_random_tree(RNG_type *rng_p): rng(rng_p), num_leafs(0), the_nodes(), actual_depth(0) {}
+	k_ary_random_tree(RNG_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
 
-	/** \brief fits a randomized decision tree to the data
+
+	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
+			 rfr::tree_options<num_type, index_type> tree_opts){
+
+		std::vector<index_type> data_indices(data.num_data_points());
+		std::iota(data_indices.begin(), data_indices.end(), 0);
+		fit(data, tree_opts, data_indices);
+	}
+
+
+	/** \brief fits a randomized decision tree to a subset of the data
 	 * 
 	 * At each node, if it is 'splitworthy', a random subset of all features is considered for the
 	 * split. Depending on the split_type provided, greedy or randomized choices can be
@@ -41,9 +51,11 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	 * 
 	 * \param data the container holding the training data
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
+	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
 	 */
 	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
-									 rfr::tree_options<num_type, index_type> tree_opts){
+			 rfr::tree_options<num_type, index_type> tree_opts,
+			 std::vector<index_type> &data_indices){
 		
 		tree_opts.adjust_limits_to_data(data);
 		
@@ -54,14 +66,8 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		std::iota(feature_indices.begin(), feature_indices.end(), 0);
 		
 		// add the root to the temporary nodes to get things started
-		{
-			// Create a temporary vector with all the indices.
-			// It is copied inside the temorary_node constructor, so
-			// we can discard it afterwards -> runs out of scope at the "}"
-			std::vector<index_type> data_indices(data.num_data_points());
-			std::iota(data_indices.begin(), data_indices.end(), 0);
-			tmp_nodes.emplace_back(0, 0, 0, data_indices.begin(), data_indices.end());
-		}
+		tmp_nodes.emplace_back(0, 0, 0, data_indices.begin(), data_indices.end());
+	
 		
 		// as long as there are potentially splittable nodes
 		while (!tmp_nodes.empty()){
@@ -155,8 +161,8 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	 * 
 	 * \return num_type the prediction of the response value (usually the mean of all responses in the corresponding leaf)
 	 */
-	virtual num_type predict_mean (num_type *feature_vector){
-		find_leaf(feature_vector);
+	virtual num_type predict (num_type *feature_vector){
+		index_type node_index = find_leaf(feature_vector);
 		return(the_nodes[node_index].mean());
 	}
 	
@@ -203,13 +209,13 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		while (!stack.empty()){
 			if (stack.top().second == k){
 				stack.pop();
-				for (auto i=0; i<stack.size(); i++) str << "\t";
+				for (size_t i=0; i<stack.size(); i++) str << "\t";
 				str << "]\n";
 			}
 			else{
 				auto current_index = stack.top().first[stack.top().second++];
 				    
-				for (auto i=0; i<stack.size(); i++) str << "\t";
+				for (size_t i=0; i<stack.size(); i++) str << "\t";
 				str << "[" << the_nodes[current_index].latex_representation(current_index);
 				    
 				if (the_nodes[current_index].is_a_leaf())

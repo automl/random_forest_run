@@ -303,7 +303,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 			std::cout<<"split: f_"<<feature_index<<" <= "<<split_criterion[1]<<"\n";
 		else{
 			std::cout<<"split: f_"<<feature_index<<" in {";
-			for (auto i = 1; i < split_criterion.size(); i++)
+			for (size_t i = 1; i < split_criterion.size(); i++)
 				std::cout<<split_criterion[i]<<", ";
 			std::cout<<"\b\b}\n";
 		}
@@ -319,7 +319,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 		}
 		else{
 			str << "$f_" << feature_index << " \\in \\{"<< split_criterion[1];
-			for (auto i = 2; i < split_criterion.size(); i++){
+			for (size_t i = 2; i < split_criterion.size(); i++){
 				str<<","<<split_criterion[i];
 			}
 			str << "\\}$";
