@@ -8,6 +8,7 @@
 #include <numeric>
 #include <vector>
 #include <array>
+#include <random>
 
 #include <boost/test/unit_test.hpp>
 
@@ -16,6 +17,8 @@
 
 typedef float num_type;
 typedef unsigned int index_type;
+typedef std::default_random_engine rng_type;
+typedef rfr::binary_split_one_feature_rss_loss<rng_type, num_type, index_type> split_type;
 typedef rfr::mostly_contiuous_data<num_type, index_type> data_container_type;
 
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
@@ -24,6 +27,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	
 	// read the test dataset
 	data_container_type data;
+	
 	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
     strcat(filename, "toy_data_set_features.csv");
     data.read_feature_file(filename);
@@ -39,8 +43,10 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	std::array<std::vector<index_type>::iterator, 3>indices_split_it;
 	std::vector<index_type> features_to_try(1,0);
 
-	rfr::binary_split_one_feature_rss_loss<num_type, index_type> split1;
-	num_type loss = split1.find_best_split(data, features_to_try, indices, indices_split_it);
+	rng_type rng;
+
+	split_type split1;
+	num_type loss = split1.find_best_split(data, features_to_try, indices, indices_split_it, rng);
 
 	// actual loss independently computed in python
 	BOOST_REQUIRE_CLOSE(loss, 23.33333333, 1e-4);
@@ -77,6 +83,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
     data.read_response_file(filename);
 	
 	data.set_type_of_feature(1,10);
+	rng_type rng;
 
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
@@ -84,8 +91,8 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	std::array<std::vector<index_type>::iterator, 3>indices_split_it;
 	std::vector<index_type> features_to_try(1,1);
 
-	rfr::binary_split_one_feature_rss_loss<num_type, index_type>split2;
-	num_type loss = split2.find_best_split(data, features_to_try, indices, indices_split_it);
+	split_type split2;
+	num_type loss = split2.find_best_split(data, features_to_try, indices, indices_split_it, rng);
 
 	// actual best split and loss independently computed in python
 	BOOST_REQUIRE_CLOSE(loss, 88.57142857, 1e-4);
@@ -126,6 +133,8 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	
 	data.set_type_of_feature(1,10);
 
+	rng_type rng;
+
 	std::vector<index_type> indices(data.num_data_points());
 	std::iota(indices.begin(), indices.end(), 0);
 
@@ -133,8 +142,8 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	std::vector<index_type> features_to_try({1,0});
 
 
-	rfr::binary_split_one_feature_rss_loss<num_type, index_type>split3;
-	num_type loss = split3.find_best_split(data, features_to_try, indices, indices_split_it);
+	split_type split3;
+	num_type loss = split3.find_best_split(data, features_to_try, indices, indices_split_it, rng);
 	BOOST_REQUIRE_CLOSE(loss, 23.33333333, 1e-4);
 	std::vector<num_type> split_criterion = split3.get_split_criterion();
 	BOOST_REQUIRE(split_criterion[0] == 0);

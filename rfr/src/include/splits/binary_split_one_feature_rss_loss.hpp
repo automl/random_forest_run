@@ -13,8 +13,8 @@
 namespace rfr{
 
 
-template <typename num_type = float, typename index_type = unsigned int>
-class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type, index_type> {
+template <typename rng_type, typename num_type = float, typename index_type = unsigned int>
+class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type, num_type, index_type> {
   private:
 	
 	index_type feature_index;	//!< split needs to know which feature it uses
@@ -40,7 +40,8 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 	 virtual num_type find_best_split(	const rfr::data_container_base<num_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
-									std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it){
+									std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it,
+									rng_type &rng){
 		
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
@@ -67,7 +68,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 			if (ft > 0){
 				split_criterion_copy.assign(1,ft);
 				// find best split for the current feature_index
-				loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy);
+				loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy, rng);
 			}
 			// check if this split is the best so far
 			if (loss < best_loss){
@@ -191,7 +192,8 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 									const index_type &num_categories,
 									std::vector<num_type> &split_criterion_copy,
 									std::vector<index_type> &indices_copy,
-									typename std::vector<index_type>::iterator &split_indices_it_copy){
+									typename std::vector<index_type>::iterator &split_indices_it_copy,
+									rng_type &rng){
 
 		// auxiliary variables
 		std::vector<index_type> category_ranking(num_categories);
@@ -277,9 +279,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,num_type
 			split_criterion_copy.push_back(*it1+1);	// add a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
 
 		// add unobserved values randomly to the split_set
-		//!<  TODO: consider using one RNG across everything by passing it along.
 		if (empty_categories_it != category_ranking.end()){
-			std::default_random_engine rng;
 			std::bernoulli_distribution dist;
 
 			for (auto it1 = empty_categories_it; it1 != category_ranking.end(); it1++){

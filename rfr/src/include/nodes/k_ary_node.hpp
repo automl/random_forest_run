@@ -22,7 +22,7 @@ namespace rfr{
  * In this case, one can try to gain some speed by replacing variable length std::vectors by std::arrays.
  * 
  */
-template <int k, typename split_type, typename num_type = float, typename index_type = unsigned int>
+template <int k, typename split_type, typename rng_type, typename num_type = float, typename index_type = unsigned int>
 class k_ary_node{
   private:
 	index_type parent_index;
@@ -52,12 +52,13 @@ class k_ary_node{
 							const rfr::data_container_base<num_type, index_type> &data,
 							std::vector<index_type> &features_to_try,
 							index_type num_nodes,
-							std::deque<rfr::temporary_node<num_type, index_type> > &tmp_nodes){
+							std::deque<rfr::temporary_node<num_type, index_type> > &tmp_nodes,
+							rng_type &rng){
 		is_leaf = false;
 		response_values.clear();
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<index_type>::iterator, k+1> split_indices_it;
-		split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it);
+		split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it,rng);
 	
 		// create an empty node, and a tmp node for each child
 		for (index_type i = 0; i < k; i++){

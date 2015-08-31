@@ -14,9 +14,6 @@ typedef std::default_random_engine rng_type;
 typedef double num_type;
 
 
-
-typedef double rng_type;
-
 BOOST_AUTO_TEST_CASE( data_container_tests ){
 	rfr::mostly_contiuous_data<num_type> data;
 

@@ -10,7 +10,7 @@
 
 namespace rfr{
 
-template <const int k, typename num_type = float, typename index_type = unsigned int>
+template <const int k,  typename rng_type, typename num_type = float, typename index_type = unsigned int>
 class k_ary_split_base{
   public:
 	/** \brief member function to find the optimal split for a subset of the data and features
@@ -23,15 +23,17 @@ class k_ary_split_base{
 	 * \param features_to_try a vector with the indices of all the features that can be considered for this split
 	 * \param indices a vector containing the subset of data point indices to be considered (output!)
 	 * \param split_indices_it iterators into indices specifying where to split the data for the children. Number of iterators is k+1, for easier iteration
+	 * \param rng (pseudo) random number generator as a source for stochasticity
 	 * 
 	 * \return float the loss of the found split
 	 */
 	virtual num_type find_best_split(const rfr::data_container_base<num_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
-									std::array<typename std::vector<index_type>::iterator, k+1> &split_indices_it) = 0;
+									std::array<typename std::vector<index_type>::iterator, k+1> &split_indices_it,
+									rng_type &rng) = 0;
 
-	/** \brief operator telling into which child the given feature vector falls
+	/** \brief tells into which child a given feature vector falls
 	 * 
 	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
 	 * 
@@ -39,8 +41,10 @@ class k_ary_split_base{
 	 */
 	virtual index_type operator() (num_type *feature_vector) = 0;
 	
+	/** \brief some debug output that prints a informative representation to std::cout*/
 	virtual void print_info() = 0;
 	
+	/** \brief hopefully all trees can create a LaTeX document as a visualization, this contributes the text of the split.*/
 	virtual std::string latex_representation () = 0;
 };
 

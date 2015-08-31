@@ -21,17 +21,17 @@
 
 namespace rfr{
 
-template <const int k,typename split_type, typename RNG_type, typename num_type = float, typename index_type = unsigned int>
+template <const int k,typename split_type, typename rng_type, typename num_type = float, typename index_type = unsigned int>
 class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
   private:
-	std::vector< rfr::k_ary_node<k, split_type, num_type, index_type> > the_nodes;
+	std::vector< rfr::k_ary_node<k, split_type, rng_type, num_type, index_type> > the_nodes;
 	index_type num_leafs;
 	index_type actual_depth;
-	RNG_type *rng;
+	rng_type *rng;
 	
   public:
 
-	k_ary_random_tree(RNG_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
+	k_ary_random_tree(rng_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
 
 
 	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
@@ -104,7 +104,7 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 				
 				the_nodes[tmp_nodes.front().node_index].make_internal_node(
 						tmp_nodes.front(), data, feature_subset,
-						the_nodes.size(), tmp_nodes);
+						the_nodes.size(), tmp_nodes,*rng);
 				
 
 				// Now, we have to check whether the split was legal
