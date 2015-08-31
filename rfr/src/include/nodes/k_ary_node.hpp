@@ -4,6 +4,7 @@
 #include <vector>
 #include <deque>
 #include <array>
+#include <tuple>
 #include <sstream>
 
 #include "data_containers/data_container_base.hpp"
@@ -112,6 +113,27 @@ class k_ary_node{
 		}
 		return(m/((num_type) response_values.size()));
 	}
+
+
+	std::tuple<num_type, num_type, index_type> mean_variance_N (){
+		if (! is_leaf)
+			return(std::tuple<num_type, num_type, index_type>(	std::numeric_limits<num_type>::quiet_NaN(),
+																std::numeric_limits<num_type>::quiet_NaN(),
+																0));
+		
+		num_type sum = 0;
+		num_type sum_squared = 0;
+		index_type N = response_values.size();
+		for (auto v : response_values){
+			sum += v;
+			sum_squared += v*v;	
+		}
+		return( std::tuple<num_type, num_type, index_type> (sum/N,
+															sum_squared/N - (sum/N)*(sum/N),
+															N));
+	}
+
+
 
 
 	/** \brief to test whether this node is a leaf */

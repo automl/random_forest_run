@@ -9,6 +9,7 @@
 #include <cstring>
 #include <vector>
 #include <deque>
+#include <tuple>
 
 
 
@@ -53,9 +54,6 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 	root_node1.print_info();
 	
 	
-	std::cout<<"done building first node\n";
-
-
 	std::vector<node_type> nodes;
 	nodes.emplace_back();
 	
@@ -79,18 +77,26 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 	tmp_nodes.pop_front();
 	
 	nodes.emplace_back();
-	nodes[2].make_leaf_node(tmp_nodes[0], data);	
+	nodes[2].make_leaf_node(tmp_nodes[0], data);
 	tmp_nodes.pop_front();
 	
-	std::cout<<"\n\n Let's see:\n";
-	
-	
-	for (std::deque<tmp_node_type>::iterator tn =  tmp_nodes.begin(); tn != tmp_nodes.end(); tn++){
-		tn->print_info();
-	}
-	
-	for (auto n: nodes)
-		n.print_info();
-	
-	
+
+	// check calculation of mean and variance
+
+	// first an internal node
+	auto info0 = nodes[0].mean_variance_N();
+	BOOST_CHECK(isnan(std::get<0>(info0)));
+	BOOST_CHECK(isnan(std::get<1>(info0)));
+	BOOST_CHECK(std::get<2>(info0) == 0);
+
+	// now the two leaves:
+	auto info1 = nodes[1].mean_variance_N();
+	BOOST_CHECK_CLOSE(std::get<0>(info1), ((my_num_type) 5)/3, 1e-10);
+	BOOST_CHECK_CLOSE(std::get<1>(info1), ((my_num_type) 2)/9, 1e-10);
+	BOOST_CHECK(std::get<2>(info1) == 60);
+
+	auto info2 = nodes[2].mean_variance_N();
+	BOOST_CHECK_CLOSE(std::get<0>(info2), ((my_num_type) 7)/2, 1e-10);
+	BOOST_CHECK_CLOSE(std::get<1>(info2), ((my_num_type) 1)/4, 1e-10);
+	BOOST_CHECK(std::get<2>(info2) == 40);
 }
