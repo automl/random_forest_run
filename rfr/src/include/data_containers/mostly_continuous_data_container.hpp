@@ -18,22 +18,22 @@ namespace rfr{
  *  In that case it would be wasteful to store the type of every feature separately.
  *  Instead, this data_container only stores the non-continuous ones in a hash-map.
  */
-template<typename num_type = float, typename index_type = unsigned int>
-class mostly_contiuous_data : public rfr::data_container_base<num_type, index_type>{
+template<typename num_type = float, typename response_type = float, typename index_type = unsigned int>
+class mostly_contiuous_data : public rfr::data_container_base<num_type, response_type, index_type>{
   private:
 	std::vector< std::vector<num_type> > feature_values;//!< 2d vector to store the feature values
 	std::vector<num_type> response_values;              //!< the associated responses
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
   public:
-	virtual num_type feature  (int feature_index, int sample_index) const {
+	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
 		return(feature_values.at(feature_index).at(sample_index));
 	}
 
-	virtual num_type response (int sample_index) const{
+	virtual response_type response (index_type sample_index) const{
 		return(response_values[sample_index]);
 	}
 
-	virtual bool add_data_point (num_type* feats, index_type num_elements, num_type &response){
+	virtual bool add_data_point (num_type* feats, index_type num_elements, response_type &response){
 		if (num_features() != num_elements) return(false);
 
 		for (size_t i=0; i<num_elements; i++)

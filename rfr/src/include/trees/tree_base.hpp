@@ -7,7 +7,7 @@
 
 namespace rfr{
 
-template <typename num_type = float, typename index_type = unsigned int>
+template <typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
 class tree_base{
   public:
 	/** \brief member function to fit the tree to the data
@@ -18,17 +18,30 @@ class tree_base{
 	 * 
 	 * \param data the container holding the training data
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
+	 * \param rng a (pseudo) random number generator
 	 */
-	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
-			 rfr::tree_options<num_type, index_type> tree_opts) = 0;
+	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
+			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
+			 rng_type &rng) = 0;
 
-	/** \brief member function to predict the response value for a single feature vector
+	/** \brief predicts the response value for a single feature vector
 	 * 
 	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
 	 * 
 	 * \return num_type the prediction of the response value (usually the mean of all responses in the corresponding leaf)
 	 */
-	virtual num_type predict (num_type *feature_vector) = 0;
+	virtual response_type predict (num_type *feature_vector) = 0;
+	
+	
+	
+	/** \brief returns all response values in the leaf into which the given feature vector falls
+	 * 
+	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
+	 * 
+	 * \return std::vector<response_type> all response values in that leaf
+	 */
+	virtual std::vector<response_type> leaf_entries (num_type *feature_vector) = 0;
+	
 	
 	
 	/** \brief member function to predict the response values for a batch of  feature vectors stored in a data container
@@ -37,13 +50,17 @@ class tree_base{
 	 * 
 	 * \return std::vector<num_type> the predictions for all points in a vector.
 	 */	
-	//virtual std::vector<num_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
+	//virtual std::vector<response_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
 	
 	
 	
 	virtual index_type number_of_nodes() = 0;
 	virtual index_type number_of_leafs() = 0;
 	virtual index_type depth() = 0;
+	
+	/** \brief creates a LaTeX document visualizing the tree*/
+	virtual void save_latex_representation(const char* filename) = 0;
+	
 	
 };
 

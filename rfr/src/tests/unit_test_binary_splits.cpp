@@ -16,10 +16,11 @@
 #include "splits/binary_split_one_feature_rss_loss.hpp"
 
 typedef float num_type;
+typedef float response_type;
 typedef unsigned int index_type;
 typedef std::default_random_engine rng_type;
-typedef rfr::binary_split_one_feature_rss_loss<rng_type, num_type, index_type> split_type;
-typedef rfr::mostly_contiuous_data<num_type, index_type> data_container_type;
+typedef rfr::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type> split_type;
+typedef rfr::mostly_contiuous_data<num_type, response_type, index_type> data_container_type;
 
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	

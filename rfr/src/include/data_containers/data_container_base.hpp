@@ -5,7 +5,7 @@ namespace rfr{
 /** \brief The interface for any data container with the minimal functionality
  *
  */
-template <typename num_type = float, typename index_type = unsigned int>
+template <typename num_type=float, typename response_type=float, typename index_type=unsigned int>
 class data_container_base{
   public:
 	/** \brief member function for accessing a single feature value, consistency checks might be omitted for performance
@@ -15,14 +15,14 @@ class data_container_base{
 	 *
 	 * \return the stored value
 	 */
-	virtual num_type feature (int feature_index, int sample_index) const = 0;
+	virtual num_type feature (index_type feature_index, index_type sample_index) const = 0;
 
 	/** \brief member function to query a single response value, consistency checks might be omitted for performance
 	 *
 	 * \param sample_index the response of which data point
 	 * \return the response value
 	 */
-	virtual num_type response (int sample_index) const = 0;
+	virtual response_type response (index_type sample_index) const = 0;
 
 
 	/** \brief method to add a single data point
@@ -30,10 +30,10 @@ class data_container_base{
 	 * \param features an array containing all the features
 	 * \param num_features length of the array
 	 * \param response The corresponding response value
-	 * \return bool whether the action 
+	 * \return bool whether the action was sucessful
 	 *
 	 */
-	virtual bool add_data_point (num_type* feats, index_type num_elements, num_type &response) = 0;
+	virtual bool add_data_point (num_type* features, index_type num_elements, response_type &response) = 0;
 
 	/** \brief method to retrieve a data point
 	 *

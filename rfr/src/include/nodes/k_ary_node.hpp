@@ -22,14 +22,14 @@ namespace rfr{
  * In this case, one can try to gain some speed by replacing variable length std::vectors by std::arrays.
  * 
  */
-template <int k, typename split_type, typename rng_type, typename num_type = float, typename index_type = unsigned int>
+template <int k, typename split_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
 class k_ary_node{
   private:
 	index_type parent_index;
 	bool is_leaf;
 
 	// for leaf nodes
-	std::vector<num_type> response_values;
+	std::vector<response_type> response_values;
 
 	// for internal_nodes
 	std::array<index_type, k> children;
@@ -39,7 +39,6 @@ class k_ary_node{
   
 	/** \brief If the temporary node should be split further, this member turns this node into an internal node.
 	*
-	* TODO: Think about taking two iterators for the features to try, so that copying can be avoided 
 	* 
 	* \param tmp_node a temporary_node struct containing all the important information. It is not changed in this function.
 	* \param data a refernce to the data object that is used
@@ -49,7 +48,7 @@ class k_ary_node{
 	*
 	*/ 
 	void make_internal_node(rfr::temporary_node<num_type, index_type> &tmp_node,
-							const rfr::data_container_base<num_type, index_type> &data,
+							const rfr::data_container_base<num_type, response_type, index_type> &data,
 							std::vector<index_type> &features_to_try,
 							index_type num_nodes,
 							std::deque<rfr::temporary_node<num_type, index_type> > &tmp_nodes,
@@ -74,7 +73,7 @@ class k_ary_node{
 	*
 	*/
 	void make_leaf_node(rfr::temporary_node<num_type, index_type> &tmp_node,
-						const rfr::data_container_base<num_type, index_type> &data){
+						const rfr::data_container_base<num_type, response_type, index_type> &data){
 		is_leaf = true;
 		parent_index = tmp_node.parent_index;
 		
@@ -95,7 +94,7 @@ class k_ary_node{
 	index_type falls_into_child(num_type * sample){
 		// could be removed if performance issues arise here, but that's not very likely
 		if (is_leaf)
-			return(std::numeric_limits<index_type>::quiet_NaN());
+			return(0);
 		return(children[split(sample)]);
 	}
 	
@@ -144,7 +143,7 @@ class k_ary_node{
 	/** \brief get indices of all children*/
 	std::array<index_type, k> get_children() {return(children);}
 	/** \brief get reference to the response values*/	
-	const std::vector<num_type> & responses(){ return(response_values);}
+	std::vector<response_type> responses(){ return(response_values);}
 
 
 	/** \brief prints out some basic information abouth the node*/

@@ -8,7 +8,7 @@
 namespace rfr{
 
 
-//template <typename num_type = float, typename index_type = unsigned int>
+template <typename tree_type, typename num_type = float, typename index_type = unsigned int>
 
 
 

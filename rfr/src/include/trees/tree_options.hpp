@@ -9,7 +9,7 @@
 
 namespace rfr{
 
-template <typename num_type = float, typename index_type = unsigned int>
+template <typename num_type = float,typename response_type = float, typename index_type = unsigned int>
 struct tree_options{
     index_type max_features;
     index_type max_depth;
@@ -19,7 +19,7 @@ struct tree_options{
     
     index_type max_num_nodes;
     
-    num_type epsilon_purity;
+    response_type epsilon_purity;
 
 
     /** (Re)set to default values with no limits on the size of the tree
@@ -51,13 +51,13 @@ struct tree_options{
     /** Constructor that adjusts the number of features considered at each split proportional to the square root of the number of features.
      * 
      */    
-    tree_options (rfr::data_container_base<num_type, index_type> &data){
+    tree_options (rfr::data_container_base<num_type, response_type, index_type> &data){
 	set_default_values();
 	max_features =  static_cast<int>(std::sqrt(data.num_features()) + 0.5);
     }
     
     
-    void adjust_limits_to_data (const rfr::data_container_base<num_type, index_type> &data){
+    void adjust_limits_to_data (const rfr::data_container_base<num_type, response_type, index_type> &data){
 	max_features = std::min(max_features, data.num_features());
     }
     

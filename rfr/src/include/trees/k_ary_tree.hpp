@@ -21,25 +21,25 @@
 
 namespace rfr{
 
-template <const int k,typename split_type, typename rng_type, typename num_type = float, typename index_type = unsigned int>
-class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
+template <const int k,typename split_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
+class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_type, index_type> {
   private:
-	std::vector< rfr::k_ary_node<k, split_type, rng_type, num_type, index_type> > the_nodes;
+	std::vector< rfr::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> > the_nodes;
 	index_type num_leafs;
 	index_type actual_depth;
-	rng_type *rng;
 	
   public:
 
-	k_ary_random_tree(rng_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
+	//k_ary_random_tree(rng_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
 
 
-	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
-			 rfr::tree_options<num_type, index_type> tree_opts){
+	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
+			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
+			 rng_type &rng){
 
 		std::vector<index_type> data_indices(data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
-		fit(data, tree_opts, data_indices);
+		fit(data, tree_opts, data_indices,rng);
 	}
 
 
@@ -53,9 +53,10 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
 	 */
-	virtual void fit(const rfr::data_container_base<num_type, index_type> &data,
-			 rfr::tree_options<num_type, index_type> tree_opts,
-			 std::vector<index_type> &data_indices){
+	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
+			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
+			 std::vector<index_type> &data_indices,
+			 rng_type &rng){
 		
 		tree_opts.adjust_limits_to_data(data);
 		
@@ -97,14 +98,14 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 				){
 				
 				// generate a subset of the features to try
-				std::shuffle(feature_indices.begin(), feature_indices.end(), *rng);
+				std::shuffle(feature_indices.begin(), feature_indices.end(), rng);
 				std::vector<index_type> feature_subset(feature_indices.begin(), std::next(feature_indices.begin(), tree_opts.max_features));
 
 				//split the node
 				
 				the_nodes[tmp_nodes.front().node_index].make_internal_node(
 						tmp_nodes.front(), data, feature_subset,
-						the_nodes.size(), tmp_nodes,*rng);
+						the_nodes.size(), tmp_nodes,rng);
 				
 
 				// Now, we have to check whether the split was legal
@@ -141,12 +142,6 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		the_nodes.shrink_to_fit();
 	}
 
-	/** \brief member function to find the index of the leaf into which the feature vector would fall
-	 * 
-	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
-	 * 
-	 * \return index_type the index of the node (a leaf) for this point
-	 */
 	virtual index_type find_leaf(num_type *feature_vector){
 		index_type node_index = 0;
 		while (! the_nodes[node_index].is_a_leaf())
@@ -154,18 +149,15 @@ class k_ary_random_tree : public rfr::tree_base<num_type, index_type> {
 		return(node_index);
 	}
 	
+	virtual std::vector<response_type> leaf_entries (num_type *feature_vector){
+		index_type i = find_leaf(feature_vector);
+		return(the_nodes[i].responses());
+	}
 	
-	/** \brief member function to predict the response value for a single feature vector
-	 * 
-	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
-	 * 
-	 * \return num_type the prediction of the response value (usually the mean of all responses in the corresponding leaf)
-	 */
-	virtual num_type predict (num_type *feature_vector){
+	virtual response_type predict (num_type *feature_vector){
 		index_type node_index = find_leaf(feature_vector);
 		return(the_nodes[node_index].mean());
 	}
-	
 	
 	
 	virtual index_type number_of_nodes() {return(the_nodes.size());}

@@ -13,8 +13,8 @@
 namespace rfr{
 
 
-template <typename rng_type, typename num_type = float, typename index_type = unsigned int>
-class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type, num_type, index_type> {
+template <typename rng_type, typename num_type = float, typename response_type=float, typename index_type = unsigned int>
+class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type, num_type, response_type, index_type> {
   private:
 	
 	index_type feature_index;	//!< split needs to know which feature it uses
@@ -37,7 +37,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 	 * \param an iterator into this vector that says where to split the data for the two children
 	 * 
 	 */
-	 virtual num_type find_best_split(	const rfr::data_container_base<num_type, index_type> &data,
+	 virtual num_type find_best_split(	const rfr::data_container_base<num_type, response_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
 									std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it,
@@ -121,7 +121,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 	 * 
 	 * \return float the loss of this split
 	 */
-	num_type best_split_continuous( const rfr::data_container_base<num_type, index_type> &data,
+	num_type best_split_continuous( const rfr::data_container_base<num_type, response_type, index_type> &data,
 									const index_type & fi,
 									std::vector<num_type> &split_criterion_copy,
 									std::vector<index_type> &indices_copy,
@@ -187,7 +187,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 	 * 
 	 * \return float the loss of this split
 	 */
-	num_type best_split_categorical(const rfr::data_container_base<num_type, index_type> &data,
+	num_type best_split_categorical(const rfr::data_container_base<num_type, response_type, index_type> &data,
 									const index_type &fi,
 									const index_type &num_categories,
 									std::vector<num_type> &split_criterion_copy,
