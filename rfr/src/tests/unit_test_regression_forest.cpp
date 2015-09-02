@@ -33,7 +33,7 @@ typedef rfr::k_ary_random_tree<2, split_type, rng_type, num_type, response_type,
 
 
 BOOST_AUTO_TEST_CASE( data_container_tests ){
-	rfr::mostly_contiuous_data<num_type> data;
+	rfr::mostly_contiuous_data<num_type,response_type, index_type> data;
 
     char *filename = (char*) malloc(1024*sizeof(char));
 
@@ -45,13 +45,23 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
     strcat(filename, "diabetes_responses.csv");
     data.read_response_file(filename);
 
-	rfr::forest_options<num_type, response_type, index_type> forest_opts();
+	rfr::tree_options<num_type, response_type, index_type> tree_opts;
+	rfr::forest_options<num_type, response_type, index_type> forest_opts(tree_opts);
 
 	forest_opts.num_data_points_per_tree = 50;
 	forest_opts.num_trees = 2;
 	forest_opts.do_bootstrapping = true;
 
 	rfr::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest(forest_opts);
+	
+	rng_type rng;
 
+	the_forest.fit(data, rng);
+
+	std::tuple<response_type, num_type> tmp;
+	std::vector<response_type> data_point_five = data.retrieve_data_point(5);
+	tmp = the_forest.predict_mean_std(data_point_five.data());
+
+	std::cout<<std::get<0>(tmp) <<" "<<std::get<1>(tmp)<<"\n";
     free(filename);
 }

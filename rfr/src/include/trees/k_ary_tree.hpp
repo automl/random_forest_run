@@ -144,8 +144,12 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 
 	virtual index_type find_leaf(num_type *feature_vector){
 		index_type node_index = 0;
-		while (! the_nodes[node_index].is_a_leaf())
+		std::cout<<node_index<<"\n";
+		while (! the_nodes[node_index].is_a_leaf()){
+			std::cout<<node_index<<"\n";
 			node_index = the_nodes[node_index].falls_into_child(feature_vector);
+		}
+		std::cout<<"\n";
 		return(node_index);
 	}
 	
@@ -157,6 +161,11 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 	virtual response_type predict (num_type *feature_vector){
 		index_type node_index = find_leaf(feature_vector);
 		return(the_nodes[node_index].mean());
+	}
+	
+	virtual std::tuple<num_type, num_type, index_type> predict_mean_std_N(num_type *feature_vector){
+		index_type node_index = find_leaf(feature_vector);
+		return(the_nodes[node_index].mean_variance_N());
 	}
 	
 	
