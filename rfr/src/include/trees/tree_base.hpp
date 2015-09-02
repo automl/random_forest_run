@@ -1,6 +1,8 @@
 #ifndef RFR_TREE_BASE_HPP
 #define RFR_TREE_BASE_HPP
 
+#include <vector>
+
 #include "data_containers/data_container_base.hpp"
 
 
@@ -21,8 +23,8 @@ class tree_base{
 	 * \param rng a (pseudo) random number generator
 	 */
 	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
-			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
-			 rng_type &rng) = 0;
+			rfr::tree_options<num_type, response_type, index_type> tree_opts,
+			rng_type &rng) = 0;
 
 	/** \brief predicts the response value for a single feature vector
 	 * 
