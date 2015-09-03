@@ -11,7 +11,7 @@
 
 
 #include "rfr/trees/tree_options.hpp"
-#include "rfr/forest_options.hpp"
+#include "rfr/forests/forest_options.hpp"
 
 namespace rfr{
 
