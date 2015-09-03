@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required (VERSION 2.8 FATAL_ERROR) # used to be version 3.1, but I don't know if that is really necessary
 project (RFR CXX)
 
 # add a version number
@@ -7,8 +7,8 @@ set (RFR_VERSION_MINOR 1)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
- SET(CMAKE_BUILD_TYPE "DEBUG")
- #SET(CMAKE_BUILD_TYPE "RELEASE")
+ #SET(CMAKE_BUILD_TYPE "DEBUG")
+ SET(CMAKE_BUILD_TYPE "RELEASE")
  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
@@ -20,13 +20,17 @@ enable_testing()
 
 # required libaries
 find_package(Boost COMPONENTS unit_test_framework python3 REQUIRED)
-find_package(PythonLibs 3)
+find_package(PythonLibs 3 REQUIRED)
 find_package(Doxygen)
 
 
 
 # define all include directories within the project for different splits, data containers, node types etc...
 include_directories ("${PROJECT_SOURCE_DIR}/src/include")
+include_directories ("${PYTHON_INCLUDE_DIRS}")
+include_directories ("${Boost_INCLUDE_DIR}")
+
+
 
 
 
