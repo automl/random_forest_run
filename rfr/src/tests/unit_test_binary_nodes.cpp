@@ -13,10 +13,10 @@
 
 
 
-#include "data_containers/mostly_continuous_data_container.hpp"
-#include "splits/binary_split_one_feature_rss_loss.hpp"
-#include "nodes/temporary_node.hpp"
-#include "nodes/k_ary_node.hpp"
+#include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
+#include "rfr/nodes/temporary_node.hpp"
+#include "rfr/nodes/k_ary_node.hpp"
 
 
 typedef double num_type;

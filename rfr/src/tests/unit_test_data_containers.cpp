@@ -9,8 +9,8 @@
 #include <cstring>
 
 
-#include "data_containers/mostly_continuous_data_container.hpp"
-#include "splits/binary_split_one_feature_rss_loss.hpp"
+#include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 
 typedef double num_type;
 

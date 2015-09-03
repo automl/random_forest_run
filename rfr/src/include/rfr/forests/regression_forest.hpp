@@ -1,6 +1,7 @@
 #ifndef RFR_REGRESSION_FOREST_HPP
 #define RFR_REGRESSION_FOREST_HPP
 
+#include <sstream>
 #include <vector>
 #include <tuple>
 #include <cmath>
@@ -9,8 +10,8 @@
 #include <algorithm>
 
 
-#include "trees/tree_options.hpp"
-#include "forest_options.hpp"
+#include "rfr/trees/tree_options.hpp"
+#include "rfr/forest_options.hpp"
 
 namespace rfr{
 
@@ -39,10 +40,10 @@ class regression_forest{
 		std::iota(data_indices.begin(), data_indices.end(), 0);
 		std::vector<index_type> data_indices_to_be_used( forest_opts.num_data_points_per_tree);
 	  
-		for (auto tree : the_trees){
+		for (auto &tree : the_trees){
 			// prepare the data(sub)set
 			if (forest_opts.do_bootstrapping){
-				std::uniform_int_distribution<index_type> dist (0,data.num_data_points());
+				std::uniform_int_distribution<index_type> dist (0,data.num_data_points()-1);
 				auto dice = std::bind(dist, rng);
 				std::generate_n(data_indices_to_be_used.begin(), data_indices_to_be_used.size(), dice);
 			}
@@ -50,7 +51,7 @@ class regression_forest{
 				std::shuffle(data_indices.begin(), data_indices.end(), rng);
 				data_indices_to_be_used.assign(data_indices.begin(), data_indices.begin()+ forest_opts.num_data_points_per_tree);
 			}
-
+			rfr::print_vector(data_indices_to_be_used);
 			// fit the tree
 			tree.fit(data, forest_opts.tree_opts, data_indices_to_be_used, rng);
 		}
@@ -72,20 +73,32 @@ class regression_forest{
 		num_type sum_squared = 0;
 		index_type N = 0;
 
-
-	  
-		for (auto tree: the_trees){
+		for (auto &tree: the_trees){
 			num_type m , s;
 			index_type n;
 
 			std::tie(m, s, n) = tree.predict_mean_std_N(feature_vector);
-
+			// recompute the sum and the sum of squared response values 
 			sum += m*n;
-			sum_squared += s*s*n;
+			sum_squared += s*s*n+n*m*m;
 			N += n;
-			
 		}
 		return(std::tuple<response_type, num_type> (sum/N, sqrt(sum_squared/N - (sum/N)*(sum/N))));
+	}
+
+	void save_latex_representation(const char* filename_template){
+		for (auto i = 0u; i<the_trees.size(); i++){
+			std::stringstream filename;
+			filename << filename_template<<i<<".tex";
+			the_trees[i].save_latex_representation(filename.str().c_str());
+		}
+	}
+
+
+	void print_info(){
+		for (auto t: the_trees){
+			t.print_info();
+		}
 	}
 
 };

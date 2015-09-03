@@ -12,11 +12,11 @@
 #include<fstream>
 
 
-#include "data_containers/data_container_base.hpp"
-#include "nodes/temporary_node.hpp"
-#include "nodes/k_ary_node.hpp"
-#include "trees/tree_base.hpp"
-#include "trees/tree_options.hpp"
+#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/nodes/temporary_node.hpp"
+#include "rfr/nodes/k_ary_node.hpp"
+#include "rfr/trees/tree_base.hpp"
+#include "rfr/trees/tree_options.hpp"
 
 
 namespace rfr{
@@ -144,12 +144,9 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 
 	virtual index_type find_leaf(num_type *feature_vector){
 		index_type node_index = 0;
-		std::cout<<node_index<<"\n";
 		while (! the_nodes[node_index].is_a_leaf()){
-			std::cout<<node_index<<"\n";
 			node_index = the_nodes[node_index].falls_into_child(feature_vector);
 		}
-		std::cout<<"\n";
 		return(node_index);
 	}
 	
@@ -174,15 +171,15 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 	virtual index_type depth() {return(actual_depth);}
 	
 	
-	void print_info(const rfr::data_container_base<num_type, index_type> &data){
+	void print_info(){
 		
 		std::cout<<"number of nodes ="<<number_of_nodes()<<"\n";
 		std::cout<<"number of leafes="<<number_of_leafs()<<"\n";
 		std::cout<<"      depth     ="<<depth()<<"\n";
 		
-		for (auto i = 0; i< the_nodes.size(); i++){
+		for (auto i = 0u; i< the_nodes.size(); i++){
 			std::cout<<"=========================\nnode "<<i<<"\n";
-			the_nodes[i].print_info(data);
+			the_nodes[i].print_info();
 		}
 	}
 	    

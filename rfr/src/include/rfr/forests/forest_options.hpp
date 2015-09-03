@@ -2,8 +2,8 @@
 #define RFR_FOREST_OPTIONS_HPP
 
 
-#include "data_containers/data_container_base.hpp"
-#include "trees/tree_options.hpp"
+#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/trees/tree_options.hpp"
 
 
 namespace rfr{

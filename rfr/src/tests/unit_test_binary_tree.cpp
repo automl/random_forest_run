@@ -9,12 +9,12 @@
 #include <cstring>
 
 
-#include "data_containers/mostly_continuous_data_container.hpp"
-#include "splits/binary_split_one_feature_rss_loss.hpp"
-#include "nodes/temporary_node.hpp"
-#include "nodes/k_ary_node.hpp"
-#include "trees/tree_options.hpp"
-#include "trees/k_ary_tree.hpp"
+#include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
+#include "rfr/nodes/temporary_node.hpp"
+#include "rfr/nodes/k_ary_node.hpp"
+#include "rfr/trees/tree_options.hpp"
+#include "rfr/trees/k_ary_tree.hpp"
 
 
 typedef double num_type;
