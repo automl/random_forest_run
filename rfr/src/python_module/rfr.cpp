@@ -1,5 +1,7 @@
 //#include "rfr/forest/regression_forest.hpp"
 #include <boost/python.hpp>
+#include <boost/numpy.hpp>
+
 
 
 
