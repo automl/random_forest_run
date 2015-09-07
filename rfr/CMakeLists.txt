@@ -19,7 +19,7 @@ enable_testing()
 
 
 # required libaries
-find_package(Boost COMPONENTS unit_test_framework python REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework python3 REQUIRED)
 find_package(PythonLibs 3 REQUIRED)
 find_package(Doxygen)
 
@@ -100,8 +100,13 @@ set_tests_properties (UTRegressionForest PROPERTIES PASS_REGULAR_EXPRESSION "No 
 
 
 
-PYTHON_ADD_MODULE(rfr "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp")
+add_subdirectory( "Boost.NumPy")
 
+
+add_library(rfr SHARED "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp")
+target_link_libraries( rfr boost_numpy)
+set_property(TARGET rfr PROPERTY CXX_STANDARD 11)
+set_property(TARGET rfr PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
 
