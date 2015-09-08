@@ -19,7 +19,7 @@ enable_testing()
 
 
 # required libaries
-find_package(Boost COMPONENTS unit_test_framework python REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework python3 REQUIRED)
 find_package(PythonLibs REQUIRED)
 find_package(Doxygen)
 
@@ -46,7 +46,6 @@ if(DOXYGEN_FOUND)
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 
 endif(DOXYGEN_FOUND)
-
 
 
 
@@ -100,12 +99,14 @@ set_tests_properties (UTRegressionForest PROPERTIES PASS_REGULAR_EXPRESSION "No 
 
 
 
-#add_subdirectory("Boost.NumPy")
+add_subdirectory("Boost.NumPy")
 
 
-PYTHON_ADD_MODULE(rfr "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp")
-#target_link_libraries( rfr boost_numpy)
+#PYTHON_ADD_MODULE(rfr "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp" boost_numpy)
+add_library(rfr SHARED "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp")
+target_link_libraries( rfr boost_numpy)
 set_property(TARGET rfr PROPERTY CXX_STANDARD 11)
+set_property(TARGET rfr PROPERTY PREFIX "")
 set_property(TARGET rfr PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
