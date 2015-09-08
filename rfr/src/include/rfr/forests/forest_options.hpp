@@ -41,8 +41,10 @@ struct forest_options{
 	}
 
 	/** Default constructor that initializes the values with their default */
-	forest_options(tree_options<num_type,response_type,index_type> & to): tree_opts(to) { set_default_values();}
+	forest_options(){ set_default_values();}
 
+	/** Constructor to feed in tree values but leave the forest parameters at their default.*/
+	forest_options(tree_options<num_type,response_type,index_type> & to): tree_opts(to) { set_default_values();}
 
 	/** Constructor that adjusts to the data. */   
 	forest_options (tree_options<num_type,response_type,index_type> & to, rfr::data_container_base<num_type, response_type, index_type> &data): tree_opts(to){

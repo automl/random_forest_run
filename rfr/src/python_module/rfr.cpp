@@ -95,7 +95,7 @@ class binary_regression_forest_rss_split{
     
     rfr::forest_options<num_type, response_type, index_type> forest_opts;
     std::default_random_engine rng;
-    forest_type the_forest;
+    forest_type * the_forest;
 
   public:
 
@@ -114,25 +114,24 @@ class binary_regression_forest_rss_split{
 	if (seed > 0) rng.seed(seed);
 
 	// store all the tree related options
-	rfr::tree_options<num_type, response_type, index_type> to;
-	if (max_depth > 0) to.max_depth = max_depth;
-	if (max_features_per_split > 0) to.max_features = max_features_per_split;
-	if (min_samples_to_split > 0) to.min_samples_to_split = min_samples_to_split;
-	if (min_samples_in_leaf > 0) to.min_samples_in_leaf = min_samples_in_leaf;
-	if (max_num_nodes >  0) to.max_num_nodes = max_num_nodes;
-	if (epsilon_purity >= 0) to.epsilon_purity = epsilon_purity;
+	if (max_depth > 0) forest_opts.tree_opts.max_depth = max_depth;
+	if (max_features_per_split > 0) forest_opts.tree_opts.max_features = max_features_per_split;
+	if (min_samples_to_split > 0) forest_opts.tree_opts.min_samples_to_split = min_samples_to_split;
+	if (min_samples_in_leaf > 0) forest_opts.tree_opts.min_samples_in_leaf = min_samples_in_leaf;
+	if (max_num_nodes >  0) forest_opts.tree_opts.max_num_nodes = max_num_nodes;
+	if (epsilon_purity >= 0) forest_opts.tree_opts.epsilon_purity = epsilon_purity;
 
 
 	// now the forest related options
-	rfr::forest_options<num_type, response_type, index_type> forest_opts (to);
 	forest_opts.num_trees = num_trees;
 	forest_opts.do_bootstrapping = do_bootstrapping;
 	if (num_data_points_per_tree > 0) forest_opts.num_data_points_per_tree = num_data_points_per_tree;
 
-	forest_type the_forest(forest_opts);
+	the_forest = new forest_type (forest_opts);
 	
-
     }
+
+	~binary_regression_forest_rss_split(){ delete the_forest;}
 					
 
     void fit (	boost::numpy::ndarray const & features,

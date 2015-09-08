@@ -100,7 +100,7 @@ set_tests_properties (UTRegressionForest PROPERTIES PASS_REGULAR_EXPRESSION "No 
 
 
 add_subdirectory("Boost.NumPy")
-
+include_directories("${PROJECT_SOURCE_DIR}/Boost.NumPy")
 
 #PYTHON_ADD_MODULE(rfr "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp" boost_numpy)
 add_library(rfr SHARED "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp")
