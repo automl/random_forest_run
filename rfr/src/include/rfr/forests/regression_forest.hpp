@@ -67,7 +67,7 @@ class regression_forest{
 	 *
 	 * \return std::tuple<respones_type, num_type> mean and standard deviation as prediction and uncertainty 
 	 */
-	std::tuple<response_type, num_type> predict_mean_std( num_type * feature_vector){
+	std::tuple<num_type, num_type> predict_mean_std( num_type * feature_vector){
 
 		num_type sum=0;
 		num_type sum_squared = 0;
@@ -78,12 +78,16 @@ class regression_forest{
 			index_type n;
 
 			std::tie(m, s, n) = tree.predict_mean_std_N(feature_vector);
+			std::cout<<m<<" "<<s<<" "<<n<<"\n";
+			
 			// recompute the sum and the sum of squared response values 
 			sum += m*n;
 			sum_squared += s*s*n+n*m*m;
 			N += n;
 		}
-		return(std::tuple<response_type, num_type> (sum/N, sqrt(sum_squared/N - (sum/N)*(sum/N))));
+		std::cout<<sum<<" "<<sum_squared<<" "<<N<<"\n";
+		std::cout<<sum/N<<" "<<sqrt(sum_squared/N - (sum/N)*(sum/N))<<"\n";
+		return(std::tuple<num_type, num_type> (sum/N, sqrt(sum_squared/N - (sum/N)*(sum/N))));
 	}
 
 	void save_latex_representation(const char* filename_template){

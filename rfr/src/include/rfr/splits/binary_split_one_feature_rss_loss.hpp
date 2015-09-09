@@ -9,7 +9,7 @@
 
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/splits/split_base.hpp"
-
+#include "rfr/data_containers/data_container_utils.hpp"
 namespace rfr{
 
 
@@ -45,7 +45,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 		
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
-		
+		rfr::print_vector(features_to_try);
 		for (index_type fi : features_to_try){ //! > uses C++11 range based loop
 
 			std::vector<num_type> split_criterion_copy;
@@ -70,6 +70,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 				// find best split for the current feature_index
 				loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy, rng);
 			}
+			std::cout<<loss<<std::endl;
 			// check if this split is the best so far
 			if (loss < best_loss){
 				best_loss = loss;
@@ -79,10 +80,12 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 				split_indices_it.at(1) = split_indices_it_copy;
 			}
 		}
-		split_indices_it[0] = indices.begin();
-		split_indices_it[2] = indices.end();
-		std::sort(++split_criterion.begin(), split_criterion.end());
-		split_criterion.shrink_to_fit();
+		if (best_loss < std::numeric_limits<num_type>::infinity()){
+			split_indices_it[0] = indices.begin();
+			split_indices_it[2] = indices.end();
+			std::sort(++split_criterion.begin(), split_criterion.end());
+			split_criterion.shrink_to_fit();
+		}
 		return(best_loss);
 	}
 
@@ -102,11 +105,11 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 			it++;
 			//it = std::find(it, split_criterion.end(), feature_vector[feature_index]);
 			//return( it != split_criterion.end());
-			return(std::binary_search(it, split_criterion.end(), feature_vector[feature_index]));
+			return(!std::binary_search(it, split_criterion.end(), feature_vector[feature_index]));
 		}
 		
 		// simple case of a numerical feature
-		return(feature_vector[feature_index] <= split_criterion[1]);
+		return(feature_vector[feature_index] > split_criterion[1]);
 	}
 
 

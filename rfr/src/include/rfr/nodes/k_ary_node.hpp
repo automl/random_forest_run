@@ -46,8 +46,9 @@ class k_ary_node{
 	* \param nodes reference to vector containing all processed nodes
 	* \param tmp_nodes reference to vector containing all temporary nodes that still have to be checked
 	*
+	* \return num_type the loss of the split
 	*/ 
-	void make_internal_node(rfr::temporary_node<num_type, index_type> &tmp_node,
+	num_type make_internal_node(rfr::temporary_node<num_type, index_type> &tmp_node,
 							const rfr::data_container_base<num_type, response_type, index_type> &data,
 							std::vector<index_type> &features_to_try,
 							index_type num_nodes,
@@ -57,13 +58,19 @@ class k_ary_node{
 		response_values.clear();
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<index_type>::iterator, k+1> split_indices_it;
-		split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it,rng);
+		num_type best_loss = split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it,rng);
 	
-		// create an empty node, and a tmp node for each child
-		for (index_type i = 0; i < k; i++){
-			tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
-			children[i] = num_nodes + i;
-		}	
+		//check if a split was found
+		if (best_loss <  std::numeric_limits<num_type>::infinity()){
+			// create an empty node, and a tmp node for each child
+			for (index_type i = 0; i < k; i++){
+				tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
+				children[i] = num_nodes + i;
+			}
+		}
+		else
+			make_leaf_node(tmp_node, data);
+		return(best_loss);
 	}
 	
 	/** \brief  turns this node into a leaf node based on a temporary node.

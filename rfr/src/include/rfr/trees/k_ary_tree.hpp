@@ -103,32 +103,35 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 
 				//split the node
 				
-				the_nodes[tmp_nodes.front().node_index].make_internal_node(
-						tmp_nodes.front(), data, feature_subset,
-						the_nodes.size(), tmp_nodes,rng);
+				num_type best_loss = the_nodes[tmp_nodes.front().node_index].make_internal_node(
+										tmp_nodes.front(), data, feature_subset,
+										the_nodes.size(), tmp_nodes,rng);
 				
 
-				// Now, we have to check whether the split was legal
-				bool illegal_split = false;
+				// if no split was produces, the node turns itself into a leaf, so nothing else has to be done
+				if (best_loss <  std::numeric_limits<num_type>::infinity()){
 
-				auto tmp_it = tmp_nodes.end();
-				std::advance(tmp_it, -k);
+					// Now, we have to check whether the split was legal
+					bool illegal_split = false;
+					auto tmp_it = tmp_nodes.end();
+					std::advance(tmp_it, -k);
 				
-				for (; tmp_it != tmp_nodes.end(); tmp_it++){
-					if ( (*tmp_it).data_indices.size() < tree_opts.min_samples_in_leaf){
-						illegal_split = true;
-						break;
+					for (; tmp_it != tmp_nodes.end(); tmp_it++){
+						if ( (*tmp_it).data_indices.size() < tree_opts.min_samples_in_leaf){
+							illegal_split = true;
+							break;
+						}
 					}
-				}
-				// in case it wasn't ...
-				if (illegal_split){
-					// we have to delete the k new temporary nodes
-					for (auto i = 0; i<k; i++)
-						tmp_nodes.pop_back();
-					// and make this node a leaf
-					the_nodes[tmp_nodes.front().node_index].make_leaf_node(tmp_nodes.front(),data);
-					actual_depth = std::max(actual_depth, tmp_nodes.front().node_level);
-					num_leafs++;
+					// in case it wasn't ...
+					if (illegal_split){
+						// we have to delete the k new temporary nodes
+						for (auto i = 0; i<k; i++)
+							tmp_nodes.pop_back();
+						// and make this node a leaf
+						the_nodes[tmp_nodes.front().node_index].make_leaf_node(tmp_nodes.front(),data);
+						actual_depth = std::max(actual_depth, tmp_nodes.front().node_level);
+						num_leafs++;
+					}
 				}
 			}
 			// if it is not 'splitworthy', just turn it into a leaf
