@@ -7,8 +7,8 @@ set (RFR_VERSION_MINOR 1)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
- #SET(CMAKE_BUILD_TYPE "DEBUG")
- SET(CMAKE_BUILD_TYPE "RELEASE")
+ SET(CMAKE_BUILD_TYPE "DEBUG")
+ #SET(CMAKE_BUILD_TYPE "RELEASE")
  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
@@ -27,7 +27,7 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 
 
 # define all include directories within the project for different splits, data containers, node types etc...
-include_directories ("${PROJECT_SOURCE_DIR}/src/include")
+include_directories ("${PROJECT_SOURCE_DIR}/include")
 include_directories ("${PYTHON_INCLUDE_DIRS}")
 include_directories ("${Boost_INCLUDE_DIR}")
 
