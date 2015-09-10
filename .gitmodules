@@ -1,3 +1,3 @@
-[submodule "rfr/Boost.NumPy"]
-	path = rfr/Boost.NumPy
+[submodule "boost_numpy"]
+	path = boost_numpy
 	url = https://github.com/ndarray/Boost.NumPy.git
