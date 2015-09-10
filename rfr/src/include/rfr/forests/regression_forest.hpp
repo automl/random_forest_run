@@ -51,8 +51,6 @@ class regression_forest{
 				std::shuffle(data_indices.begin(), data_indices.end(), rng);
 				data_indices_to_be_used.assign(data_indices.begin(), data_indices.begin()+ forest_opts.num_data_points_per_tree);
 			}
-			rfr::print_vector(data_indices_to_be_used);
-			// fit the tree
 			tree.fit(data, forest_opts.tree_opts, data_indices_to_be_used, rng);
 		}
 	}
@@ -78,15 +76,11 @@ class regression_forest{
 			index_type n;
 
 			std::tie(m, s, n) = tree.predict_mean_std_N(feature_vector);
-			std::cout<<m<<" "<<s<<" "<<n<<"\n";
-			
 			// recompute the sum and the sum of squared response values 
 			sum += m*n;
 			sum_squared += s*s*n+n*m*m;
 			N += n;
 		}
-		std::cout<<sum<<" "<<sum_squared<<" "<<N<<"\n";
-		std::cout<<sum/N<<" "<<sqrt(sum_squared/N - (sum/N)*(sum/N))<<"\n";
 		return(std::tuple<num_type, num_type> (sum/N, sqrt(sum_squared/N - (sum/N)*(sum/N))));
 	}
 

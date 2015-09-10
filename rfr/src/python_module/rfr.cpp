@@ -130,7 +130,7 @@ class regression_forest_binary_rss_split{
 	// simple sanity checks
 	check_array<num_type>(features, 2);
 	check_array<response_type>(responses, 1);
-	check_array<num_type>(types, 1);
+	check_array<index_type>(types, 1);
 
 	// create the data container
 	rfr::numpy_simple_data_container<num_type, response_type, index_type> data(features, responses, types);

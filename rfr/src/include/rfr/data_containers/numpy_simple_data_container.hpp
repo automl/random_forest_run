@@ -2,6 +2,7 @@
 #define RFR_NUMPY_CONTAINER_HPP
 
 
+#include <algorithm>
 #include <vector>
 #include <cmath>
 
@@ -19,7 +20,7 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 	index_type n_features;
 	num_type * feature_array;
 	response_type * response_array;
-	num_type * type_array;
+	index_type * type_array;
 
   public:
 
@@ -27,11 +28,8 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 								boost::numpy::ndarray const & responses,
 								boost::numpy::ndarray const & types){
 
-
-		n_features = features.shape(0);
-		n_data_points = features.shape(1);
-
-		std::cout<<n_features<<" x "<<n_data_points<<"\n";
+		n_data_points = features.shape(0);
+		n_features = features.shape(1);
 
 		if (n_data_points != responses.shape(0) ) {
 			PyErr_SetString(PyExc_ValueError, "Number of responses does not match number of datapoints provided.");
@@ -46,21 +44,21 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 
 		feature_array = reinterpret_cast<num_type *>(features.get_data());
 		response_array= reinterpret_cast<response_type *>(responses.get_data());
-		type_array    = reinterpret_cast<num_type *>(types.get_data());
+		type_array    = reinterpret_cast<index_type *>(types.get_data());
 
+		// make sure the types are properly rounded
+		std::transform(type_array, type_array+n_features, type_array, round);
 
 		for (auto i=0u; i<n_features; i++){
-			std::cout<<i<<"\n";
 			if (types[i] > 0.5){
-				std::cout<<"needs rounding\n";
 				for (auto j=0u; j < n_data_points; j++)
-					feature_array[i*n_data_points + j] = std::round(feature_array[i*n_data_points + j]);
+					feature_array[j*n_features + i] = std::round(feature_array[j*n_features + i]);
 			}
 		}
 	}
   
 	virtual num_type feature (index_type feature_index, index_type sample_index) const {
-		return (feature_array[feature_index*n_data_points + sample_index]);
+		return (feature_array[sample_index*n_features + feature_index]);
 	}
 	
 	virtual response_type response (index_type sample_index) const{
@@ -77,7 +75,7 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 	virtual std::vector<num_type> retrieve_data_point (index_type index){
 		std::vector<num_type> rv(n_features);
 		for (auto i = 0u; i < rv.size(); i++)
-			rv[i] = feature_array[i*n_data_points+ index];
+			rv[i] = feature_array[index*n_features + i];
 		return(rv);
 	}
 	

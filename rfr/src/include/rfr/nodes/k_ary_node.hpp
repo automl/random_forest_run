@@ -61,6 +61,7 @@ class k_ary_node{
 		num_type best_loss = split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it,rng);
 	
 		//check if a split was found
+		// note: if the number of features to try is too small, there is a chance that the data cannot be split any further
 		if (best_loss <  std::numeric_limits<num_type>::infinity()){
 			// create an empty node, and a tmp node for each child
 			for (index_type i = 0; i < k; i++){

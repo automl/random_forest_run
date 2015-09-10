@@ -14,9 +14,7 @@ IF(NOT CMAKE_BUILD_TYPE)
 ENDIF()
 
 
-
 enable_testing()
-
 
 # required libaries
 find_package(Boost COMPONENTS unit_test_framework python3 REQUIRED)

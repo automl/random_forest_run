@@ -45,7 +45,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 		
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
-		rfr::print_vector(features_to_try);
+
 		for (index_type fi : features_to_try){ //! > uses C++11 range based loop
 
 			std::vector<num_type> split_criterion_copy;
@@ -70,7 +70,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 				// find best split for the current feature_index
 				loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy, rng);
 			}
-			std::cout<<loss<<std::endl;
+
 			// check if this split is the best so far
 			if (loss < best_loss){
 				best_loss = loss;
