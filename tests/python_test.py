@@ -1,14 +1,10 @@
-import sys
-sys.path.append('../../build/lib')
 
 import time
+
+import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestRegressor
-
-
-import numpy as np
-
 import rfr
 
 
@@ -16,7 +12,7 @@ import rfr
 #types = np.array([0,4],dtype=np.uint32)
 
 
-data_set_prefix = '../../test_data_sets/diabetes_'
+data_set_prefix = '../test_data_sets/diabetes_'
 
 
 
@@ -30,22 +26,10 @@ types = np.zeros([features.shape[1]],dtype=np.uint32)
 
 
 
-print(features.shape)
-print(features.flags)
-
-print(responses.shape)
-print(responses.flags)
-
-
-print(types)
-print(types.shape)
-print(types.flags)
-
-
 
 print(features.shape)
 
-the_forest = rfr.regression_forest()
+the_forest = rfr.regression.binary_rss()
 
 
 
