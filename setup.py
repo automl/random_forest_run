@@ -1,36 +1,44 @@
 from distutils.core import setup, Extension
-import distutils.command.build_ext
+import distutils.command.build
 
 import sys
 
 
 
-class build_ext(distutils.command.build_ext.build_ext):
-	"""Subclass of build subcommand to specify the name of the boost-python
-	library
+class build(distutils.command.build.build):
+	"""Subclass of build to specify the name of the boost-python library
 	"""
-	user_options = distutils.command.build_ext.build_ext.user_options + [
+	user_options = distutils.command.build.build.user_options + [
 		('boost-python-lib-name=', None,
 		 'specify the name of the boost python library'),
 		]
 
 	def initialize_options(self, *args, **kwargs):
 		self.boost_python_lib_name = None
-		distutils.command.build_ext.build_ext.initialize_options(self, *args, **kwargs)
+		distutils.command.build.build.initialize_options(self, *args, **kwargs)
 
 
 	def finalize_options(self, *args, **kwargs):
 		if self.boost_python_lib_name is None:
 			self.boost_python_lib_name = 'boost_python'
-		distutils.command.build_ext.build_ext.finalize_options(self, *args, **kwargs)
+		distutils.command.build.build.finalize_options(self, *args, **kwargs)
 	
 	def run(self, *args, **kwargs):
 	# XXX gotta be a better way than globals
 	#global BOOST_PYTHON_LIB_NAME
 	#BOOST_PYTHON_LIB_NAME = self.boost_python_lib_name
 		print(self.boost_python_lib_name)
-		#self.libraries = [ (self.boost_python_lib_name,{}) ]
-		distutils.command.build_ext.build_ext.run(self, *args, **kwargs)
+		print(vars(self).values())
+		for k,v in vars(self.distribution).items():
+			print(k,v)
+
+
+		
+		self.distribution.ext_modules[0].libraries = [self.boost_python_lib_name]
+
+
+		print(vars(self.distribution.ext_modules[0]))
+		distutils.command.build.build.run(self, *args, **kwargs)
 
 
 
@@ -39,7 +47,8 @@ rfr = Extension('rfr',
 					library_dirs = ['/usr/local/lib'],
 					libraries = ['boost_python3'],
 					sources = ['python_module/rfr.cpp'],
-					extra_compile_args = ['-O3', '-std=c++11'])
+					extra_compile_args = ['-O3', '-std=c++11', '-march=native'],
+					extra_link_args = ['-O3'])
 
 
 setup(
@@ -49,6 +58,6 @@ setup(
 	author_email='sfalkner@cs.uni-freiburg.de',
 	license='Use as you wish. No guarantees whatsoever.',
 	classifiers=['Development Status :: 2 - Pre-Alpha'],
-	cmdclass={'build_ext': build_ext},
+	cmdclass={'build': build},
 	ext_modules=[rfr],
 )
