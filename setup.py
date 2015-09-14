@@ -19,36 +19,26 @@ class build(distutils.command.build.build):
 
 
 	def finalize_options(self, *args, **kwargs):
+		# if no name for the boost_python library has been provided, set the default
 		if self.boost_python_lib_name is None:
 			self.boost_python_lib_name = 'boost_python'
 		distutils.command.build.build.finalize_options(self, *args, **kwargs)
 	
 	def run(self, *args, **kwargs):
-	# XXX gotta be a better way than globals
-	#global BOOST_PYTHON_LIB_NAME
-	#BOOST_PYTHON_LIB_NAME = self.boost_python_lib_name
-		print(self.boost_python_lib_name)
-		print(vars(self).values())
-		for k,v in vars(self.distribution).items():
-			print(k,v)
-
-
-		
+		# replace the name of boost_python for the linker
 		self.distribution.ext_modules[0].libraries = [self.boost_python_lib_name]
 
-
-		print(vars(self.distribution.ext_modules[0]))
+		# now run the regular build
 		distutils.command.build.build.run(self, *args, **kwargs)
-
 
 
 rfr = Extension('rfr',
 					include_dirs = ['./boost_numpy', './include'],
 					library_dirs = ['/usr/local/lib'],
-					libraries = ['boost_python3'],
+					libraries = ['dummy_string'],	# just in case. This will be replaced later
 					sources = ['python_module/rfr.cpp'],
-					extra_compile_args = ['-O3', '-std=c++11', '-march=native'],
-					extra_link_args = ['-O3'])
+					extra_compile_args = ['-O2', '-std=c++11'],
+					extra_link_args = ['-O2'])	# not shure if this actually does anything
 
 
 setup(
