@@ -46,7 +46,7 @@ the_forest.epsilon_purity = 1e-8
 
 times_rfr = []
 times_scikit=[]
-num_trees = [1, 2, 4, 8, 16, 32, 64, 128,256]
+num_trees = [1, 2, 4, 8]#, 16, 32, 64, 128,256]
 
 
 
@@ -70,7 +70,7 @@ for nt in num_trees:
 
 
 
-#the_forest.save_latex_representation("/tmp/rfr_test")
+the_forest.save_latex_representation("/tmp/rfr_test")
 
 
 predictions_rfr = np.zeros_like(responses);

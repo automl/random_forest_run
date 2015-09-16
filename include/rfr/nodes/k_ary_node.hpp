@@ -6,6 +6,7 @@
 #include <array>
 #include <tuple>
 #include <sstream>
+#include <algorithm>
 
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"
@@ -176,9 +177,11 @@ class k_ary_node{
 			
 		if (is_leaf){
 			str << "{i = " << my_index << ": \\begin{tiny}"<<response_values[0];			
-			for (size_t i=1; i<response_values.size(); i++){
+			for (size_t i=1; i<std::min<int>(20u, response_values.size()); i++){
 				str << "," << response_values[i];
 			}
+			if (response_values.size() > 20)
+			    str <<"...";
 			str << "\\end{tiny}}";
 			
 		}
