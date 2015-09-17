@@ -1,6 +1,7 @@
 #ifndef RFR_REGRESSION_FOREST_HPP
 #define RFR_REGRESSION_FOREST_HPP
 
+#include <iostream>
 #include <sstream>
 #include <vector>
 #include <tuple>

@@ -37,16 +37,16 @@ the_forest.seed=12
 
 the_forest.do_bootstrapping=True
 the_forest.num_data_points_per_tree=0
-the_forest.max_features_per_split = 10
-the_forest.min_samples_to_split = 2
-the_forest.min_samples_in_leaf = 1
+the_forest.max_features_per_split = 0
+the_forest.min_samples_to_split = 0
+the_forest.min_samples_in_leaf = 0
 the_forest.max_depth=0
 the_forest.epsilon_purity = 1e-8
 
 
 times_rfr = []
 times_scikit=[]
-num_trees = [1, 2, 4, 8]#, 16, 32, 64, 128,256]
+num_trees = [1, 2, 4, 8, 16, 32, 64, 128,256]
 
 
 

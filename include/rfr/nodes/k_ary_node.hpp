@@ -176,13 +176,16 @@ class k_ary_node{
 		std::stringstream str;
 			
 		if (is_leaf){
-			str << "{i = " << my_index << ": \\begin{tiny}"<<response_values[0];			
-			for (size_t i=1; i<std::min<int>(20u, response_values.size()); i++){
-				str << "," << response_values[i];
+			str << "{i = " << my_index << ": ";
+
+			num_type s=0, ss=0;
+			for (auto v: response_values){
+				s += v;
+				ss+= v*v;
 			}
-			if (response_values.size() > 20)
-			    str <<"...";
-			str << "\\end{tiny}}";
+
+			auto N = response_values.size();
+			str << "N = "<<N<<", mean = "<<s/N<<", variance = " << sqrt(ss/N - (s/N)*(s/N))<<"}";
 			
 		}
 		else{

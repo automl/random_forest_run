@@ -42,11 +42,12 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 									std::vector<index_type> & indices,
 									std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it,
 									rng_type &rng){
-		
+
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
 
 		for (index_type fi : features_to_try){ //! > uses C++11 range based loop
+
 
 			std::vector<num_type> split_criterion_copy;
 			typename std::vector<index_type>::iterator split_indices_it_copy = indices_copy.begin();
@@ -256,6 +257,8 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 			best_loss = (S_y2_right - (S_y_right*S_y_right)/N_right)
 							+ (S_y2_left - (S_y_left*S_y_left)/N_left);
 
+		current_loss = best_loss;
+
 		// now move one category at a time to the left child and recompute the loss
 		for (auto it1 = it_best_split; it1 != empty_categories_it; it1++){
 			S_y_left  += S_y[*it1];
@@ -267,13 +270,19 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 			N_left  += N_points_in_category[*it1];
 			N_right -= N_points_in_category[*it1];
 
-			current_loss 	= (S_y2_right - (S_y_right*S_y_right)/N_right)
-							+ (S_y2_left - (S_y_left*S_y_left)/N_left);
-			// keep the best split
-			if (current_loss < best_loss){
-				best_loss = current_loss;
-				it_best_split = it1;
-				it_best_split++;
+
+			// catch divide by zero as they are invalid splits anyway
+			// becomes important if only one or two categories have specimen here!
+			if ( (N_right != 0) && (N_left != 0) ){
+				current_loss 	= (S_y2_right - (S_y_right*S_y_right)/N_right)
+								+ (S_y2_left - (S_y_left*S_y_left)/N_left);
+
+				// keep the best split
+				if (current_loss < best_loss){
+					best_loss = current_loss;
+					it_best_split = it1;
+					it_best_split++;
+				}
 			}
 		}
 

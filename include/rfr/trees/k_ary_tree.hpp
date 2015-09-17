@@ -96,7 +96,6 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 				(is_not_pure) &&                                                            // are not all the values the same?
 				(the_nodes.size() <= tree_opts.max_num_nodes-k)                             // don't have more nodes than the user specified number
 				){
-				
 				// generate a subset of the features to try
 				std::shuffle(feature_indices.begin(), feature_indices.end(), rng);
 				std::vector<index_type> feature_subset(feature_indices.begin(), std::next(feature_indices.begin(), tree_opts.max_features));
