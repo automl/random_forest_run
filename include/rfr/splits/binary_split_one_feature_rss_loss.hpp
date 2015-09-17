@@ -318,10 +318,10 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 	virtual std::string latex_representation(){
 		std::stringstream str;
 		if (split_criterion[0] == 0){
-			str << "$f_" << feature_index << "<=" << split_criterion[1] << "$";
+			str << "$f_{" << feature_index << "}<=" << split_criterion[1] << "$";
 		}
 		else{
-			str << "$f_" << feature_index << " \\in \\{"<< split_criterion[1];
+			str << "$f_{" << feature_index << "} \\in \\{"<< split_criterion[1];
 			for (size_t i = 2; i < split_criterion.size(); i++){
 				str<<","<<split_criterion[i];
 			}
