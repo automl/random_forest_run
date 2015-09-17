@@ -82,9 +82,9 @@ class binary_rss{
 
 	// store all the tree related options
 	forest_opts.num_data_points_per_tree = (num_data_points_per_tree > 0)? num_data_points_per_tree : data.num_data_points();
-	
+	forest_opts.tree_opts.max_features = (max_features_per_split > 0) ? max_features_per_split : data.num_features();
+
 	if (max_depth > 0) forest_opts.tree_opts.max_depth = max_depth;
-	if (max_features_per_split > 0) forest_opts.tree_opts.max_features = max_features_per_split;
 	if (min_samples_to_split > 0) forest_opts.tree_opts.min_samples_to_split = min_samples_to_split;
 	if (min_samples_in_leaf > 0) forest_opts.tree_opts.min_samples_in_leaf = min_samples_in_leaf;
 	if (max_num_nodes >  0) forest_opts.tree_opts.max_num_nodes = max_num_nodes;

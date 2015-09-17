@@ -4,7 +4,6 @@ import distutils.command.build
 import sys
 
 
-
 class build(distutils.command.build.build):
 	"""Subclass of build to specify the name of the boost-python library
 	"""
@@ -37,8 +36,8 @@ rfr = Extension('rfr',
 					library_dirs = ['/usr/local/lib'],
 					libraries = ['dummy_string'],	# just in case. This will be replaced later
 					sources = ['python_module/rfr.cpp'],
-					extra_compile_args = ['-O2', '-std=c++11'],
-					extra_link_args = ['-O2'])	# not shure if this actually does anything
+					extra_compile_args = ['-O3', '-std=c++11'],
+					extra_link_args = ['-O3'])	# not sure if this actually does anything
 
 
 setup(
