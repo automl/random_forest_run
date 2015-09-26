@@ -1,7 +1,6 @@
 from distutils.core import setup, Extension
 import distutils.command.build
 
-import sys
 
 
 class build(distutils.command.build.build):
@@ -9,7 +8,7 @@ class build(distutils.command.build.build):
 	"""
 	user_options = distutils.command.build.build.user_options + [
 		('boost-python-lib-name=', None,
-		 'specify the name of the boost python library'),
+		'specify the name of the boost python library'),
 		]
 
 	def initialize_options(self, *args, **kwargs):
@@ -22,7 +21,7 @@ class build(distutils.command.build.build):
 		if self.boost_python_lib_name is None:
 			self.boost_python_lib_name = 'boost_python'
 		distutils.command.build.build.finalize_options(self, *args, **kwargs)
-	
+
 	def run(self, *args, **kwargs):
 		# replace the name of boost_python for the linker
 		self.distribution.ext_modules[0].libraries = [self.boost_python_lib_name]
@@ -32,7 +31,7 @@ class build(distutils.command.build.build):
 
 
 rfr = Extension('rfr',
-					include_dirs = ['./boost_numpy', './include'],
+					include_dirs = ['./boost_numpy', './include','/usr/lib/python3.4/site-packages/numpy/core/include/'],
 					library_dirs = ['/usr/local/lib'],
 					libraries = ['dummy_string'],	# just in case. This will be replaced later
 					sources = ['python_module/rfr.cpp'],
@@ -49,4 +48,5 @@ setup(
 	classifiers=['Development Status :: 2 - Pre-Alpha'],
 	cmdclass={'build': build},
 	ext_modules=[rfr],
+    install_requires=['numpy']
 )
