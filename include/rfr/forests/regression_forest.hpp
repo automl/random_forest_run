@@ -30,6 +30,13 @@ class regression_forest{
 		the_trees.resize(forest_opts.num_trees);
 	}
 
+
+
+	/* \brief growing the random forest for a given data set
+	 * 
+	 * \param data a filled data container
+	 * \param rng the random number generator to be used
+	 */
 	void fit(const rfr::data_container_base<num_type, response_type, index_type> &data, rng_type &rng){
 
 		if ((!forest_opts.do_bootstrapping) && (data.num_data_points() < forest_opts.num_data_points_per_tree)){
@@ -60,7 +67,7 @@ class regression_forest{
 	/* \brief combines the prediction of all trees in the forest
 	 *
 	 * Every random tree makes an individual prediction. From that, the mean and the standard
-	 * deviation from all response values in all the leaves is calculated.
+	 * deviation of those predictions is calculated. (See Frank's PhD thesis section 11.?)
 	 *
 	 * \param feature_vector a valid (size and values) array containing features
 	 *
@@ -70,21 +77,27 @@ class regression_forest{
 
 		num_type sum=0;
 		num_type sum_squared = 0;
-		index_type N = 0;
 
 		for (auto &tree: the_trees){
 			num_type m , s;
 			index_type n;
 
 			std::tie(m, s, n) = tree.predict_mean_std_N(feature_vector);
-			// recompute the sum and the sum of squared response values 
-			sum += m*n;
-			sum_squared += s*s*n+n*m*m;
-			N += n;
+			
+			sum += m;
+			sum_squared += m*m;
 		}
+		
+		unsigned int N = the_trees.size();
 		return(std::tuple<num_type, num_type> (sum/N, sqrt(sum_squared/N - (sum/N)*(sum/N))));
 	}
 
+
+	/* \brief stores a latex document for every individual tree
+	 * 
+	 * \param filename_template a string to specify the location and the naming scheme. Note the directory is not created, so make sure it exists.
+	 * 
+	 */
 	void save_latex_representation(const char* filename_template){
 		for (auto i = 0u; i<the_trees.size(); i++){
 			std::stringstream filename;
@@ -93,13 +106,11 @@ class regression_forest{
 		}
 	}
 
-
 	void print_info(){
 		for (auto t: the_trees){
 			t.print_info();
 		}
 	}
-
 };
 
 
