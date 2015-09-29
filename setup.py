@@ -2,6 +2,8 @@ from distutils.core import setup, Extension
 import distutils.command.build
 
 
+import numpy
+
 
 class build(distutils.command.build.build):
 	"""Subclass of build to specify the name of the boost-python library
@@ -31,7 +33,7 @@ class build(distutils.command.build.build):
 
 
 rfr = Extension('rfr',
-					include_dirs = ['./boost_numpy', './include','/usr/lib/python3.4/site-packages/numpy/core/include/'],
+					include_dirs = ['./boost_numpy', './include', numpy.get_include()],
 					library_dirs = ['/usr/local/lib'],
 					libraries = ['dummy_string'],	# just in case. This will be replaced later
 					sources = ['python_module/rfr.cpp'],

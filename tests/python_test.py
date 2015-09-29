@@ -37,7 +37,7 @@ the_forest.seed=12
 
 the_forest.do_bootstrapping=True
 the_forest.num_data_points_per_tree=0
-the_forest.max_features_per_split = 0
+the_forest.max_features_per_split = features.shape[1]//2
 the_forest.min_samples_to_split = 0
 the_forest.min_samples_in_leaf = 0
 the_forest.max_depth=0
