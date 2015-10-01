@@ -42,7 +42,7 @@ class tree_base{
 	 * 
 	 * \return std::vector<response_type> all response values in that leaf
 	 */
-	virtual std::vector<response_type> leaf_entries (num_type *feature_vector) = 0;
+	virtual std::vector<response_type> const &leaf_entries (num_type *feature_vector) = 0;
 	
 	
 	

@@ -152,7 +152,7 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 		return(node_index);
 	}
 	
-	virtual std::vector<response_type> leaf_entries (num_type *feature_vector){
+	virtual std::vector<response_type> const &leaf_entries (num_type *feature_vector){
 		index_type i = find_leaf(feature_vector);
 		return(the_nodes[i].responses());
 	}

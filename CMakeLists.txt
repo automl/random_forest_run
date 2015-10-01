@@ -7,12 +7,11 @@ set (RFR_VERSION_MINOR 1)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
- SET(CMAKE_BUILD_TYPE "DEBUG")
- #SET(CMAKE_BUILD_TYPE "RELEASE")
+ #SET(CMAKE_BUILD_TYPE "DEBUG")
+ SET(CMAKE_BUILD_TYPE "RELEASE")
  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
-
 
 enable_testing()
 
@@ -47,6 +46,11 @@ if(DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 
+
+
+add_executable(profiling_example "${PROJECT_SOURCE_DIR}/tests/profiling_example.cpp")
+set_property(TARGET profiling_example PROPERTY CXX_STANDARD 11)
+set_property(TARGET profiling_example PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
 
@@ -107,11 +111,8 @@ set_property(TARGET rfr PROPERTY PREFIX "")
 set_property(TARGET rfr PROPERTY CXX_STANDARD_REQUIRED ON)
 
 
-
-
-
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  ADD_DEFINITIONS("-Wall -fPIC")
+  ADD_DEFINITIONS("-Wall -fPIC -pg")
   #ADD_DEFINITIONS("-fPIC")
  ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")

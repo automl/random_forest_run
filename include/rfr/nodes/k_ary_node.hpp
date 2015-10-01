@@ -152,7 +152,7 @@ class k_ary_node{
 	/** \brief get indices of all children*/
 	std::array<index_type, k> get_children() {return(children);}
 	/** \brief get reference to the response values*/	
-	std::vector<response_type> responses(){ return(response_values);}
+	std::vector<response_type> const &responses (){ return( (std::vector<response_type> const &) response_values);}
 
 
 	/** \brief prints out some basic information abouth the node*/

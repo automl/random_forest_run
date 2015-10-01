@@ -9,6 +9,7 @@
 #include <numeric>
 #include <random>
 #include <algorithm>
+#include <functional>  // std::bind
 
 
 #include "rfr/trees/tree_options.hpp"
@@ -89,7 +90,7 @@ class regression_forest{
 		}
 		
 		unsigned int N = the_trees.size();
-		return(std::tuple<num_type, num_type> (sum/N, sqrt( (sum_quared - sum*sum/N)/(N*(N-1)))));
+		return(std::tuple<num_type, num_type> (sum/N, sqrt( (sum_squared - sum*sum/N)/(N*(N-1)))));
 	}
 
 
