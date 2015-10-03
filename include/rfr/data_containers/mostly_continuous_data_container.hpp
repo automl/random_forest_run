@@ -25,8 +25,12 @@ class mostly_contiuous_data : public rfr::data_container_base<num_type, response
 	std::vector<num_type> response_values;              //!< the associated responses
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
   public:
+
+	mostly_contiuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)){}
+  
 	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
-		return(feature_values.at(feature_index).at(sample_index));
+		//return(feature_values.at(feature_index).at(sample_index));
+		return(feature_values[feature_index][sample_index]);
 	}
 
 	virtual response_type response (index_type sample_index) const{
@@ -73,8 +77,9 @@ class mostly_contiuous_data : public rfr::data_container_base<num_type, response
 		if (index >= num_features()) return(false);
 		if (type < 0)   return(false);
 		// here, only store the categorical values
-		if (type > 0)   categorical_ranges[index] = type;
-			return(true);
+		if (type > 0)
+			categorical_ranges[index] = type;
+		return(true);
 	}
 
 

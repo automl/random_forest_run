@@ -1,5 +1,5 @@
 #include "binary_rss.cpp"
-
+#include "binary_rssv2.cpp"
 
 
 void export_regression(){
@@ -47,4 +47,43 @@ void export_regression(){
 			&pyrfr::regression::binary_rss::binary_rss::min_samples_in_leaf)
 	.def_readwrite("epsilon_purity",
 			&pyrfr::regression::binary_rss::binary_rss::epsilon_purity);
+
+
+
+
+    boost::python::class_<pyrfr::regression::binary_rss::binary_rss_v2>("binary_rss_v2")
+	// add methods
+	.def("fit",
+		&pyrfr::regression::binary_rss::binary_rss_v2::fit)
+
+	.def("predict",
+		&pyrfr::regression::binary_rss::binary_rss_v2::predict)
+
+	.def("save_latex_representation",
+		&pyrfr::regression::binary_rss::binary_rss_v2::save_latex_representation)
+
+	// add attribute variables
+	.def_readwrite("num_trees",
+			&pyrfr::regression::binary_rss::binary_rss_v2::num_trees)
+	.def_readwrite("seed",
+			&pyrfr::regression::binary_rss::binary_rss_v2::seed)
+	.def_readwrite("do_bootstrapping",
+			&pyrfr::regression::binary_rss::binary_rss_v2::do_bootstrapping)
+	.def_readwrite("num_data_points_per_tree",
+			&pyrfr::regression::binary_rss::binary_rss_v2::num_data_points_per_tree )
+	.def_readwrite("max_num_nodes",
+			&pyrfr::regression::binary_rss::binary_rss_v2::max_num_nodes )
+	.def_readwrite("max_depth",
+			&pyrfr::regression::binary_rss::binary_rss_v2::max_depth)
+	.def_readwrite("max_features_per_split",
+			&pyrfr::regression::binary_rss::binary_rss_v2::max_features_per_split)
+	.def_readwrite("min_samples_to_split",
+			&pyrfr::regression::binary_rss::binary_rss_v2::min_samples_to_split)
+	.def_readwrite("min_samples_in_leaf",
+			&pyrfr::regression::binary_rss::binary_rss_v2::min_samples_in_leaf)
+	.def_readwrite("epsilon_purity",
+			&pyrfr::regression::binary_rss::binary_rss_v2::epsilon_purity);
+
+
+
 }

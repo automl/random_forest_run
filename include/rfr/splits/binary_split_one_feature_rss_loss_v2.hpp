@@ -1,5 +1,5 @@
-#ifndef RFR_BINARY_SPLIT_RSS_HPP
-#define RFR_BINARY_SPLIT_RSS_HPP
+#ifndef RFR_BINARY_SPLIT_RSS_V2_HPP
+#define RFR_BINARY_SPLIT_RSS_V2_HPP
 
 #include <vector>
 #include <array>
@@ -13,8 +13,9 @@
 namespace rfr{
 
 
+
 template <typename rng_type, typename num_type = float, typename response_type=float, typename index_type = unsigned int>
-class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type, num_type, response_type, index_type> {
+class binary_split_one_feature_rss_loss_v2: public rfr::k_ary_split_base<2,rng_type, num_type, response_type, index_type> {
   private:
 	
 	index_type feature_index;	//!< split needs to know which feature it uses
@@ -47,6 +48,10 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 		std::vector<index_type> indices_copy(indices);
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
 
+
+		std::vector<index_type> shadow_indices(indices.size());
+		std::iota(shadow_indices.begin(), shadow_indices.end(), 0);
+
 		for (index_type fi : features_to_try){ //! > uses C++11 range based loop
 
 
@@ -70,7 +75,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 			if (ft > 0){
 				split_criterion_copy.assign(1,ft);
 				// find best split for the current feature_index
-				loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy, rng);
+				//loss = best_split_categorical(data,fi, ft, split_criterion_copy, indices_copy, split_indices_it_copy, rng);
 			}
 
 			// check if this split is the best so far
@@ -79,7 +84,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 				feature_index = fi;
 				split_criterion.swap(split_criterion_copy);
 				indices.swap(indices_copy);
-				split_indices_it.at(1) = split_indices_it_copy;
+				split_indices_it.[1] = split_indices_it_copy;
 			}
 		}
 		if (best_loss < std::numeric_limits<num_type>::infinity()){
@@ -90,6 +95,12 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 		}
 		return(best_loss);
 	}
+
+	void permute_two_vectors (std::vector<index_type> &perm, std::vector<num_type> &f, std::vector<response_type> &r){
+
+	}
+
+
 
 
 	/** \brief this operator tells into which child the given feature vector falls
