@@ -19,14 +19,15 @@ namespace rfr{
  *  Instead, this data_container only stores the non-continuous ones in a hash-map.
  */
 template<typename num_type = float, typename response_type = float, typename index_type = unsigned int>
-class mostly_contiuous_data : public rfr::data_container_base<num_type, response_type, index_type>{
+class mostly_continuous_data : public rfr::data_container_base<num_type, response_type, index_type>{
   private:
 	std::vector< std::vector<num_type> > feature_values;//!< 2d vector to store the feature values
 	std::vector<num_type> response_values;              //!< the associated responses
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
   public:
 
-	mostly_contiuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)){}
+	mostly_continuous_data() {}
+	mostly_continuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)){}
   
 	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
 		//return(feature_values.at(feature_index).at(sample_index));

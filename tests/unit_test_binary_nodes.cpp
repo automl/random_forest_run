@@ -30,7 +30,7 @@ typedef rfr::temporary_node<num_type, index_type> tmp_node_type;
 
 BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 
-	rfr::mostly_contiuous_data<num_type, index_type> data;
+	rfr::mostly_continuous_data<num_type, index_type> data;
     char filename [1024];
 
     strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);

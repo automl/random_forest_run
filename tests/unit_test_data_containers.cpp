@@ -16,7 +16,7 @@ typedef double num_type;
 
 
 BOOST_AUTO_TEST_CASE( data_container_tests ){
-	rfr::mostly_contiuous_data<num_type> data;
+	rfr::mostly_continuous_data<num_type> data;
 
 	char *filename = (char*) malloc(1024*sizeof(char));
 
