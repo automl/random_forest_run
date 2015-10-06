@@ -1,5 +1,5 @@
-#ifndef RFR_NUMPY_CONTAINER_HPP
-#define RFR_NUMPY_CONTAINER_HPP
+#ifndef RFR_NUMPY_TRANSPOSED_CONTAINER_HPP
+#define RFR_NUMPY_TRANSPOSED_CONTAINER_HPP
 
 
 #include <algorithm>
@@ -13,7 +13,7 @@
 
 namespace rfr{
 template <typename num_type=float, typename response_type=float, typename index_type=unsigned int>
-class numpy_simple_data_container : public data_container_base<num_type, response_type, index_type>{
+class numpy_transposed_data_container : public data_container_base<num_type, response_type, index_type>{
 
   private:
 	index_type n_data_points;
@@ -24,12 +24,12 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 
   public:
 
-	numpy_simple_data_container(boost::numpy::ndarray const & features,
+	numpy_transposed_data_container(boost::numpy::ndarray const & features,
 								boost::numpy::ndarray const & responses,
 								boost::numpy::ndarray const & types){
 
-		n_data_points = features.shape(0);
-		n_features = features.shape(1);
+		n_data_points = features.shape(1);
+		n_features = features.shape(0);
 
 		if (n_data_points != responses.shape(0) ) {
 			PyErr_SetString(PyExc_ValueError, "Number of responses does not match number of datapoints provided.");
@@ -52,13 +52,13 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 		for (auto i=0u; i<n_features; i++){
 			if (types[i] > 0.5){
 				for (auto j=0u; j < n_data_points; j++)
-					feature_array[j*n_features + i] = std::round(feature_array[j*n_features + i]);
+					feature_array[i*n_data_points + j] = std::round(feature_array[i*n_data_points + j]);
 			}
 		}
 	}
   
 	virtual num_type feature (index_type feature_index, index_type sample_index) const {
-		return (feature_array[sample_index*n_features + feature_index]);
+		return (feature_array[sample_index + n_data_points*feature_index]);
 	}
 
 
@@ -67,7 +67,7 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 		rv.reserve(sample_indices.size());
 
 		for (auto i: sample_indices)
-			rv.push_back(feature_array[i*n_features+feature_index]);
+			rv.push_back(feature_array[i+n_data_points*feature_index]);
 
 		return(rv);
 		

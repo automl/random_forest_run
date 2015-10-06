@@ -31,6 +31,8 @@ class mostly_continuous_data : public rfr::data_container_base<num_type, respons
 	// points via 'add_data_point' may or may not fail!
 	mostly_continuous_data() {}
 
+	// if you plan on filling the container with single data points one at a time
+	// use this constructor to specify the number of features 
 	mostly_continuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)){}
   
 	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
@@ -38,11 +40,21 @@ class mostly_continuous_data : public rfr::data_container_base<num_type, respons
 		return(feature_values[feature_index][sample_index]);
 	}
 
+
+	virtual std::vector<num_type> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
+		std::vector<num_type> rv;
+		rv.reserve(sample_indices.size());
+		for (auto i : sample_indices)
+			rv.push_back(feature_values[feature_index][i]);
+		return(rv);
+	}
+
+
 	virtual response_type response (index_type sample_index) const{
 		return(response_values[sample_index]);
 	}
 
-	virtual bool add_data_point (num_type* feats, index_type num_elements, response_type &response){
+	virtual bool add_data_point (num_type* feats, index_type num_elements, response_type response){
 		if (num_features() != num_elements) return(false);
 
 		for (size_t i=0; i<num_elements; i++)

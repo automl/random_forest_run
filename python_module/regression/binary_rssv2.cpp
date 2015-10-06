@@ -26,10 +26,9 @@ typedef double response_type;
 typedef unsigned int index_type;
 typedef std::default_random_engine rng_type;
 
-typedef rfr::binary_split_one_feature_rss_loss_v2<rng_type, num_type, response_type, index_type> split_type_v2;
-//typedef rfr::k_ary_node<2, split_type_v2, rng_type, num_type, response_type, index_type> node_type;
-//typedef rfr::temporary_node<num_type, index_type> tmp_node_type;
+typedef rfr::numpy_simple_data_container<num_type, response_type, index_type> data_container_type;
 
+typedef rfr::binary_split_one_feature_rss_loss_v2<rng_type, num_type, response_type, index_type> split_type_v2;
 typedef rfr::k_ary_random_tree<2, split_type_v2, rng_type, num_type, response_type, index_type> tree_type_v2;
 typedef rfr::regression_forest< tree_type_v2, rng_type, num_type, response_type, index_type> forest_type_v2;
 
@@ -74,7 +73,7 @@ class binary_rss_v2{
 	pyrfr::check_array<index_type>(types, 1);
 
 	// create the data container
-	rfr::numpy_simple_data_container<num_type, response_type, index_type> data(features, responses, types);
+	data_container_type data(features, responses, types);
 
 
 	// construct the forest_option object

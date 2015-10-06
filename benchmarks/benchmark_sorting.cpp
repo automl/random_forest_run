@@ -172,8 +172,6 @@ num_type rss_split_v3 ( data_type & data, std::vector<index_type> &indices, std:
 		responses.push_back(res);
 	}	
 
-	//print_vector(responses);
-
 	for (auto fi: features_to_try){
 		feature.clear();
 		for (auto it = indices.begin(); it != indices.end(); it++)
@@ -194,12 +192,12 @@ num_type rss_split_v3 ( data_type & data, std::vector<index_type> &indices, std:
 		// so we compute the mean and the variance for that case
 		num_type S_y_right(S_y_total), S_y2_right(S_y2_total);
 
-		auto tmp_i = 0;
+		auto tmp_i = 0u;
 
 		// now we can increase the splitting value to move data points from the right to the left child
 		// this way we do not consider a split with everything in the right child
 		while (tmp_i != tmp_indices.size()){
-			num_type psv = feature[tmp_indices[tmp_i]]+ 1e-10; // potential split value add small delta for numerical inaccuracy
+			num_type psv = feature[tmp_indices[tmp_i]]+ 1e-6; // potential split value add small delta for numerical inaccuracy
 			// combine data points that are very close
 			while ((tmp_i != tmp_indices.size()) && (feature[tmp_indices[tmp_i]] - psv <= 0)){
 				// change the Sum(y) and Sum(y^2) for left and right accordingly
@@ -228,6 +226,74 @@ num_type rss_split_v3 ( data_type & data, std::vector<index_type> &indices, std:
 	}
 	return(best_loss);
 }
+
+
+
+num_type rss_split_v4 ( data_type & data, std::vector<index_type> &indices, std::vector<index_type> &features_to_try){
+
+	num_type best_loss = std::numeric_limits<num_type>::infinity();
+	num_type S_y_total(0), S_y2_total(0);
+
+
+	std::vector<index_type> tmp_indices(indices.size());
+	std::iota(tmp_indices.begin(), tmp_indices.end(), 0);
+	
+	std::vector<num_type> feature; feature.reserve(indices.size());
+	std::vector<response_type> responses;responses.reserve(indices.size());
+
+	for (auto it = indices.begin(); it != indices.end(); it++){
+		response_type res = data.response(*it);
+		S_y_total  += res;
+		S_y2_total += res*res;
+		responses.push_back(res);
+	}	
+
+	for (auto fi: features_to_try){
+		feature.clear();
+		for (auto it = indices.begin(); it != indices.end(); it++)
+			feature.emplace_back(data.feature(fi,*it));
+		
+		// sort the indices by the value in feature vector
+		std::sort(	tmp_indices.begin(), tmp_indices.end(),
+					[&](index_type a, index_type b){return feature[a] < feature[b];}		//! > uses C++11 lambda function, how exciting :)
+		);
+
+		// find the best split by looking at any meaningful value for the feature
+		// first some temporary variables
+		num_type S_y_left(0), S_y2_left(0);
+		num_type N_left(0), N_right(indices.size());
+		num_type loss = std::numeric_limits<num_type>::infinity();
+
+		// we start out with everything in the right child
+		// so we compute the mean and the variance for that case
+		num_type S_y_right(S_y_total), S_y2_right(S_y2_total);
+
+		// now we can increase the splitting value to move data points from the right to the left child
+		// this way we do not consider a split with everything in the right child
+		for (auto tmp_i = 0u; tmp_i < tmp_indices.size()-1 ;tmp_i++){
+			//num_type psv = feature[tmp_indices[tmp_i]];
+			// change the Sum(y) and Sum(y^2) for left and right accordingly
+			response_type res = responses[tmp_indices[tmp_i]];
+			S_y_left  += res;
+			S_y_right -= res;
+			S_y2_left += res*res;
+			S_y2_right-= res*res;
+			N_right--;
+			N_left++;
+
+			// compute the loss
+			loss = (S_y2_left  - (S_y_left *S_y_left )/N_left) 
+			     + (S_y2_right - (S_y_right*S_y_right)/N_right);
+
+			// store the best split
+			if (loss < best_loss){
+				best_loss = loss;
+			}
+		}
+	}
+	return(best_loss);
+}
+
 
 
 
@@ -281,6 +347,11 @@ int main (int argc, char** argv){
 	best_loss = rss_split_v3 (data, indices, features_to_try);
 	t = clock() - t;
 	std::cout << "v3 took "<< t <<" ticks, best_loss = "<<best_loss<<std::endl;
+
+	t = clock();
+	best_loss = rss_split_v4 (data, indices, features_to_try);
+	t = clock() - t;
+	std::cout << "v4 took "<< t <<" ticks, best_loss = "<<best_loss<<std::endl;
 
     return(0);
 }
