@@ -72,7 +72,7 @@ void check_array ( boost::numpy::ndarray const & array, int num_dims){
 } // end of namespace pyrfr
 
 #include "regression/regression.hpp"
-
+#include "data_container/container.hpp"
 
 
 
@@ -90,7 +90,11 @@ BOOST_PYTHON_MODULE(rfr){
 	package.attr("__path__") = "rfr";
 
 
+
+
+
 	// add submodules
+	export_data_container();
 	export_regression();
 }
 

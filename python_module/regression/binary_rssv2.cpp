@@ -7,8 +7,8 @@
 #include <boost/numpy.hpp>
 
 
-#include "rfr/data_containers/numpy_simple_data_container.hpp"
-#include "rfr/splits/binary_split_one_feature_rss_loss_v2.hpp"
+#include "../data_container/mostly_continuous.cpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
 #include "rfr/trees/tree_options.hpp"
@@ -20,15 +20,14 @@
 namespace pyrfr{ namespace regression { namespace binary_rss{
 
 
-
 typedef double num_type;
 typedef double response_type;
 typedef unsigned int index_type;
 typedef std::default_random_engine rng_type;
 
-typedef rfr::numpy_simple_data_container<num_type, response_type, index_type> data_container_type;
+//typedef rfr::numpy_transposed_data_container<num_type, response_type, index_type> data_container_type;
 
-typedef rfr::binary_split_one_feature_rss_loss_v2<rng_type, num_type, response_type, index_type> split_type_v2;
+typedef rfr::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type> split_type_v2;
 typedef rfr::k_ary_random_tree<2, split_type_v2, rng_type, num_type, response_type, index_type> tree_type_v2;
 typedef rfr::regression_forest< tree_type_v2, rng_type, num_type, response_type, index_type> forest_type_v2;
 
@@ -58,23 +57,10 @@ class binary_rss_v2{
 
     ~binary_rss_v2(){ delete forest_ptr;}
     
-    void fit (	boost::numpy::ndarray const & features,
-		boost::numpy::ndarray const & responses,
-		boost::numpy::ndarray const & types
-		){
+    void fit (pyrfr::data_container::mostly_continuous_data &data){
 
 
 	if (seed > 0) {rng.seed(seed); seed = 0;}
-
-
-	// simple sanity checks
-	pyrfr::check_array<num_type>(features, 2);
-	pyrfr::check_array<response_type>(responses, 1);
-	pyrfr::check_array<index_type>(types, 1);
-
-	// create the data container
-	data_container_type data(features, responses, types);
-
 
 	// construct the forest_option object
 	rfr::forest_options<num_type, response_type, index_type> forest_opts;

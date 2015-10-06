@@ -55,6 +55,7 @@ class mostly_continuous_data : public rfr::data_container_base<num_type, respons
 	}
 
 	virtual bool add_data_point (num_type* feats, index_type num_elements, response_type response){
+
 		if (num_features() != num_elements) return(false);
 
 		for (size_t i=0; i<num_elements; i++)
