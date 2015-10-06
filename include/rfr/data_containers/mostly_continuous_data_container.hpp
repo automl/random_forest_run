@@ -26,6 +26,11 @@ class mostly_continuous_data : public rfr::data_container_base<num_type, respons
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
   public:
 
+	// empty constructor. Use this only if you read the data from a file!
+	// the private vectors are not properly initialized! Adding data
+	// points via 'add_data_point' may or may not fail!
+	mostly_continuous_data() {}
+
 	mostly_continuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)){}
   
 	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
@@ -41,7 +46,7 @@ class mostly_continuous_data : public rfr::data_container_base<num_type, respons
 		if (num_features() != num_elements) return(false);
 
 		for (size_t i=0; i<num_elements; i++)
-			feature_values[i].push_back(feats[i]);
+			feature_values.at(i).push_back(feats[i]);
 		response_values.push_back(response);
 		return(true);
 	}
