@@ -27,7 +27,7 @@ typedef rfr::k_ary_random_tree<2, split_type, rng_type, num_type, response_type,
 
 
 int main (int argc, char** argv){
-	rfr::mostly_contiuous_data<num_type,response_type, index_type> data;
+	data_container_type data;
 
     char *filename = (char*) malloc(1024*sizeof(char));
 
