@@ -55,7 +55,7 @@ class binary_rss{
     unsigned int min_samples_in_leaf = 0;
     response_type epsilon_purity = -1;
 
-
+    
 
     ~binary_rss(){ delete forest_ptr;}
     

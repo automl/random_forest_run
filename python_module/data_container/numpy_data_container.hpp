@@ -11,9 +11,10 @@
 #include <rfr/data_containers/data_container_base.hpp>
 
 
-namespace rfr{
-template <typename num_type=float, typename response_type=float, typename index_type=unsigned int>
-class numpy_simple_data_container : public data_container_base<num_type, response_type, index_type>{
+namespace pyrfr{ namespace data_container{
+
+template <typename num_type, typename response_type, typename index_type>
+class numpy_data_container : public rfr::data_container_base<num_type, response_type, index_type>{
 
   private:
 	index_type n_data_points;
@@ -24,9 +25,9 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 
   public:
 
-	numpy_simple_data_container(boost::numpy::ndarray const & features,
-								boost::numpy::ndarray const & responses,
-								boost::numpy::ndarray const & types){
+	numpy_data_container(boost::numpy::ndarray const & features,
+						boost::numpy::ndarray const & responses,
+						boost::numpy::ndarray const & types){
 
 		n_data_points = features.shape(0);
 		n_features = features.shape(1);
@@ -70,7 +71,6 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 			rv.push_back(feature_array[i*n_features+feature_index]);
 
 		return(rv);
-		
 	}
 
 	
@@ -107,5 +107,5 @@ class numpy_simple_data_container : public data_container_base<num_type, respons
 	virtual index_type num_data_points()  const {return(n_data_points);}
 };
 
-} // namespace rfr
+}} // namespace rfr
 #endif // RFR_NUMPY_CONTAINER_HPP

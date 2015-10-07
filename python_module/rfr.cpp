@@ -4,7 +4,9 @@
 #include "my_boost_numpy.hpp"
 
 
-
+typedef double pyrfr_num_type;
+typedef double pyrfr_response_type_regression;
+typedef unsigned int pyrfr_index_type;
 
 
 
@@ -71,9 +73,9 @@ void check_array ( boost::numpy::ndarray const & array, int num_dims){
 
 } // end of namespace pyrfr
 
-#include "regression/regression.hpp"
-#include "data_container/container.hpp"
 
+#include "data_container/container.hpp"
+//#include "regression/regression.hpp"
 
 
 
@@ -95,7 +97,7 @@ BOOST_PYTHON_MODULE(rfr){
 
 	// add submodules
 	export_data_container();
-	export_regression();
+	//export_regression();
 }
 
 
