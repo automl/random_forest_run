@@ -1,4 +1,3 @@
-
 import time
 
 import numpy as np
@@ -25,6 +24,13 @@ responses =  np.loadtxt(data_set_prefix+'responses.csv', delimiter=",")
 types = np.zeros([features.shape[1]],dtype=np.uint32)
 
 
+data = rfr.data_container.numpy_data_container_regression(features, responses, types)
+data = rfr.data_container.numpy_transposed_data_container_regression(np.copy(features.T, 'C'), responses, types)
+
+
+
+exit(0)
+
 
 
 print(features.shape)
@@ -34,7 +40,6 @@ the_forest = rfr.regression.binary_rss()
 
 
 the_forest.seed=12
-
 the_forest.do_bootstrapping=True
 the_forest.num_data_points_per_tree=0
 the_forest.max_features_per_split = features.shape[1]//2

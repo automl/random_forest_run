@@ -30,6 +30,6 @@ void export_data_container(){
 
 
 	boost::python::class_<pyrfr::data_container::numpy_data_container<pyrfr_num_type, pyrfr_response_type_regression, pyrfr_index_type> >("numpy_data_container_regression", boost::python::init<boost::numpy::ndarray, boost::numpy::ndarray, boost::numpy::ndarray> ());
-	boost::python::class_<pyrfr::data_container::numpy_data_container<pyrfr_num_type, pyrfr_response_type_regression, pyrfr_index_type> >("numpy_transposed_data_container_regression", boost::python::init<boost::numpy::ndarray, boost::numpy::ndarray, boost::numpy::ndarray> ());
+	boost::python::class_<pyrfr::data_container::numpy_transposed_data_container<pyrfr_num_type, pyrfr_response_type_regression, pyrfr_index_type> >("numpy_transposed_data_container_regression", boost::python::init<boost::numpy::ndarray, boost::numpy::ndarray, boost::numpy::ndarray> ());
 	
 }
