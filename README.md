@@ -29,9 +29,9 @@ On a recent Arch Linux this line could look like that:
 python  setup.py build --boost-python-lib-name=boost_python3
 ```
 and would build the module for Python 3. You can find the name of the library
-by searching in $/lib/$ or $/usr/lib/$ for files starting with $libboost_python$
+by searching in `/lib/` or `/usr/lib/` for files starting with `libboost_python`
 
 ##USAGE
 
-For now, the file $tests/python_test.py$ inside the repository serves as the
+For now, the file `./tests/python_test.py` inside the repository serves as the
 only real documentation of the Python bindings.
