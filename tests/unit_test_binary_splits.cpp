@@ -111,9 +111,6 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
 		BOOST_CHECK_MESSAGE(split2(tmp_feature_vector) == operator_test[i],split2(tmp_feature_vector) << "!=" <<  operator_test[i]<<" (index "<<i<<")\n");
 	}
-	
-	
-	
 }
 
 

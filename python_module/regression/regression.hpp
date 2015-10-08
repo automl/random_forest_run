@@ -1,5 +1,9 @@
+#ifndef PYRFR_REGRESSION_HPP
+#define PYRFR_REGRESSION_HPP
+
+
 #include "binary_rss.cpp"
-#include "binary_rssv2.cpp"
+#include "../data_container/container.hpp"
 
 
 void export_regression(){
@@ -15,17 +19,24 @@ void export_regression(){
     // set the current scope to the new sub-module
     bp::scope regression_scope = regressionModule;
 
+
+
+	void (pyrfr::regression::binary_rss::binary_rss::*f1) ( pyrfr::data_container::mostly_continuous_data<pyrfr_num_type, pyrfr_response_type_regression, pyrfr_index_type> &data) = &pyrfr::regression::binary_rss::binary_rss::fit;
+	void (pyrfr::regression::binary_rss::binary_rss::*f2) ( pyrfr::data_container::numpy_data_container<pyrfr_num_type, pyrfr_response_type_regression, pyrfr_index_type> &data) = &pyrfr::regression::binary_rss::binary_rss::fit;
+	void (pyrfr::regression::binary_rss::binary_rss::*f3) ( pyrfr::data_container::numpy_transposed_data_container<pyrfr_num_type, pyrfr_response_type_regression, pyrfr_index_type> &data) = &pyrfr::regression::binary_rss::binary_rss::fit;
+
+
+
     boost::python::class_<pyrfr::regression::binary_rss::binary_rss>("binary_rss")
 	// add methods
-	.def("fit",
-		&pyrfr::regression::binary_rss::binary_rss::fit)
-
+	.def("fit",	f1)
+	.def("fit",	f2)
+	.def("fit",	f3)
 	.def("predict",
 		&pyrfr::regression::binary_rss::binary_rss::predict)
 
 	.def("save_latex_representation",
 		&pyrfr::regression::binary_rss::binary_rss::save_latex_representation)
-
 	// add attribute variables
 	.def_readwrite("num_trees",
 			&pyrfr::regression::binary_rss::binary_rss::num_trees)
@@ -48,7 +59,7 @@ void export_regression(){
 	.def_readwrite("epsilon_purity",
 			&pyrfr::regression::binary_rss::binary_rss::epsilon_purity);
 
-
+	/*
 
 
     boost::python::class_<pyrfr::regression::binary_rss::binary_rss_v2>("binary_rss_v2")
@@ -84,6 +95,8 @@ void export_regression(){
 	.def_readwrite("epsilon_purity",
 			&pyrfr::regression::binary_rss::binary_rss_v2::epsilon_purity);
 
-
+	*/
 
 }
+
+#endif

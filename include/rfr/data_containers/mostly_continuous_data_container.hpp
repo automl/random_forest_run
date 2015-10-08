@@ -20,7 +20,7 @@ namespace rfr{
  */
 template<typename num_type = float, typename response_type = float, typename index_type = unsigned int>
 class mostly_continuous_data : public rfr::data_container_base<num_type, response_type, index_type>{
-  private:
+  protected:
 	std::vector< std::vector<num_type> > feature_values;//!< 2d vector to store the feature values
 	std::vector<num_type> response_values;              //!< the associated responses
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range

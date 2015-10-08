@@ -20,7 +20,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 	
 	index_type feature_index;	//!< split needs to know which feature it uses
 	
-	//!< The split criterion contains its type (first element = 0 for numerical, =1 for categoricals), and the split value in the second/ the categories that fall into the left child respectively
+	//!< The split criterion contains its type (first element = 0 for numerical, >=1 for categoricals), and the split value in the second/ the categories that fall into the left child respectively
 	std::vector<num_type> split_criterion; //!< one could consider to use a dynamically sized array here to save some memory (vector stores size and capacity + it might allocate more memory than needed!)
   public:
   	
@@ -218,7 +218,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 	 * 
 	 * \return float the loss of this split
 	 */
-	num_type best_split_continuous(	const std::vector<num_type> & features,
+	virtual num_type best_split_continuous(	const std::vector<num_type> & features,
 									const std::vector<response_type> & responses,
 									std::vector<num_type> &split_criterion,
 									num_type S_y_right, num_type S_y2_right){
@@ -282,7 +282,7 @@ class binary_split_one_feature_rss_loss: public rfr::k_ary_split_base<2,rng_type
 	 * 
 	 * \return float the loss of this split
 	 */
-	num_type best_split_categorical(const std::vector<num_type> & features,
+	virtual num_type best_split_categorical(const std::vector<num_type> & features,
 									index_type num_categories,
 									const std::vector<response_type> & responses,
 									std::vector<num_type> &split_criterion,

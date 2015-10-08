@@ -26,8 +26,8 @@ class numpy_transposed_data_container : public rfr::data_container_base<num_type
   public:
 
 	numpy_transposed_data_container(boost::numpy::ndarray const & features,
-								boost::numpy::ndarray const & responses,
-								boost::numpy::ndarray const & types){
+									boost::numpy::ndarray const & responses,
+									boost::numpy::ndarray const & types){
 
 		n_data_points = features.shape(1);
 		n_features = features.shape(0);
@@ -71,7 +71,6 @@ class numpy_transposed_data_container : public rfr::data_container_base<num_type
 			rv.push_back(feature_array[i+n_data_points*feature_index]);
 
 		return(rv);
-		
 	}
 
 	

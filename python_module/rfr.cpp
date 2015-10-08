@@ -8,7 +8,7 @@ typedef double pyrfr_num_type;
 typedef double pyrfr_response_type_regression;
 typedef unsigned int pyrfr_index_type;
 
-
+typedef std::default_random_engine pyrfr_rng_type;
 
 namespace pyrfr{
 
@@ -75,7 +75,7 @@ void check_array ( boost::numpy::ndarray const & array, int num_dims){
 
 
 #include "data_container/container.hpp"
-//#include "regression/regression.hpp"
+#include "regression/regression.hpp"
 
 
 
@@ -97,7 +97,7 @@ BOOST_PYTHON_MODULE(rfr){
 
 	// add submodules
 	export_data_container();
-	//export_regression();
+	export_regression();
 }
 
 
