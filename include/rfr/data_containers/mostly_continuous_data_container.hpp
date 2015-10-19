@@ -10,7 +10,7 @@
 #include "rfr/data_containers/data_container_utils.hpp"
 
 
-namespace rfr{
+namespace rfr{ namespace data_containers{
 
 /** \brief A data container for mostly continuous data.
  *
@@ -137,9 +137,8 @@ class mostly_continuous_data : public rfr::data_container_base<num_type, respons
 			std::cout<<"-> "<<response_values[i]<<std::endl;
 		}
 	}
-
 };
 
 
-}//namespace rfr
+}}//namespace rfr
 #endif

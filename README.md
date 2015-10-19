@@ -1,6 +1,19 @@
 #RFR
 A extensible C++ library for random forests with Python bindings.
 
+## Requirements
+
+For the C++ library itself, you need no additional libaries, only a C++11 capable compiler.
+The development is done using GCC 4.8 and 5.2.
+
+For the Python bindings, you will need
+
+```
+numpy
+boost (with the optional python module)
+```
+
+Any decent version (>1.32 or so) of Boost should do.
 
 
 ## INSTALLING THE PYTHON BINDINGS
