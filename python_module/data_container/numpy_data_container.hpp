@@ -43,6 +43,13 @@ class numpy_data_container : public rfr::data_container_base<num_type, response_
 			boost::python::throw_error_already_set();
 		}
 
+		std::cout<<"checking the feature values"<<std::endl;
+		pyrfr::check_array<num_type>(features, 2);
+		std::cout<<"checking the response values"<<std::endl;
+		pyrfr::check_array<response_type>(responses, 1);
+		std::cout<<"checking the types"<<std::endl;
+		pyrfr::check_array<index_type>(types, 1);
+
 		feature_array = reinterpret_cast<num_type *>(features.get_data());
 		response_array= reinterpret_cast<response_type *>(responses.get_data());
 		type_array    = reinterpret_cast<index_type *>(types.get_data());

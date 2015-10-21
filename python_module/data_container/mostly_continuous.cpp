@@ -21,11 +21,11 @@ namespace pyrfr{ namespace data_container{
  */
 
 template <typename num_type,typename response_type,typename index_type>
-class mostly_continuous_data : public rfr::mostly_continuous_data<num_type, response_type, index_type>{
+class mostly_continuous_data : public rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type>{
   public:
 
 	// constructor setting the number of features calling the base class' constructor
-	mostly_continuous_data (index_type number_of_features): rfr::mostly_continuous_data<num_type, response_type, index_type>(number_of_features) {}
+	mostly_continuous_data (index_type number_of_features): rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type>(number_of_features) {}
 
 	virtual bool add_data_point_numpy (boost::numpy::ndarray const & feature_vector, num_type response){
 		pyrfr::check_array<num_type>(feature_vector, 1);
