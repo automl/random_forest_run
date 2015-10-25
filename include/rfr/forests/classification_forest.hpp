@@ -62,24 +62,24 @@ class classification_forest{
 	 * in each of the classes.
          */
         std::tuple<num_type, num_type> predict_class( num_type * feature_vector){
-
-		int count_class1 = 0;
-		int count_class2 = 0;
+		int max_class =  *std::max_element(begin(data.response), end(data.response));
+    		int min_class =  *std::min_element(begin(data.response), end(data.response));
+		int length = max_class - min_class+1;
+		std::vector<int> classvector = std::vector<int> vector1(length, 0);
+		std::vector<int> class_probs = std::vector<int> vector1(length, 0);
+		int N = 0;
                 for (auto &tree: the_trees){
                         num_type c;
 
                         c = tree.predict_class(feature_vector);
                         // recompute the sum and the sum of squared response values 
-                        if(c == 1) {
-				count_class1 +=1;
-			}
-			else {
-				count_class2 +=1;
-			}
+                        classvector[c - min_class] += 1 ;
+			N++;
                 }
-		float prob_class1 = count_class1/static_cast<float>(count_class1 + count_class2);
-		float prob_class2 = count_class2/static_cast<float>(count_class1 + count_class2);
-                return(std::tuple<float, float> (prob_class1, prob_class2);
+		for (int i = 0; i <length; i++){
+			class_probs[i] = classvector[i]/N;
+		}
+                return(std::tuple<float, float>(class_probs);
         }
 
         void save_latex_representation(const char* filename_template){

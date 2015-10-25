@@ -1,0 +1,6 @@
+class_split: class_split.cpp
+	g++ -g++ -std=c++11 class_split.cpp -o class_split -I /usr/include/python2.7/
+
+clean:
+	rm *o class_split
+

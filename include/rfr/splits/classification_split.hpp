@@ -121,7 +121,7 @@ class classification_split: public rfr::k_ary_split_base<2,rng_type, num_type, r
          * \param indices_copy a const reference to the indices (const b/c it has already been sorted)
          * \param split_indices_it_copy an iterator that will point to the first element of indices_copy that would go into the right child
          * 
-         * \return int the gini criterion of this split
+         * \return the gini criterion of this split
          */
         num_type best_split_continuous( const rfr::data_container_base<num_type, response_type, index_type> &data,
                                                                         const index_type & fi,
@@ -134,30 +134,31 @@ class classification_split: public rfr::k_ary_split_base<2,rng_type, num_type, r
 		// first some temporary variables
 		num_type N_L(0), N_R(indices_copy.size());
 		num_type S_y_left(0), S_y_right(0);
-		num_type p_1L(0);
-		num_type p_1R(0);
 		num_type gini, highest_gini = std::numeric_limits<num_type>::infinity();;
-		int count_class1_R = 0;
-		int count_class2_R = 0;
-		int count_class1_L = 0;
-		int count_class2_L = 0;
-
+		int max_class =  *std::max_element(begin(data.response), end(data.response));
+    		int min_class =  *std::min_element(begin(data.response), end(data.response));
+		int length = max_class - min_class+1;
+		std::vector<int> classvector_r = std::vector<int> vector1(length, 0);
+		std::vector<int> classvector_l = std::vector<int> vector1(length, 0);
+		p_kr = std::vector<float>(length);
+		float gini = 0;
+		float gini_l = 0;
+		float gini_r = 0;
 		// we start out with everything in the right child and calculate the gini for total dataset
                 for (auto it = indices_copy.begin(); it != indices_copy.end(); it++){
-                        S_y_right  += data.response(*it);
-			if(S_y_right == 1) {
-				count_class1_R +=1;
-			}
-			else {
-				count_class2_R+=1;
-			}                     
+                        S_y_right = data.response(*it);
+			classvector_r[S_y_right - min_class] += 1 
                 }
-		// distribution (proportion) of both classes in the node:
-		p_1R = count_class1_R/N_R;
-		p_2R = count_class2_R/N_R;
-		
-		// gini index for that node:
-		gini = p_1R * (1-p_1R);
+		// distribution (proportion) of all classes in the node:
+		for (int i = 0; i <length; i++){
+			p_kr[i] = classvector_r[i]/N_R;
+		}
+		// calculating the gini of this node
+		for ( int i = 0; i < length; i++){
+			gini += p_kr[i]*(1-p_kr[i]);
+		}
+		// resulting gini index for that node:
+		gini = N_R * gini;
 
 		// splits (best slit is the one with the highest purity/gini)
 		
@@ -168,31 +169,31 @@ class classification_split: public rfr::k_ary_split_base<2,rng_type, num_type, r
                         num_type psv = data.feature(fi, *psii) + 1e-10; // potential split value add small delta for numerical inaccuracy
                         // combine data points that are very close
                         while ((psii != indices_copy.end()) && (data.feature(fi,*psii) - psv <= 0)){
-                                // change the Sum(y) and Sum(y^2) for left and right accordingly
 
                                 S_y_left  += data.response(*psii);
                                 S_y_right -= data.response(*psii);
-				if(data.response(*psii)== 1) {
-					count_class1_R -= 1;
-					count_class1_L +=1;
+				classvector_r[S_y_right - min_class] -= 1;
+				classvector_l[S_y_left - min_class] += 1;
+				N_R--;
+				N_L++;
+				// count classes for the right and left node and divide them by the overall classes of node
+				for (int i = 0; i <length; i++){
+					p_kr[i] = classvector_r[i]/N_R;
+					p_kl[i] = classvector_l[i]/N_L;
 				}
-				else {
-					count_class2_R -=1;
-					count_class2_L +=1;
+				// calculate the ginis for each node (summing up proportions of all classes)
+				for ( int i = 0; i < length; i++){
+					gini_r += p_kr[i]*(1-p_kr[i]);
+					gini_l += p_kl[i]*(1-p_kl[i]);
 				}
-                                N_right--;
-                                N_left++;
+				
                                 psii++;
                         }
                         // stop if all data points are now in the left child as this is not a meaningful split
                         if (N_right == 0) break;
 
-                        // compute the gini index
-			p_1R = count_class1_R/N_right;
-			p_1L = count_class1_L/N_left;
-			p_2R = count_class2_R/N_right;
-			p_2L = count_class2_L/N_left;
-                        gini = N_left * ((p_1L *(1-p_1L))+(p_2L *(1-p_2L))) + N_right * ((p1_R * (1-p1_R))+ (p2_R * (1-p2_R)));
+                        // compute the main gini index for both sides (the most important values)
+                        gini = (N_L * gini_l) + (N_R * gini_r);
 
                         // store the best split
                         if (gini < best_gini){
@@ -253,39 +254,48 @@ class classification_split: public rfr::k_ary_split_base<2,rng_type, num_type, r
                 num_type S_y_left = 0, S_y2_left = 0, N_left = 0;
                 num_type S_y_right = 0, S_y2_right = 0, N_right= 0;
                 num_type current_gini = 0, best_gini = 0;
-		int count_class1_R = 0;
-		int count_class2_R = 0;
-		int count_class1_L = 0;
-		int count_class2_L = 0;		
+		int max_class =  *std::max_element(begin(data.response), end(data.response));
+    		int min_class =  *std::min_element(begin(data.response), end(data.response));
+		int length = max_class - min_class+1;
+		std::vector<int> classvector_r = std::vector<int> vector1(length, 0);
+		std::vector<int> classvector_l = std::vector<int> vector1(length, 0);
+		p_kr = std::vector<float>(length);
+		float gini_l = 0;
+		float gini_r = 0;
+		float gini = 0;	
 
                 // put one category in the left node
                 auto it_best_split = category_ranking.begin();
                 S_y_left  = S_y[*it_best_split];
                 N_left    = N_points_in_category[*it_best_split];
-		if(S_y_left == 1) {
-			count_class1_L +=1;
+		// distribution (proportion) of all classes in the node:
+		for (int i = 0; i <length; i++){
+			p_kl[i] = classvector_l[i]/N_left;
 		}
-		else {
-			count_class2_L+=1;
-		}            
+		// calculate the gini for left node (summing up proportions of all classes)
+		for ( int i = 0; i < length; i++){
+			gini_l += p_kl[i]*(1-p_kl[i]);
+		}
+		// resulting gini index for left node:
+		gini = N_left * gini_l;
+            
                 it_best_split++;
 
-		p_1L = count_class1_L/N_left;
-		p_2L = count_class2_L/N_left;
 
                 // the rest goes into the right node
                 for (auto it1 = it_best_split; it1!=empty_categories_it; it1++){
                         S_y_right  += S_y[*it1];
                         N_right    += N_points_in_category[*it1];
-			if(S_y_right == 1) {
-				count_class1_R +=1;
-			}
-			else {
-				count_class2_R+=1;
-			}            
-                }
-		p_1R = count_class1_R/N_right;
-		p_2R = count_class2_R/N_right;
+		}
+		// distribution (proportion) of all classes in the node:
+		for (int i = 0; i <length; i++){
+			p_kr[i] = classvector_r[i]/N_R;
+		}
+		for ( int i = 0; i < length; i++){
+				gini_r += p_kr[i]*(1-p_kr[i]);
+		}
+		// gini index for that node:
+		gini = N_right * gini_r;           
 
                 // it can happen that the node is not pure wrt the response, but the
                 // feature at hand takes only one value in this node. By setting the
@@ -294,7 +304,7 @@ class classification_split: public rfr::k_ary_split_base<2,rng_type, num_type, r
                 if ( (N_right == 0) || (N_left == 0) )
                         best_gini = std::numeric_limits<num_type>::max();
                 else
-                        best_gini = N_left * ((p_1L *(1-p_1L))+(p_2L *(1-p_2L))) + N_right * ((p1_R * (1-p1_R))+ (p2_R * (1-p2_R)));
+                        best_gini = (N_left * gini_l) + (N_right * gini_r);
 
                 current_gini = best_gini;
 
@@ -302,26 +312,20 @@ class classification_split: public rfr::k_ary_split_base<2,rng_type, num_type, r
                 for (auto it1 = it_best_split; it1 != empty_categories_it; it1++){
                         S_y_left  += S_y[*it1];
                         S_y_right -= S_y[*it1];
-
-			if(data.response(*it1)== 1) {
-					count_class1_R -= 1;
-					count_class1_L +=1;
-				}
-				else {
-					count_class2_R -=1;
-					count_class2_L +=1;
-				}
-
-
                         N_left  += N_points_in_category[*it1];
                         N_right -= N_points_in_category[*it1];
-			
-			// compute the gini index
-			p_1R = count_class1_R/N_right;
-			p_1L = count_class1_L/N_left;
-			p_2R = count_class2_R/N_right;
-			p_2L = count_class2_L/N_left;
-                        current_gini = N_left * ((p_1L *(1-p_1L))+(p_2L *(1-p_2L))) + N_right * ((p1_R * (1-p1_R))+ (p2_R * (1-p2_R)));
+			classvector_r[S_y_right - min_class] -= 1;
+			classvector_l[S_y_left - min_class] += 1;
+			for (int i = 0; i <length; i++){
+				p_kr[i] = classvector_r[i]/N_right;
+				p_kl[i] = classvector_l[i]/N_left;
+			}
+			for ( int i = 0; i < length; i++){
+				gini_r += p_kr[i]*(1-p_kr[i]);
+				gini_l += p_kl[i]*(1-p_kl[i]);
+			}
+
+                        current_gini = (N_left * gini_l) + (N_right * gini_r);
 
                         // catch divide by zero as they are invalid splits anyway
                         // becomes important if only one or two categories have specimen here!
@@ -337,7 +341,6 @@ class classification_split: public rfr::k_ary_split_base<2,rng_type, num_type, r
                         }
                 }
 
-                // store the split set for the left leaf
                 // store the split set for the left leaf
                 for (auto it1 = category_ranking.begin(); it1 != it_best_split; it1++)
                         split_criterion_copy.push_back(*it1+1); // add a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
