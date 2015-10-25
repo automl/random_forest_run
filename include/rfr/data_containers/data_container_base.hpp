@@ -4,7 +4,7 @@
 #include <vector>
 
 
-namespace rfr{
+namespace rfr{ namespace data_containers{
 /** \brief The interface for any data container with the minimal functionality
  *
  */
@@ -77,5 +77,5 @@ class data_container_base{
 	virtual index_type num_data_points()  const = 0;
 };
 
-} // namespace rfr
+}} // namespace rfr::data_containers
 #endif // RFR_DATA_CONTAINER_BASE_HPP

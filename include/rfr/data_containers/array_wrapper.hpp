@@ -10,7 +10,7 @@
 namespace rfr{ namespace data_containers{
 
 template <typename num_type, typename response_type, typename index_type>
-class array_data_container : public rfr::data_container_base<num_type, response_type, index_type>{
+class array_data_container : public rfr::data_containers::data_container_base<num_type, response_type, index_type>{
 
   private:
 	index_type n_data_points;

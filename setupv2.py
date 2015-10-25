@@ -1,5 +1,6 @@
 from distutils.core import setup, Extension
 import distutils.command.build
+import numpy as np
 
 from Cython.Build import cythonize
 
@@ -7,7 +8,7 @@ from Cython.Build import cythonize
 
 
 
-include_dirs = ['./include']
+include_dirs = ['./include', np.get_include()]
 
 
 extensions = cythonize(
