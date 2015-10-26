@@ -20,7 +20,7 @@ responses =  np.loadtxt(data_set_prefix+'responses.csv', delimiter=",")
 # the types have the following meaning:
 #	0 - this variable is continuous
 #  >0 - the number of values from {1, 2, ...} this variable can take
-types = np.zeros([features.shape[1]],dtype=np.uint8)
+types = np.zeros([features.shape[1]],dtype=np.uint)
 
 
 
@@ -30,31 +30,23 @@ types = np.zeros([features.shape[1]],dtype=np.uint8)
 # note: no copy of the data is made, so be sure that the numpy matrices
 #		still exist when the random forest is fitted
 #data1 = pyrfr.data_containers.numpy_container_regression(features, responses, types)
-data1 = pyrfr.data_containers.numpy_container_regression(np.loadtxt(data_set_prefix+'features.csv', delimiter=","),  np.loadtxt(data_set_prefix+'responses.csv', delimiter=","), np.zeros([features.shape[1]],dtype=np.uint8))
-print(data1.num_features(), data1.num_data_points())
-print(data1.retrieve_data_point(0), features[0])
-print(data1.retrieve_data_point(0)- features[0])
-
-data1.add_data_point(np.zeros(10), 1)
+data1 = pyrfr.data_containers.numpy_container_regression(np.loadtxt(data_set_prefix+'features.csv', delimiter=","),  np.loadtxt(data_set_prefix+'responses.csv', delimiter=","), np.zeros([features.shape[1]],dtype=np.uint))
 
 print(data1.num_features(), data1.num_data_points())
+print(np.allclose(data1.retrieve_data_point(0)- features[0],0))
+data1.add_data_point(np.random.rand(10), 1)
+print(data1.num_features(), data1.num_data_points())
+print(data1.retrieve_data_point(-2))
 
-exit(0)
-
-
-# in case the feature matrix comes transposed (meaning each column is a data point)
-# there is a container for that too. This distinction is necessary due to the direct
-# memory access and numpy's tricks when you transpose an array.
-features_T = np.copy(features.T, 'C')
-data2 = rfr.data_container.numpy_transposed_data_container_regression(features_T, responses, types)
 
 
 # the third container, that lives completely in the C++ code
 # the only argument the constructor takes is the number of features
-data3 = rfr.data_container.mostly_continuous_data_regression(features.shape[1])
+data2 = pyrfr.data_containers.mostly_continuous_data_regression(features.shape[1])
 
 # you can set the type of each feature like that:
-data3.set_type_of_feature(0,0) #arguments are "feature index" and "type"
+data2.set_type_of_feature(0,5) #arguments are "feature index" and "type"
+print(data2.get_type_of_feature(0))
 # define each type before you add any data points
 
 

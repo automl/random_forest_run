@@ -11,6 +11,9 @@ namespace rfr{ namespace data_containers{
 template <typename num_type=float, typename response_type=float, typename index_type=unsigned int>
 class data_container_base{
   public:
+
+	virtual ~data_container_base(){};
+  
 	/** \brief Function for accessing a single feature value, consistency checks might be omitted for performance
 	 *
 	 * \param feature_index The index of the feature requested

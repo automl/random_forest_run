@@ -41,6 +41,8 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 			}
 		}
 	}
+
+	virtual ~array_data_container() {};
   
 	virtual num_type feature (index_type feature_index, index_type sample_index) const {
 		return (feature_array[sample_index*n_features + feature_index]);

@@ -19,7 +19,7 @@ namespace rfr{ namespace data_containers{
  *  Instead, this data_container only stores the non-continuous ones in a hash-map.
  */
 template<typename num_type = float, typename response_type = float, typename index_type = unsigned int>
-class mostly_continuous_data : public rfr::data_container_base<num_type, response_type, index_type>{
+class mostly_continuous_data : public rfr::data_containers::data_container_base<num_type, response_type, index_type>{
   protected:
 	std::vector< std::vector<num_type> > feature_values;//!< 2d vector to store the feature values
 	std::vector<num_type> response_values;              //!< the associated responses
