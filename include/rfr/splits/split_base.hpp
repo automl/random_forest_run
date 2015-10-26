@@ -8,7 +8,7 @@
 
 
 
-namespace rfr{
+namespace rfr{ namespace splits{
 
 template <const int k,  typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
 class k_ary_split_base{
@@ -27,7 +27,7 @@ class k_ary_split_base{
 	 * 
 	 * \return float the loss of the found split
 	 */
-	virtual num_type find_best_split(const rfr::data_container_base<num_type, response_type, index_type> &data,
+	virtual num_type find_best_split(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
 									const std::vector<index_type> &features_to_try,
 									std::vector<index_type> & indices,
 									std::array<typename std::vector<index_type>::iterator, k+1> &split_indices_it,
@@ -50,5 +50,5 @@ class k_ary_split_base{
 
 
 
-}//namespace rfr
+}}//namespace rfr::splits
 #endif

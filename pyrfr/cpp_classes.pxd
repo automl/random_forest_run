@@ -7,8 +7,14 @@ import numpy as np
 cimport numpy as np
 
 
+cdef extern from *:
+	ctypedef void* two "2"
+
+
 """
-All the original C++ classes
+----------------
+Data Containers
+----------------
 """
 
 cdef extern from "rfr/data_containers/data_container_base.hpp" namespace "rfr::data_containers":
@@ -42,4 +48,32 @@ cdef extern from "rfr/data_containers/mostly_continuous_data_container.hpp" name
 		bool set_type_of_feature (index_type, index_type)
 		vector[num_type] retrieve_data_point (index_type)
 
+
+
+########################
+#      Splits          #
+########################
+cdef extern from "rfr/splits/split_base.hpp" namespace "rfr::splits":
+	cdef cppclass  k_ary_split_base[k, rng_type, num_type, response_type,index_type]:
+		pass
+
+cdef extern from "rfr/splits/binary_split_one_feature_rss_loss.hpp" namespace "rfr::splits":
+	cdef cppclass binary_split_one_feature_rss_loss[rng_type, num_type, response_type,index_type](k_ary_split_base[two, rng_type, num_type, response_type,index_type]):
+		pass
+
+
+########################
+#       Nodes          #
+########################
+cdef extern from "rfr/nodes/k_ary_node.hpp" namespace "rfr::nodes":
+	cdef cppclass  k_ary_node[k, split_type, rng_type, num_type, response_type, index_type]:
+		pass
+
+
+########################
+#       Trees          #
+########################
+cdef extern from "rfr/trees/tree_base.hpp" namespace "rfr::trees":
+	cdef cppclass tree_base[rng_type, num_type, response_type, index_type]:
+		pass
 

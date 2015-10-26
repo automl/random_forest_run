@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestRegressor
-import pyrfr.data_containers
+import pyrfr.regression
 
 
 data_set_prefix = '../test_data_sets/diabetes_'
@@ -30,7 +30,7 @@ types = np.zeros([features.shape[1]],dtype=np.uint)
 # note: no copy of the data is made, so be sure that the numpy matrices
 #		still exist when the random forest is fitted
 #data1 = pyrfr.data_containers.numpy_container_regression(features, responses, types)
-data1 = pyrfr.data_containers.numpy_container_regression(np.loadtxt(data_set_prefix+'features.csv', delimiter=","),  np.loadtxt(data_set_prefix+'responses.csv', delimiter=","), np.zeros([features.shape[1]],dtype=np.uint))
+data1 = pyrfr.regression.numpy_data_container(np.loadtxt(data_set_prefix+'features.csv', delimiter=","),  np.loadtxt(data_set_prefix+'responses.csv', delimiter=","), np.zeros([features.shape[1]],dtype=np.uint))
 
 print(data1.num_features(), data1.num_data_points())
 print(np.allclose(data1.retrieve_data_point(0)- features[0],0))
@@ -42,7 +42,7 @@ print(data1.retrieve_data_point(-2))
 
 # the third container, that lives completely in the C++ code
 # the only argument the constructor takes is the number of features
-data2 = pyrfr.data_containers.mostly_continuous_data_regression(features.shape[1])
+data2 = pyrfr.regression.mostly_continuous_data_container(features.shape[1])
 
 # you can set the type of each feature like that:
 data2.set_type_of_feature(0,5) #arguments are "feature index" and "type"
@@ -52,9 +52,13 @@ print(data2.get_type_of_feature(0))
 
 
 # the container can import numpy arrays (a copy of the data will be made)
-data3.import_numpy_arrays(features, responses);
+data2.add_data_points(features, responses);
 
 
+print(data2.num_features(), data2.num_data_points())
+
+
+exit(0)
 
 # the other way of feeding data points into the container is this:
 data4 = rfr.data_container.mostly_continuous_data_regression(features.shape[1])

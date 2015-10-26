@@ -19,12 +19,12 @@
 #include "rfr/trees/tree_options.hpp"
 
 
-namespace rfr{
+namespace rfr{ namespace trees{
 
 template <const int k,typename split_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
-class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_type, index_type> {
+class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, response_type, index_type> {
   private:
-	std::vector< rfr::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> > the_nodes;
+	std::vector< rfr::nodes::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> > the_nodes;
 	index_type num_leafs;
 	index_type actual_depth;
 	
@@ -33,7 +33,7 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 	//k_ary_random_tree(rng_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
 
 
-	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
+	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
 			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
 			 rng_type &rng){
 
@@ -53,7 +53,7 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
 	 */
-	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
+	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
 			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
 			 std::vector<index_type> &data_indices,
 			 rng_type &rng){
@@ -231,7 +231,5 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 	}
 };
 
-
-
-}//namespace rfr
+}}//namespace rfr::trees
 #endif

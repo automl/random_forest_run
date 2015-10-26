@@ -3,11 +3,12 @@
 
 #include <vector>
 
+#include "rfr/trees/tree_options.hpp"
 #include "rfr/data_containers/data_container_base.hpp"
 
 
 
-namespace rfr{
+namespace rfr{ namespace trees{
 
 template <typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
 class tree_base{
@@ -22,8 +23,8 @@ class tree_base{
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param rng a (pseudo) random number generator
 	 */
-	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
-			rfr::tree_options<num_type, response_type, index_type> tree_opts,
+	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
+			rfr::trees::tree_options<num_type, response_type, index_type> tree_opts,
 			rng_type &rng) = 0;
 
 	/** \brief predicts the response value for a single feature vector
@@ -68,5 +69,5 @@ class tree_base{
 
 
 
-}//namespace rfr
+}}//namespace rfr::trees
 #endif

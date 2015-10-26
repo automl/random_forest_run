@@ -3,7 +3,7 @@
 
 #include <vector>
 
-namespace rfr{
+namespace rfr{ namespace nodes{
 
 
 template <typename num_type = float, typename index_type = unsigned int>
@@ -33,5 +33,5 @@ struct temporary_node{
 	}
 };
 
-}
+}} // end namespace rfr::nodes
 #endif

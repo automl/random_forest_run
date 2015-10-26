@@ -13,8 +13,8 @@ include_dirs = ['./include', np.get_include()]
 
 extensions = cythonize(
 					[
-						Extension('pyrfr.data_containers',
-						sources=['pyrfr/data_containers.pyx'],
+						Extension('pyrfr.regression',
+						sources=['pyrfr/regression.pyx'],
 						language="c++",
 						include_dirs=include_dirs,
 						extra_compile_args = ['-O2', '-std=c++11'])
