@@ -50,7 +50,7 @@ data2.set_type_of_feature(0,5) #arguments are "feature index" and "type"
 print("feature 0 is now of type {}".format(data2.get_type_of_feature(0)))
 
 # define each type before you add any data points
-data2.set_type_of_feature(0,0)
+data2 = pyrfr.regression.mostly_continuous_data_container(features.shape[1])
 
 # besides adding data points as above (add_data_point method), this 
 # container can import numpy arrays (a copy of the data will be made!)
@@ -61,10 +61,9 @@ data2.import_numpy_arrays(features, responses);
 if np.allclose(data2.export_responses(),responses) and  np.allclose(data2.export_features(),features):
 	print("Import of data into data2 was successful")
 
-exit(0)
 
 # create an instance of a regerssion forest using binary splits and the RSS loss
-the_forest = rfr.regression.binary_rss()
+the_forest = pyrfr.regression.binary_rss()
 
 the_forest.num_trees = 2
 
@@ -76,22 +75,25 @@ the_forest.do_bootstrapping=True	# default: false
 
 the_forest.num_data_points_per_tree=0 # means same number as data points
 
-the_forest.max_features_per_split = features.shape[1]//2 # 0 would mean all the features
+the_forest.max_features = features.shape[1]//2 # 0 would mean all the features
 the_forest.min_samples_to_split = 0	# 0 means split until pure
 the_forest.min_samples_in_leaf = 0	# 0 means no restriction 
-the_forest.max_depth=0				# 0 means no restriction
+the_forest.max_depth=1024			# 0 means no restriction
 the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
 
 
 
+print(the_forest.seed)
+
 the_forest.fit(data1)
 
+
 # you can save a LaTeX document that you can compile with pdflatex
-the_forest.save_latex_representation("/tmp/rfr_test")
+#the_forest.save_latex_representation("/tmp/rfr_test")
 
 
 # the predict method will return a tuple containing the predicted mean and the standard deviation.
-print(the_forest.predict(features[0]))
+#print(the_forest.predict(features[0]))
 
 
 
@@ -100,21 +102,21 @@ print(the_forest.predict(features[0]))
 # Note: the dataset here is pretty small, so the results may not by representative
 times_rfr = []
 times_scikit=[]
-num_trees = [1, 2, 4, 8, 16, 32, 64, 128,256]
+num_trees = [1, 2, 4, 8, 16, 32, 64, 128]
 
 for nt in num_trees:
-
+	print("training {} trees".format(nt))
 	the_forest.num_trees=nt
 
 	start = time.time()
 
 	# this is how you fit the forest, it should work with any data container
-	the_forest.fit(data3)
+	the_forest.fit(data2)
 
 	end = time.time()
 	times_rfr.append(end-start)
 
-	sk_forest = RandomForestRegressor(nt, max_features=the_forest.max_features_per_split)
+	sk_forest = RandomForestRegressor(nt, max_features=the_forest.max_features)
 	start = time.time()
 	sk_forest.fit(features, responses)
 	end = time.time()
@@ -142,6 +144,7 @@ plt.ylabel("response value")
 
 plt.legend()
 
+
 plt.figure()
 plt.plot(np.sort((responses-predictions_rfr)/responses), label="rfr")
 plt.plot(np.sort((responses-predictions_scikit)/responses), label="scikit")
@@ -151,6 +154,8 @@ plt.ylabel("relative error")
 
 plt.legend()
 plt.figure()
+
+
 
 plt.xlabel("number of trees")
 plt.ylabel("time to train")

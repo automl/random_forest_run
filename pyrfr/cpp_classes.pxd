@@ -1,7 +1,7 @@
 import cython
 from libcpp cimport bool
 from libcpp.vector cimport vector
-
+from libcpp.pair cimport pair
 
 import numpy as np
 cimport numpy as np
@@ -76,7 +76,7 @@ cdef extern from "rfr/splits/binary_split_one_feature_rss_loss.hpp" namespace "r
 ########################
 cdef extern from "rfr/nodes/k_ary_node.hpp" namespace "rfr::nodes":
 	cdef cppclass  k_ary_node[k, split_type, rng_type, num_type, response_type, index_type]:
-
+		pass
 
 
 ########################
@@ -85,7 +85,6 @@ cdef extern from "rfr/nodes/k_ary_node.hpp" namespace "rfr::nodes":
 cdef extern from "rfr/trees/tree_options.hpp" namespace "rfr::trees":
 	cdef cppclass tree_options[num_type, response_type, index_type]:
 		tree_options()
-		
 		index_type max_features
 		index_type max_depth
 		index_type min_samples_to_split
@@ -103,7 +102,7 @@ cdef extern from "rfr/trees/k_ary_tree.hpp" namespace "rfr::trees":
 
 
 ########################
-#      Forrests        #
+#       Forests        #
 ########################
 cdef extern from "rfr/forests/forest_options.hpp" namespace "rfr::forests":
 	cdef cppclass forest_options[num_type, response_type, index_type]:
@@ -119,3 +118,4 @@ cdef extern from "rfr/forests/regression_forest.hpp" namespace "rfr::forests":
 		regression_forest(forest_options[num_type, response_type, index_type])
 
 		void fit(data_container_base[num_type, response_type, index_type] &data, rng_type &rng)
+		pair[num_type, num_type] predict_mean_std( num_type * feats)

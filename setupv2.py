@@ -17,6 +17,7 @@ extensions = cythonize(
 						sources=['pyrfr/regression.pyx'],
 						language="c++",
 						include_dirs=include_dirs,
+						#extra_compile_args = ['-O0','-g', '-std=c++11'])
 						extra_compile_args = ['-O2', '-std=c++11'])
 					])
 

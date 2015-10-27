@@ -1,4 +1,5 @@
 import cython
+from cython.operator cimport dereference as deref
 from libcpp cimport bool
 from libcpp.vector cimport vector
 
@@ -82,7 +83,7 @@ cdef class numpy_data_container(data_base):
 	cdef public object features
 	cdef public object responses
 	cdef public object types
-	
+
 	def __cinit__(self, np.ndarray[num_t,ndim=2] feats, np.ndarray[response_t,ndim=1] resp, np.ndarray[index_t] types):
 		""" constructor should make no copy if the data comes in C-contiguous form."""
 		# store a 'reference' so that the numpy array does not get garbage collected
@@ -91,7 +92,7 @@ cdef class numpy_data_container(data_base):
 		self.responses= np.ascontiguousarray(resp)
 		self.types    = np.ascontiguousarray(types)
 		self.thisptr = new array_data_container[num_t,response_t, index_t] (&feats[0,0], &resp[0], &types[0], feats.shape[0], feats.shape[1])
-		
+
 
 	def add_data_point(self, np.ndarray[num_t,ndim=1] fs, response_t r):
 		""" adds a data point by creating new python arrays, thus copies the data"""
@@ -110,7 +111,7 @@ cdef class numpy_data_container(data_base):
 
 cdef class mostly_continuous_data_container(data_base):
 	""" A python wrapper around the C++ data container for mostly continuous data."""
-	
+
 	def __cinit__(self, int num_features):
 		self.thisptr = new mostly_continuous_data[num_t,response_t, index_t] (num_features)
 
@@ -131,7 +132,7 @@ cdef class regression_forest_base:
 	cdef public index_t num_trees
 	cdef public index_t num_data_points_per_tree
 	cdef public bool do_bootstrapping
-	
+
 	# attributes for the individual trees
 	cdef public index_t max_features
 	cdef public index_t max_depth
@@ -139,55 +140,78 @@ cdef class regression_forest_base:
 	cdef public index_t min_samples_to_split
 	cdef public index_t min_samples_in_leaf
 	cdef public response_t epsilon_purity
-	
+
 	# to (re)seed the rng
 	cdef public index_t seed
-	
+
 	cdef rng_t *rng_ptr
 	# pointer to the (abstract) C++ class
-	cdef regression_forest_base_t * forest_ptr
-	
+	#cdef regression_forest_base_t * forest_ptr
+
 	def __init__(self):
+		self.num_trees=10
+		self.num_data_points_per_tree = 0
+		self.do_bootstrapping = True
+		self.max_features = 0
+		self.max_depth = 0
+		self.max_num_nodes = 0
+		self.min_samples_to_split = 2
+		self.min_samples_in_leaf = 1
+		self.epsilon_purity = 1e-8
+		
 		self.seed = 0
 		self.rng_ptr = new rng_t(42)
-	
+
 	def __dealloc__(self):
 		del self.rng_ptr
-		del self.forest_ptr
+		#del self.forest_ptr
 
-	
-	cdef public fit(self, data_base data):
+	cdef create_forest_instance(self,forest_options[num_t, response_t, index_t] fo):
+		raise NotImplementedError
+
+	cdef forest_options[num_t, response_t, index_t] build_forest_options(self, data_base data):
 
 		cdef tree_options[num_t, response_t, index_t] to
-		to.max_features = self.max_features
+		to.max_features = self.max_features if self.max_features > 0 else data.num_features()
 		to.max_depth = self.max_depth
 		to.max_num_nodes = self.max_num_nodes
 		to.min_samples_to_split = self.min_samples_to_split
 		to.min_samples_in_leaf = self.min_samples_in_leaf
 		to.epsilon_purity = self.epsilon_purity
-		
+
 
 		#construct the forest option object
 		cdef forest_options[num_t, response_t, index_t] fo
 
 		fo.num_trees=self.num_trees
-		fo.num_data_points_per_tree = self.num_data_points_per_tree
+		fo.num_data_points_per_tree = self.num_data_points_per_tree if self.num_data_points_per_tree > 0 else data.num_data_points()
 		fo.do_bootstrapping = self.do_bootstrapping
 		fo.tree_opts = to
 
 		#reseed the rng if needed
 		if (self.seed > 0):
-			self.rang_ptr.seed(self.seed)
+			self.rng_ptr.seed(self.seed)
 			self.seed=0
-		# fit the forest
-		self.forest_ptr.fit(data, fo)
+			
+		return(fo)
 
 
-cdef class regression_forest_rss(regression_forest_base):
-
-	def __cinit__(self):
-		self.forest_ptr = new regression_forest_t[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] ()
-
+cdef class binary_rss(regression_forest_base):
+	cdef regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t]* forest_ptr
 	
+	def __init(self):
+		super(binary_rss, self).__init__()
+	
+	def __dealloc__(self):
+		del self.forest_ptr
+	
+	def fit(self, data_base data):
+		del self.forest_ptr
+		fo = self.build_forest_options(data)
+		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] (fo)
+		self.forest_ptr.fit(deref(data.thisptr), deref(self.rng_ptr))
+
+	def predict(self, np.ndarray[num_t,ndim=1] feats):
+		return self.forest_ptr.predict_mean_std(&feats[0])
 
 

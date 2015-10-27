@@ -41,14 +41,14 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
 	 */
 	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
-			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
+			 rfr::trees::tree_options<num_type, response_type, index_type> tree_opts,
 			 std::vector<index_type> &data_indices,
 			 rng_type &rng){
 		
 		tree_opts.adjust_limits_to_data(data);
 		
 		// storage for all the temporary nodes
-		std::deque<temporary_node<num_type, index_type> > tmp_nodes;
+		std::deque<rfr::nodes::temporary_node<num_type, index_type> > tmp_nodes;
 		
 		std::vector<index_type> feature_indices(data.num_features());
 		std::iota(feature_indices.begin(), feature_indices.end(), 0);

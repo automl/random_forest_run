@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include <tuple>
+#include <utility>
 #include <cmath>
 #include <numeric>
 #include <random>
@@ -72,9 +72,9 @@ class regression_forest{
 	 *
 	 * \param feature_vector a valid (size and values) array containing features
 	 *
-	 * \return std::tuple<respones_type, num_type> mean and standard error of the mean as prediction and uncertainty 
+	 * \return std::pair<num_type, num_type> mean and standard error of the mean as prediction and uncertainty 
 	 */
-	std::tuple<num_type, num_type> predict_mean_std( num_type * feature_vector){
+	std::pair<num_type, num_type> predict_mean_std( num_type * feature_vector){
 
 		num_type sum=0;
 		num_type sum_squared = 0;
@@ -90,7 +90,7 @@ class regression_forest{
 		}
 		
 		unsigned int N = the_trees.size();
-		return(std::tuple<num_type, num_type> (sum/N, sqrt( (sum_squared - sum*sum/N)/(N*(N-1)))));
+		return(std::pair<num_type, num_type> (sum/N, sqrt( (sum_squared - sum*sum/N)/(N*(N-1)))));
 	}
 
 
