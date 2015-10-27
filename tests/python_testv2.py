@@ -1,5 +1,4 @@
 import time
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -8,8 +7,6 @@ import pyrfr.regression
 
 
 data_set_prefix = '../test_data_sets/diabetes_'
-
-
 
 # feature matrix contains one data point per row
 features  = np.loadtxt(data_set_prefix+'features.csv', delimiter=",")
@@ -22,57 +19,49 @@ responses =  np.loadtxt(data_set_prefix+'responses.csv', delimiter=",")
 #  >0 - the number of values from {1, 2, ...} this variable can take
 types = np.zeros([features.shape[1]],dtype=np.uint)
 
+# the data container to wrap the numpy arrays
+# note:	no copy of the data is made on creation if it is C continuous
+#		if the input is a sliced, or datapoints are added, a copy is made!
+data1 = pyrfr.regression.numpy_data_container(features, responses, np.zeros([features.shape[1]],dtype=np.uint))
 
-
-
-
-# the simplest data container to wrap the numpy arrays
-# note: no copy of the data is made, so be sure that the numpy matrices
-#		still exist when the random forest is fitted
-#data1 = pyrfr.data_containers.numpy_container_regression(features, responses, types)
-data1 = pyrfr.regression.numpy_data_container(np.loadtxt(data_set_prefix+'features.csv', delimiter=","),  np.loadtxt(data_set_prefix+'responses.csv', delimiter=","), np.zeros([features.shape[1]],dtype=np.uint))
-
-print(data1.num_features(), data1.num_data_points())
-print(np.allclose(data1.retrieve_data_point(0)- features[0],0))
+# this is how you add a data point
 data1.add_data_point(np.random.rand(10), 1)
-print(data1.num_features(), data1.num_data_points())
-print(data1.retrieve_data_point(-2))
 
+print("number of features: {}".format(data1.num_features()))
+print("number of data points: {}".format(data1.num_data_points()))
 
+# how to get data points out of the container. Negative indices are supported, too!
+data1.retrieve_data_point(-2)
 
-# the third container, that lives completely in the C++ code
-# the only argument the constructor takes is the number of features
+# this container grants access to the data arrays directly:
+data1.features
+data1.responses
+data1.types
+
+# A second container living completely in the C++ code.
+# The only argument to the constructor  is the number of features
 data2 = pyrfr.regression.mostly_continuous_data_container(features.shape[1])
 
+# set the types of each feature, before any data is added!
 # you can set the type of each feature like that:
 data2.set_type_of_feature(0,5) #arguments are "feature index" and "type"
-print(data2.get_type_of_feature(0))
+
+# how to get the type of a feature out of the container
+print("feature 0 is now of type {}".format(data2.get_type_of_feature(0)))
+
 # define each type before you add any data points
+data2.set_type_of_feature(0,0)
+
+# besides adding data points as above (add_data_point method), this 
+# container can import numpy arrays (a copy of the data will be made!)
+data2.import_numpy_arrays(features, responses);
 
 
 
-# the container can import numpy arrays (a copy of the data will be made)
-data2.add_data_points(features, responses);
-
-
-print(data2.num_features(), data2.num_data_points())
-
+if np.allclose(data2.export_responses(),responses) and  np.allclose(data2.export_features(),features):
+	print("Import of data into data2 was successful")
 
 exit(0)
-
-# the other way of feeding data points into the container is this:
-data4 = rfr.data_container.mostly_continuous_data_regression(features.shape[1])
-for i in range(features.shape[0]):
-	data4.add_data_point( features[i], responses[i])
-
-
-
-if np.allclose(data3.export_responses(),responses) and  np.allclose(data3.export_features(),features):
-	print("Import of data into data3 was successful")
-
-if np.allclose(data4.export_responses(),responses) and  np.allclose(data4.export_features(),features):
-	print("Import of data into data4 was successful")
-
 
 # create an instance of a regerssion forest using binary splits and the RSS loss
 the_forest = rfr.regression.binary_rss()

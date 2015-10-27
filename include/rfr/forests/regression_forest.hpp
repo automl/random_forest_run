@@ -15,7 +15,7 @@
 #include "rfr/trees/tree_options.hpp"
 #include "rfr/forests/forest_options.hpp"
 
-namespace rfr{
+namespace rfr{ namespace forests{
 
 
 template <typename tree_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
@@ -38,7 +38,7 @@ class regression_forest{
 	 * \param data a filled data container
 	 * \param rng the random number generator to be used
 	 */
-	void fit(const rfr::data_container_base<num_type, response_type, index_type> &data, rng_type &rng){
+	void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data, rng_type &rng){
 
 		if ((!forest_opts.do_bootstrapping) && (data.num_data_points() < forest_opts.num_data_points_per_tree)){
 			std::cout<<"You cannot use more data points per tree than actual data point present without bootstrapping!";
@@ -115,5 +115,5 @@ class regression_forest{
 };
 
 
-}//namespace rfr
+}}//namespace rfr::forests
 #endif

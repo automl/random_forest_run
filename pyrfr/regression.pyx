@@ -12,11 +12,18 @@ from cpp_classes cimport *
 ctypedef np.double_t num_t
 ctypedef np.double_t response_t
 ctypedef np.uint_t   index_t
+ctypedef default_random_engine rng_t
+ctypedef tree_base[rng_t, num_t, response_t, index_t] tree_base_t
+ctypedef regression_forest[ tree_base_t, rng_t, num_t, response_t, index_t] regression_forest_base_t
+
+
+ctypedef  k_ary_random_tree[two, binary_split_one_feature_rss_loss[rng_t, num_t, response_t,index_t], rng_t, num_t, response_t, index_t] binary_rss_tree_t
+
+
 
 """
 Base classes
 """
-
 cdef class data_base:
 	""" base class for the data container to reuse as much code as possible"""
 	cdef data_container_base[num_t,response_t, index_t] *thisptr
@@ -42,22 +49,39 @@ cdef class data_base:
 		""" return a point in the data """
 		while index < 0:
 			index += self.thisptr.num_data_points()
+		# to avoid:
+		#		warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+		cdef index_t new_i = <index_t> index
+		if new_i > self.thisptr.num_data_points():
+			raise ValueError("Supplied index is too large: {} > {}".format(new_i,self.thisptr.num_data_points()-1))
+		return self.thisptr.retrieve_data_point(new_i)
 
-		if index > self.thisptr.num_data_points():
-			raise ValueError("Supplied index is too large: {} > {}".format(index,self.thisptr.num_data_points()-1))
-		return self.thisptr.retrieve_data_point(index)
+	def retrieve_response(self, int index):
+		""" return a point in the data """
+		while index < 0:
+			index += self.thisptr.num_data_points()
+		# to avoid:
+		#		warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+		cdef index_t new_i = <index_t> index
+		if new_i > self.thisptr.num_data_points():
+			raise ValueError("Supplied index is too large: {} > {}".format(new_i,self.thisptr.num_data_points()-1))
+		return self.thisptr.response(new_i)
 
+	def export_features(self):
+		return np.array([ self.thisptr.retrieve_data_point(i) for i in range(self.num_data_points())])
 
-"""
-The data containers available in the python module
-"""
+	def export_responses(self):
+		return np.array([ self.thisptr.response(i) for i in range(self.num_data_points())])
 
+######################################################
+# The data containers available in the python module #
+######################################################
 cdef class numpy_data_container(data_base):
 	""" A data container wrapping three numpy arrays"""
 
-	cdef object features
-	cdef object responses
-	cdef object types
+	cdef public object features
+	cdef public object responses
+	cdef public object types
 	
 	def __cinit__(self, np.ndarray[num_t,ndim=2] feats, np.ndarray[response_t,ndim=1] resp, np.ndarray[index_t] types):
 		""" constructor should make no copy if the data comes in C-contiguous form."""
@@ -84,7 +108,6 @@ cdef class numpy_data_container(data_base):
 		del self.thisptr
 		self.thisptr = new array_data_container[num_t,response_t, index_t] (&feats[0,0], &resp[0], &types[0], feats.shape[0], feats.shape[1])
 
-
 cdef class mostly_continuous_data_container(data_base):
 	""" A python wrapper around the C++ data container for mostly continuous data."""
 	
@@ -97,4 +120,74 @@ cdef class mostly_continuous_data_container(data_base):
 	def import_numpy_arrays(self, np.ndarray[num_t,ndim=2] feats, np.ndarray[response_t,ndim=1] resp):
 		for i in range(feats.shape[0]):
 			self.thisptr.add_data_point(&feats[i,0], feats.shape[1], resp[i])
+
+
+
+######################
+# The actual forests #
+######################
+cdef class regression_forest_base:
+	# attributes for the forest parameters
+	cdef public index_t num_trees
+	cdef public index_t num_data_points_per_tree
+	cdef public bool do_bootstrapping
+	
+	# attributes for the individual trees
+	cdef public index_t max_features
+	cdef public index_t max_depth
+	cdef public index_t max_num_nodes
+	cdef public index_t min_samples_to_split
+	cdef public index_t min_samples_in_leaf
+	cdef public response_t epsilon_purity
+	
+	# to (re)seed the rng
+	cdef public index_t seed
+	
+	cdef rng_t *rng_ptr
+	# pointer to the (abstract) C++ class
+	cdef regression_forest_base_t * forest_ptr
+	
+	def __init__(self):
+		self.seed = 0
+		self.rng_ptr = new rng_t(42)
+	
+	def __dealloc__(self):
+		del self.rng_ptr
+		del self.forest_ptr
+
+	
+	cdef public fit(self, data_base data):
+
+		cdef tree_options[num_t, response_t, index_t] to
+		to.max_features = self.max_features
+		to.max_depth = self.max_depth
+		to.max_num_nodes = self.max_num_nodes
+		to.min_samples_to_split = self.min_samples_to_split
+		to.min_samples_in_leaf = self.min_samples_in_leaf
+		to.epsilon_purity = self.epsilon_purity
+		
+
+		#construct the forest option object
+		cdef forest_options[num_t, response_t, index_t] fo
+
+		fo.num_trees=self.num_trees
+		fo.num_data_points_per_tree = self.num_data_points_per_tree
+		fo.do_bootstrapping = self.do_bootstrapping
+		fo.tree_opts = to
+
+		#reseed the rng if needed
+		if (self.seed > 0):
+			self.rang_ptr.seed(self.seed)
+			self.seed=0
+		# fit the forest
+		self.forest_ptr.fit(data, fo)
+
+
+cdef class regression_forest_rss(regression_forest_base):
+
+	def __cinit__(self):
+		self.forest_ptr = new regression_forest_t[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] ()
+
+	
+
 

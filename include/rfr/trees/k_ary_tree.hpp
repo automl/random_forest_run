@@ -30,19 +30,6 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	
   public:
 
-	//k_ary_random_tree(rng_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
-
-
-	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
-			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
-			 rng_type &rng){
-
-		std::vector<index_type> data_indices(data.num_data_points());
-		std::iota(data_indices.begin(), data_indices.end(), 0);
-		fit(data, tree_opts, data_indices,rng);
-	}
-
-
 	/** \brief fits a randomized decision tree to a subset of the data
 	 * 
 	 * At each node, if it is 'splitworthy', a random subset of all features is considered for the
@@ -68,7 +55,11 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 		
 		// add the root to the temporary nodes to get things started
 		tmp_nodes.emplace_back(0, 0, 0, data_indices.begin(), data_indices.end());
-	
+
+		// initialize the private variables in case the tree is refitted!
+		the_nodes.clear();
+		num_leafs = 0;
+		actual_depth = 0;
 		
 		// as long as there are potentially splittable nodes
 		while (!tmp_nodes.empty()){
