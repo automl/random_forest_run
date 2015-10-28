@@ -101,16 +101,6 @@ set_tests_properties (UTRegressionForest PROPERTIES PASS_REGULAR_EXPRESSION "No 
 
 
 
-
-
-#PYTHON_ADD_MODULE(rfr "${PROJECT_SOURCE_DIR}/src/python_module/rfr.cpp" boost_numpy)
-add_library(rfr SHARED "${PROJECT_SOURCE_DIR}/python_module/rfr.cpp")
-target_link_libraries( rfr)
-set_property(TARGET rfr PROPERTY CXX_STANDARD 11)
-set_property(TARGET rfr PROPERTY PREFIX "")
-set_property(TARGET rfr PROPERTY CXX_STANDARD_REQUIRED ON)
-
-
 IF(CMAKE_COMPILER_IS_GNUCXX)
   ADD_DEFINITIONS("-Wall -fPIC -pg")
   #ADD_DEFINITIONS("-fPIC")

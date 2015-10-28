@@ -20,17 +20,20 @@
 
 
 typedef double num_type;
+typedef double response_type;
 typedef unsigned int index_type;
 typedef std::default_random_engine rng_type;
 
-typedef rfr::binary_split_one_feature_rss_loss<rng_type, num_type, index_type> split_type;
-typedef rfr::k_ary_node<2, split_type, rng_type, num_type, index_type> node_type;
-typedef rfr::temporary_node<num_type, index_type> tmp_node_type;
+typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type> data_container_type;
+
+typedef rfr::splits::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type> split_type;
+typedef rfr::nodes::k_ary_node<2, split_type, rng_type, num_type, response_type, index_type> node_type;
+typedef rfr::nodes::temporary_node<num_type, index_type> tmp_node_type;
 
 
 BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 
-	rfr::mostly_continuous_data<num_type, index_type> data;
+	data_container_type data;
     char filename [1024];
 
     strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);

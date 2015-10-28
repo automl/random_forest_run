@@ -29,6 +29,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	index_type actual_depth;
 	
   public:
+	// make overloaded fit function with only 3 arguments from the base class visible here!
+	using rfr::trees::tree_base<rng_type, num_type, response_type, index_type>::fit;
 
 	/** \brief fits a randomized decision tree to a subset of the data
 	 * 
