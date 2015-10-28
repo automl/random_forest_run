@@ -19,7 +19,7 @@ ctypedef regression_forest[ tree_base_t, rng_t, num_t, response_t, index_t] regr
 
 
 ctypedef  k_ary_random_tree[two, binary_split_one_feature_rss_loss[rng_t, num_t, response_t,index_t], rng_t, num_t, response_t, index_t] binary_rss_tree_t
-
+ctypedef  k_ary_random_tree[two, binary_split_one_feature_rss_loss_v2[rng_t, num_t, response_t,index_t], rng_t, num_t, response_t, index_t] binary_rss_tree_v2_t
 
 
 """
@@ -214,4 +214,23 @@ cdef class binary_rss(regression_forest_base):
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
 		return self.forest_ptr.predict_mean_std(&feats[0])
 
+
+
+cdef class binary_rss_v2(regression_forest_base):
+	cdef regression_forest[ binary_rss_tree_v2_t, rng_t, num_t, response_t, index_t]* forest_ptr
+	
+	def __init(self):
+		super(binary_rss, self).__init__()
+	
+	def __dealloc__(self):
+		del self.forest_ptr
+	
+	def fit(self, data_base data):
+		del self.forest_ptr
+		fo = self.build_forest_options(data)
+		self.forest_ptr = new regression_forest[ binary_rss_tree_v2_t, rng_t, num_t, response_t, index_t] (fo)
+		self.forest_ptr.fit(deref(data.thisptr), deref(self.rng_ptr))
+
+	def predict(self, np.ndarray[num_t,ndim=1] feats):
+		return self.forest_ptr.predict_mean_std(&feats[0])
 
