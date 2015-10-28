@@ -16,6 +16,8 @@
 #include "rfr/data_containers/data_container_utils.hpp"
 namespace rfr{ namespace splits{
 
+
+
 template <typename ft, typename it>
 void print_helper(ft feats, it indices){
 	for (auto i=0u; i< indices.size(); i++){
@@ -27,6 +29,78 @@ void print_helper(ft feats, it indices){
 	}
 	std::cout<<std::endl;
 }
+
+template<typename i_t, typename f_t>
+inline void my_qsort (std::vector<i_t> &indices, const std::vector<f_t> &features){
+	
+	// to store the indices of the subpartitions
+	std::stack<i_t> index_stack;
+
+	f_t pivot_f;
+	i_t pivot_i;
+	int l,r,L=0,R=features.size()-1, m;
+	
+	while(true){
+		//std::cout<<index_stack.size()<<std::endl;
+		// handle small arrays with insertion sort
+		if ((R-L)< 8){
+			//print_helper(features, indices);		
+			for(r=L+1; r<=R; r++){
+				pivot_i = indices[r];
+				pivot_f = features[indices[r]];
+				for(l = r-1; l >= L; l--){
+					//std::cout<<l <<" "<<r<<std::endl;
+					if (features[indices[l]] < pivot_f) break;
+					indices[l+1] = indices[l];
+					//print_helper(features, indices);
+				}
+				indices[l+1] = pivot_i;
+			}
+			if (index_stack.empty()) break;
+			R = index_stack.top(); index_stack.pop();
+			L = index_stack.top(); index_stack.pop();
+		}
+		else{
+			// pick pivot as the median of 3, and put sentinels in place
+			m = (L+R)/2;
+			std::swap(indices[m], indices[L+1]);
+			if (features[indices[L]] > features[indices[R]])
+				std::swap(indices[L], indices[R]);
+			if (features[indices[L+1]] > features[indices[R]])
+				std::swap(indices[L+1], indices[R]);
+			if (features[indices[L]] > features[indices[L+1]])
+				std::swap(indices[L], indices[L+1]);
+				
+			l = L+1;
+			r = R;
+			
+			pivot_f = features[indices[L+1]];
+			pivot_i = indices[L+1];
+			// the actual partitioning
+			while(true){
+				do l++; while (features[indices[l]] < pivot_f);
+				do r--; while (features[indices[r]] > pivot_f);
+				if (l>r) break;
+				std::swap(indices[l], indices[r]);
+			}
+			indices[L+1] = indices[r];
+			indices[r] = pivot_i;
+			
+			// put the larger range on the stack
+			if (R-l+1 >= r-L){
+				index_stack.push(l);
+				index_stack.push(R);
+				R = r-1;
+			}
+			else{
+				index_stack.push(L);
+				index_stack.push(r-1);
+				L = l;
+			}
+		}
+	}
+}
+
 
 
 
@@ -249,61 +323,11 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 		std::vector<index_type> tmp_indices(features.size());
 		std::iota(tmp_indices.begin(), tmp_indices.end(), 0);
 
-		std::stack<std::tuple<index_type, index_type> > partitions;
-		partitions.emplace(0, tmp_indices.size()-1);
-		while (partitions.size() > 0){
-			// get the next partition of indices
-			index_type l, r, l0, r0;
-			std::tie(l,r) = partitions.top();
-			std::tie(l0,r0) = partitions.top();
-			std::cout<<"starting partitioning subrange ("<<l0 <<","<<r0<<")"<<std::endl;
+		//print_helper(features, tmp_indices);
 
-			// choose the pivot element
-			num_type piv = features[tmp_indices[(l+r)/2]];
+		my_qsort<index_type, num_type>(tmp_indices, features);
 
-			std::cout<<"pivot = "<<piv<<std::endl;
-
-			// partition the range into <= and  >= pivot elements
-			while (l<=r){
-				std::cout<<l<<" "<<r<<" --> ";
-				// find left-most element >= pivot
-				while ((l < r0) && (features[tmp_indices[l]] < piv)) l++;
-				// find right-most element <= pivot
-				while ((r > l0) && (features[tmp_indices[r]] > piv)) r--;
-				std::cout<<l<<" "<<r<<std::endl;
-				// swap them and move on (note post-increments!)
-				if ((l<=r) && (l <= r0) && (r >= l0)){
-					std::swap(tmp_indices[l], tmp_indices[r]);
-					l++;
-					r--;
-				}
-				
-			}
-			print_helper(features, tmp_indices);
-			std::cout<<"done partitioning, time to recurse"<<std::endl;
-			// the recursive sorting of the two partitions
-			partitions.pop();
-			
-			if (l0 < r){
-				partitions.emplace(l0,r);
-				std::cout<<"adding ("<<l0 <<","<<r<<")\n";
-			}
-			if (r0 > l){
-				partitions.emplace(l,r0);
-				std::cout<<"adding ("<<l <<","<<r0<<")\n";
-			}
-			if(partitions.size()>50)
-				exit(1);
-		}
-
-		for (auto i=0u; i < tmp_indices.size()-1; i++){
-			std::cout<<features[tmp_indices[i]] <<" <=? "<<features[tmp_indices[i+1]]<<"\n";
-			if (features[tmp_indices[i]] > features[tmp_indices[i+1]])
-				std::cout<<"=========================================="<<std::endl;
-		}
-
-
-		
+		//print_helper(features, tmp_indices);
 
 		// now we can increase the splitting value to move data points from the right to the left child
 		// this way we do not consider a split with everything in the right child
