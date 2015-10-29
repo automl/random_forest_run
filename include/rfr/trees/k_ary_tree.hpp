@@ -19,29 +19,18 @@
 #include "rfr/trees/tree_options.hpp"
 
 
-namespace rfr{
+namespace rfr{ namespace trees{
 
 template <const int k,typename split_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
-class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_type, index_type> {
+class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, response_type, index_type> {
   private:
-	std::vector< rfr::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> > the_nodes;
+	std::vector< rfr::nodes::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> > the_nodes;
 	index_type num_leafs;
 	index_type actual_depth;
 	
   public:
-
-	//k_ary_random_tree(rng_type *rng_p):  the_nodes(), num_leafs(0), actual_depth(0), rng(rng_p) {}
-
-
-	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
-			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
-			 rng_type &rng){
-
-		std::vector<index_type> data_indices(data.num_data_points());
-		std::iota(data_indices.begin(), data_indices.end(), 0);
-		fit(data, tree_opts, data_indices,rng);
-	}
-
+	// make overloaded fit function with only 3 arguments from the base class visible here!
+	using rfr::trees::tree_base<rng_type, num_type, response_type, index_type>::fit;
 
 	/** \brief fits a randomized decision tree to a subset of the data
 	 * 
@@ -53,22 +42,26 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
 	 */
-	virtual void fit(const rfr::data_container_base<num_type, response_type, index_type> &data,
-			 rfr::tree_options<num_type, response_type, index_type> tree_opts,
+	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
+			 rfr::trees::tree_options<num_type, response_type, index_type> tree_opts,
 			 std::vector<index_type> &data_indices,
 			 rng_type &rng){
 		
 		tree_opts.adjust_limits_to_data(data);
 		
 		// storage for all the temporary nodes
-		std::deque<temporary_node<num_type, index_type> > tmp_nodes;
+		std::deque<rfr::nodes::temporary_node<num_type, index_type> > tmp_nodes;
 		
 		std::vector<index_type> feature_indices(data.num_features());
 		std::iota(feature_indices.begin(), feature_indices.end(), 0);
 		
 		// add the root to the temporary nodes to get things started
 		tmp_nodes.emplace_back(0, 0, 0, data_indices.begin(), data_indices.end());
-	
+
+		// initialize the private variables in case the tree is refitted!
+		the_nodes.clear();
+		num_leafs = 0;
+		actual_depth = 0;
 		
 		// as long as there are potentially splittable nodes
 		while (!tmp_nodes.empty()){
@@ -231,7 +224,5 @@ class k_ary_random_tree : public rfr::tree_base<rng_type, num_type, response_typ
 	}
 };
 
-
-
-}//namespace rfr
+}}//namespace rfr::trees
 #endif

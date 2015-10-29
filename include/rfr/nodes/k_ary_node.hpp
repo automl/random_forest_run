@@ -15,8 +15,8 @@
 #include <iostream>
 
 
-namespace rfr{
-
+namespace rfr{ namespace nodes{
+	
 /** \brief The node class for regular k-ary trees.
  * 
  * In a regular k-ary tree, every node has either zero (a leaf) or exactly k-children (an internal node).
@@ -49,11 +49,11 @@ class k_ary_node{
 	*
 	* \return num_type the loss of the split
 	*/ 
-	num_type make_internal_node(rfr::temporary_node<num_type, index_type> &tmp_node,
-							const rfr::data_container_base<num_type, response_type, index_type> &data,
+	num_type make_internal_node(rfr::nodes::temporary_node<num_type, index_type> &tmp_node,
+							const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
 							std::vector<index_type> &features_to_try,
 							index_type num_nodes,
-							std::deque<rfr::temporary_node<num_type, index_type> > &tmp_nodes,
+							std::deque<rfr::nodes::temporary_node<num_type, index_type> > &tmp_nodes,
 							rng_type &rng){
 		is_leaf = false;
 		response_values.clear();
@@ -81,8 +81,8 @@ class k_ary_node{
 	* \param tmp_node the internal representation for a temporary node. Node that the tmp_node instance is no longer valid after this function has been called!!
 	*
 	*/
-	void make_leaf_node(rfr::temporary_node<num_type, index_type> &tmp_node,
-						const rfr::data_container_base<num_type, response_type, index_type> &data){
+	void make_leaf_node(rfr::nodes::temporary_node<num_type, index_type> &tmp_node,
+						const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
 		is_leaf = true;
 		parent_index = tmp_node.parent_index;
 		
@@ -199,5 +199,5 @@ class k_ary_node{
 
 
 
-}
+}} // namespace rfr::nodes
 #endif

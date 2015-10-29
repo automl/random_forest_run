@@ -13,10 +13,15 @@
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 
 typedef double num_type;
+typedef double response_type;
+typedef unsigned int index_type;
+typedef std::default_random_engine rng_type;
+
+typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type> data_container_type;
 
 
 BOOST_AUTO_TEST_CASE( data_container_tests ){
-	rfr::mostly_contiuous_data<num_type> data;
+	data_container_type data;
 
 	char *filename = (char*) malloc(1024*sizeof(char));
 
