@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
     data.read_response_file(filename);
 
 
-    data.set_type_of_feature(1, 3);
+    data.set_type_of_feature(1, 4);
     
     rfr::trees::tree_options<num_type, response_type, index_type> tree_opts;
 	

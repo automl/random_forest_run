@@ -37,7 +37,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * \param indices a vector containing the subset of data point indices to be considered (output!)
 	 * \param an iterator into this vector that says where to split the data for the two children
 	 *
-	 * \return num_type 
+	 * \return num_type loss of the best found split
 	 */
 	 virtual num_type find_best_split(	const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
 										const std::vector<index_type> &features_to_try,
@@ -45,8 +45,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 										std::array<typename std::vector<index_type>::iterator, 3> &split_indices_it,
 										rng_type &rng){
 
-		
-		
+				
 		// gather all the responses into one vector and precompute mean and variance
 		num_type sum = 0; num_type sum2= 0;
 		std::vector<response_type> responses(indices.size());
@@ -297,7 +296,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		for (auto i = 0u; i < features.size(); i++){
 			// find the category for each entry as a proper int
 			//! >assumes that the features for categoricals have been properly rounded so casting them to ints results in the right value!
-			int cat = features[i]-1;	// subtracked a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
+			int cat = features[i];
 			// collect all the data to compute the loss
 			S_y[cat]  += responses[i];
 			S_y2[cat] += responses[i]*responses[i];
@@ -373,16 +372,15 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 		// store the split set for the left leaf
 		for (auto it1 = category_ranking.begin(); it1 != it_best_split; it1++)
-			split_criterion.push_back(*it1+1);	// add a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
+			split_criterion.push_back(*it1);
 
 		// add unobserved values randomly to the split_set
 		if (empty_categories_it != category_ranking.end()){
 			std::bernoulli_distribution dist;
 
 			for (auto it1 = empty_categories_it; it1 != category_ranking.end(); it1++){
-				if (dist(rng)){
-					split_criterion.push_back(*it1+1);	// add a 1 to accomodate for the categorical values starting at 1, but vector indices at zero
-				}
+				if (dist(rng))
+					split_criterion.push_back(*it1);
 			}
 		}
 		return(best_loss);

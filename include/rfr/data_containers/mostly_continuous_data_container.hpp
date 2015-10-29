@@ -93,12 +93,23 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 
 
 	virtual bool set_type_of_feature(index_type index, index_type type){
-		if (index >= num_features()) return(false);
-		if (type < 0)   return(false);
+		if (index >= num_features())
+			throw std::runtime_error("Unknown index specified.");
+		if (type < 0)
+			throw std::runtime_error("Type value should be >= 0");
 		// here, only store the categorical values
-		if (type > 0)
+
+
+		if (type > 0){
+			//check if the data so far is consistent with the choice
+			for (auto &fv: feature_values[index])
+				if (!(fv<type))
+					throw std::runtime_error("Feature values not consistent with provided type.");
 			categorical_ranges[index] = type;
-		return(true);
+		}
+		else{
+			
+		}
 	}
 
 
@@ -141,7 +152,7 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 		if (resp_t > 0){
 			for (auto &rv: response_values){
 				if (!(rv < resp_t))
-					throw std::runtime_error("Response value not consistent with set type.");
+					throw std::runtime_error("Response value not consistent with provided type.");
 			}
 		}
 		response_t = resp_t;
