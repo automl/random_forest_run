@@ -128,9 +128,9 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 					// advance the right iterator (if necessary)
 					if (i_it1 != i_it2)
 						{ i_it2--; f_it2--;}
-					
+					// should never happen, but just in case
 					if ((i_it1 == indices.end()) || (i_it2 == indices.begin())){
-						exit(1);
+						exit(42);
 					}
 				}
 				

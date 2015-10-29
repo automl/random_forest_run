@@ -24,6 +24,7 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 	std::vector< std::vector<num_type> > feature_values;//!< 2d vector to store the feature values
 	std::vector<num_type> response_values;              //!< the associated responses
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
+	index_type response_t;
   public:
 
 	// empty constructor. Use this only if you read the data from a file!
@@ -33,7 +34,7 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features 
-	mostly_continuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)){}
+	mostly_continuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)), response_t(0){}
   
 	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
 		//return(feature_values.at(feature_index).at(sample_index));
@@ -130,6 +131,23 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 		}
 		return(true);
 	}
+
+	virtual index_type get_type_of_response () const{
+		return(response_t);		
+	}
+
+	virtual bool set_type_of_response (index_type resp_t){
+		// potentially some sanity checks here
+		if (resp_t > 0){
+			for (auto &rv: response_values){
+				if (!(rv < resp_t))
+					throw std::runtime_error("Response value not consistent with set type.");
+			}
+		}
+		response_t = resp_t;
+		return(true);
+	}
+
 
 	void print_data(){
 		for (auto i = 0u; i < feature_values.size(); i++){

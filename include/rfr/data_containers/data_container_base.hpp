@@ -68,6 +68,13 @@ class data_container_base{
 	 */
 	virtual index_type get_type_of_feature (index_type feature_index) const = 0;
 
+	/** \brief query the type of the response
+	 *
+	 * \return index_type type of the response: 0 - numerical value (float or int); n>0 - categorical value with n different values {0,1,...,n-1}
+	 *
+	 */
+	virtual index_type get_type_of_response () const = 0;
+
 	/** \brief specifying the type of a feature
 	 *
 	 * \param feature_index the index of the feature whose type is specified
@@ -75,6 +82,14 @@ class data_container_base{
 	 * \return bool success of the operation (fail do to consistency checks)
 	 */
 	virtual bool set_type_of_feature (index_type feature_index, index_type feature_type) = 0;
+
+	/** \brief specifying the type of the response
+	 *
+	 * \param feature_t the actual type (0 - numerical, value >0 catergorical with values from {0,2,...value-1}
+	 * \return bool success of the operation (fail do to consistency checks)
+	 */
+	virtual bool set_type_of_response (index_type response_t) = 0;
+
 
 	virtual index_type num_features() const = 0;
 	virtual index_type num_data_points()  const = 0;

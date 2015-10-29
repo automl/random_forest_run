@@ -18,12 +18,13 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 	num_type * feature_array;
 	response_type * response_array;
 	index_type * type_array;
+	index_type response_t;
 
   public:
 
 	array_data_container( 	num_type      * features,
 							response_type * responses,
-							index_type    *  types,
+							index_type    * types,
 							index_type      n_data_points,
 							index_type      n_features):
 
@@ -31,7 +32,8 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 								n_features(n_features),
 								feature_array(features),
 								response_array(responses),
-								type_array(types){
+								type_array(types),
+								response_t(0){
 
 		//properly round the feature values for categorical features
 		for (auto i=0u; i<n_features; i++){
@@ -84,6 +86,27 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 		throw std::runtime_error("Array data containers do not support changing a feature type.");
 		return(false);
 	}
+
+
+	virtual index_type get_type_of_response () const{
+		return(response_t);		
+	}
+
+	virtual bool set_type_of_response (index_type resp_t){
+
+		// potentially some sanity checks here
+
+		if (resp_t > 0){
+			for (auto i=0u; i < n_data_points; i++){
+				if (!(response_array[i] < resp_t))
+					throw std::runtime_error("Response value not consistent with set type.");
+			}
+		}
+		response_t = resp_t;
+		
+		return(true);
+	}
+
 
 	virtual index_type num_features() const {return(n_features);}
 	virtual index_type num_data_points()  const {return(n_data_points);}
