@@ -1,0 +1,163 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>About RFR &mdash; pyrfr 0.0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pyrfr 0.0.2 documentation" href="index.html" />
+    <link rel="next" title="Documentation for the Code" href="regression.html" />
+    <link rel="prev" title="Welcome to pyrfr’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="regression.html" title="Documentation for the Code"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pyrfr’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pyrfr 0.0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="about-rfr">
+<h1>About RFR<a class="headerlink" href="#about-rfr" title="Permalink to this headline">¶</a></h1>
+<p>A extensible C++ library for random forests with Python bindings.</p>
+<div class="section" id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h2>
+<p>For the C++ library itself, you need no additional libaries, only a C++11 capable compiler. The development is done using GCC 4.8 and 5.2.</p>
+<div class="line-block">
+<div class="line">For the Python bindings, you will need</div>
+<div class="line">numpy</div>
+<div class="line">boost (with the optional python module)</div>
+<div class="line">Any decent version (&gt;1.32 or so) of Boost should do.</div>
+</div>
+</div>
+<div class="section" id="installing-the-python-bindings">
+<h2>Installing the python bindings<a class="headerlink" href="#installing-the-python-bindings" title="Permalink to this headline">¶</a></h2>
+<p>The Python bindings are implemented using the boost python library, so you will need boost installed with the optional python component enabled.
+To install the Python module you will need to execute the following commands:</p>
+<blockquote>
+<div><p><tt class="code bash docutils literal"><span class="pre">git</span> <span class="pre">submodule</span> <span class="pre">init</span></tt></p>
+<p><tt class="code bash docutils literal"><span class="pre">git</span> <span class="pre">submodule</span> <span class="pre">update</span></tt></p>
+<p><tt class="code bash docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">build</span> <span class="pre">--boost-python-lib-name</span><span class="operator"><span class="pre">=</span></span><span class="pre">boost_python-py27</span></tt></p>
+<p><tt class="code bash docutils literal"><span class="pre">python</span> <span class="pre">setup.py</span> <span class="pre">install</span> <span class="pre">--user</span></tt></p>
+</div></blockquote>
+<p>The first two will pull another git repository into the directory. It is used to access numpy arrays easily within C++. The third command has an important option: &#8220;boost-python-lib-name&#8221; which depends on your python version and operating system you use. The last line simply installs the module into your home directory.</p>
+<div class="line-block">
+<div class="line">The above commands work for Python 2.7 on Ubuntu 14.04 LTS. On a recent Arch Linux this line could look like that:</div>
+</div>
+<p><tt class="code bash docutils literal"><span class="pre">python</span>&nbsp; <span class="pre">setup.py</span> <span class="pre">build</span> <span class="pre">--boost-python-lib-name</span><span class="operator"><span class="pre">=</span></span><span class="pre">boost_python3</span></tt></p>
+<div class="line-block">
+<div class="line">and would build the module for Python 3. You can find the name of the library by searching in <tt class="code bash docutils literal"><span class="pre">/lib/</span></tt> or <tt class="code bash docutils literal"><span class="pre">/usr/lib/</span></tt> for files starting with libboost_python</div>
+</div>
+</div>
+<div class="section" id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h2>
+<p>For now, the file</p>
+<blockquote>
+<div><tt class="code bash docutils literal"><span class="pre">./tests/python_test.py</span></tt></div></blockquote>
+<p>inside the repository serves as the only real documentation of the Python bindings.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">About RFR</a><ul>
+<li><a class="reference internal" href="#requirements">Requirements</a></li>
+<li><a class="reference internal" href="#installing-the-python-bindings">Installing the python bindings</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to pyrfr&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="regression.html"
+                        title="next chapter">Documentation for the Code</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/installation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="regression.html" title="Documentation for the Code"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to pyrfr’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">pyrfr 0.0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Stefan Falkner.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>

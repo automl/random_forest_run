@@ -1,0 +1,286 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documentation &mdash; pyrfr 0.0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="pyrfr 0.0.2 documentation" href="index.html" />
+    <link rel="prev" title="About RFR" href="installation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="About RFR"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">pyrfr 0.0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="module-regression">
+<span id="documentation"></span><h1>Documentation<a class="headerlink" href="#module-regression" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="base-classes">
+<h2>Base classes:<a class="headerlink" href="#base-classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="regression.data_base">
+<em class="property">class </em><tt class="descclassname">regression.</tt><tt class="descname">data_base</tt><a class="headerlink" href="#regression.data_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>base class for the data container to reuse as much code as possible</p>
+<dl class="method">
+<dt id="regression.data_base.export_features">
+<tt class="descname">export_features</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.export_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regression.data_base.export_responses">
+<tt class="descname">export_responses</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.export_responses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regression.data_base.get_type_of_feature">
+<tt class="descname">get_type_of_feature</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.get_type_of_feature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regression.data_base.num_data_points">
+<tt class="descname">num_data_points</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.num_data_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>the number of data points in the container</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regression.data_base.num_features">
+<tt class="descname">num_features</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.num_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>the number of features of the data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regression.data_base.retrieve_data_point">
+<tt class="descname">retrieve_data_point</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.retrieve_data_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a point in the data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regression.data_base.retrieve_response">
+<tt class="descname">retrieve_response</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.retrieve_response" title="Permalink to this definition">¶</a></dt>
+<dd><p>return a point in the response data</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="regression.data_base.set_type_of_feature">
+<tt class="descname">set_type_of_feature</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.data_base.set_type_of_feature" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regression.numpy_data_container">
+<em class="property">class </em><tt class="descclassname">regression.</tt><tt class="descname">numpy_data_container</tt><big>(</big><em>data_base</em><big>)</big><a class="headerlink" href="#regression.numpy_data_container" title="Permalink to this definition">¶</a></dt>
+<dd><p>A data container wrapping three numpy arrays</p>
+<dl class="method">
+<dt id="regression.numpy_data_container.add_data_point">
+<tt class="descname">add_data_point</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.numpy_data_container.add_data_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>adds a data point by creating new python arrays, thus copies the data</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="regression.numpy_data_container.features">
+<tt class="descname">features</tt><a class="headerlink" href="#regression.numpy_data_container.features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.numpy_data_container.responses">
+<tt class="descname">responses</tt><a class="headerlink" href="#regression.numpy_data_container.responses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.numpy_data_container.types">
+<tt class="descname">types</tt><a class="headerlink" href="#regression.numpy_data_container.types" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regression.mostly_continuous_data_container">
+<em class="property">class </em><tt class="descclassname">regression.</tt><tt class="descname">mostly_continuous_data_container</tt><big>(</big><em>data_base</em><big>)</big><a class="headerlink" href="#regression.mostly_continuous_data_container" title="Permalink to this definition">¶</a></dt>
+<dd><p>A python wrapper around the C++ data container for mostly continuous data.</p>
+<dl class="method">
+<dt id="regression.mostly_continuous_data_container.add_data_point">
+<tt class="descname">add_data_point</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.mostly_continuous_data_container.add_data_point" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regression.mostly_continuous_data_container.import_numpy_arrays">
+<tt class="descname">import_numpy_arrays</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.mostly_continuous_data_container.import_numpy_arrays" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="the-actual-rf-classes">
+<h2>The actual RF classes:<a class="headerlink" href="#the-actual-rf-classes" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="regression.regression_forest_base">
+<em class="property">class </em><tt class="descclassname">regression.</tt><tt class="descname">regression_forest_base</tt><a class="headerlink" href="#regression.regression_forest_base" title="Permalink to this definition">¶</a></dt>
+<dd><p>The actual forests</p>
+<dl class="attribute">
+<dt id="regression.regression_forest_base.do_bootstrapping">
+<tt class="descname">do_bootstrapping</tt><a class="headerlink" href="#regression.regression_forest_base.do_bootstrapping" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.epsilon_purity">
+<tt class="descname">epsilon_purity</tt><a class="headerlink" href="#regression.regression_forest_base.epsilon_purity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.max_depth">
+<tt class="descname">max_depth</tt><a class="headerlink" href="#regression.regression_forest_base.max_depth" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.max_features">
+<tt class="descname">max_features</tt><a class="headerlink" href="#regression.regression_forest_base.max_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.max_num_nodes">
+<tt class="descname">max_num_nodes</tt><a class="headerlink" href="#regression.regression_forest_base.max_num_nodes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.min_samples_in_leaf">
+<tt class="descname">min_samples_in_leaf</tt><a class="headerlink" href="#regression.regression_forest_base.min_samples_in_leaf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.min_samples_to_split">
+<tt class="descname">min_samples_to_split</tt><a class="headerlink" href="#regression.regression_forest_base.min_samples_to_split" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.num_data_points_per_tree">
+<tt class="descname">num_data_points_per_tree</tt><a class="headerlink" href="#regression.regression_forest_base.num_data_points_per_tree" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.num_trees">
+<tt class="descname">num_trees</tt><a class="headerlink" href="#regression.regression_forest_base.num_trees" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="regression.regression_forest_base.seed">
+<tt class="descname">seed</tt><a class="headerlink" href="#regression.regression_forest_base.seed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="regression.binary_rss">
+<em class="property">class </em><tt class="descclassname">regression.</tt><tt class="descname">binary_rss</tt><big>(</big><em>regression_forest_base</em><big>)</big><a class="headerlink" href="#regression.binary_rss" title="Permalink to this definition">¶</a></dt>
+<dd><p>The random forest regressor. Builds a forest of trees from the training set (X,y) and predicts the regression targets for X. The splits are made by calculating the residual sum of squares and taking the min.</p>
+<dl class="method">
+<dt id="regression.binary_rss.fit">
+<tt class="descname">fit</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.binary_rss.fit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="regression.binary_rss.predict">
+<tt class="descname">predict</tt><big>(</big><big>)</big><a class="headerlink" href="#regression.binary_rss.predict" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documentation</a><ul>
+<li><a class="reference internal" href="#base-classes">Base classes:</a></li>
+<li><a class="reference internal" href="#the-actual-rf-classes">The actual RF classes:</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="installation.html"
+                        title="previous chapter">About RFR</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/regression.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="installation.html" title="About RFR"
+             >previous</a> |</li>
+        <li><a href="index.html">pyrfr 0.0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Stefan Falkner.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.2.
+    </div>
+  </body>
+</html>
