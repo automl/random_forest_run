@@ -10,39 +10,18 @@ For the Python bindings, you will need
 
 ```
 numpy
-boost (with the optional python module)
+Cython
 ```
 
-Any decent version (>1.32 or so) of Boost should do.
 
-
-## INSTALLING THE PYTHON BINDINGS
-The Python bindings are implemented using the boost python library, so you
-will need boost installed with the optional python component enabled.
-
-To install the Python module you will need to execute the following commands:
-
+## Installing the Python Bindings
+Simply execute 
 ```
-git submodule init
-git submodule update
-python setup.py build --boost-python-lib-name=boost_python-py27
 python setup.py install --user
 ```
+to install it. After the installation finishes (hopefully) sucessfully, you can use the library with the pyrfr module.
 
-The first two will pull another git repository into the directory. It is used
-to access numpy arrays easily within C++. The third command has an important
-option: "boost-python-lib-name" which depends on your python version and
-operating system you use. The last line simply installs the module into your
-home directory.
-
-The above commands work for Python 2.7 on Ubuntu 14.04 LTS.
-On a recent Arch Linux this line could look like that:
-
-```
-python  setup.py build --boost-python-lib-name=boost_python3
-```
-and would build the module for Python 3. You can find the name of the library
-by searching in `/lib/` or `/usr/lib/` for files starting with `libboost_python`
+The above commands work for Python 3.4 and 3.5 on Gentoo and ArchLinux. With Python 2.7, there have been problems reported. Contact me if you experience any irregularities.
 
 ##USAGE
 
