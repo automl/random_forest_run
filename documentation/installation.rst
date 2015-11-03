@@ -1,42 +1,30 @@
 *********
-About RFR
+About pyRFR
 *********
 .. role:: bash(code)
     :language: bash
 
-A extensible C++ library for random forests with Python bindings.
+This package serves as the python interface to RFR, an extensible C++ librarry for random forests.
 
 Requirements
 ************
 
-For the C++ library itself, you need no additional libaries, only a C++11 capable compiler. The development is done using GCC 4.8 and 5.2.
+For the C++ library itself, you need no additional libaries, only a C++11 capable compiler. The development is done using GCC 4.8 and 5.2. The Python bindings are only tested on Python 3.
 
-| For the Python bindings, you will need
-| numpy
-| boost (with the optional python module)
-| Any decent version (>1.32 or so) of Boost should do.
+For the Python bindings, you will need
+        numpy
+        Cython
 
+Installation
+************
+Right now, pyRFR is not available on PyPI. To install the Python bindings, execute the following commands:
 
-Installing the python bindings
-******************************
-The Python bindings are implemented using the boost python library, so you will need boost installed with the optional python component enabled.
-To install the Python module you will need to execute the following commands:
+	:bash:`git clone git@bitbucket.org:aadfreiburg/random_forest_run.git`
 
-	:bash:`git submodule init`
-
-	:bash:`git submodule update`
-
-	:bash:`python setup.py build --boost-python-lib-name=boost_python-py27`
+        :bash:`cd random_forest_run`
 
 	:bash:`python setup.py install --user`
 
-The first two will pull another git repository into the directory. It is used to access numpy arrays easily within C++. The third command has an important option: "boost-python-lib-name" which depends on your python version and operating system you use. The last line simply installs the module into your home directory.
-
-| The above commands work for Python 2.7 on Ubuntu 14.04 LTS. On a recent Arch Linux this line could look like that:
-
-:bash:`python  setup.py build --boost-python-lib-name=boost_python3`
-
-| and would build the module for Python 3. You can find the name of the library by searching in :bash:`/lib/` or :bash:`/usr/lib/` for files starting with libboost_python
 
 Usage
 *****
