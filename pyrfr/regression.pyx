@@ -23,7 +23,8 @@ ctypedef  k_ary_random_tree[two, binary_split_one_feature_rss_loss[rng_t, num_t,
 
 
 """
-Base classes
+Base classes:
+=============
 """
 cdef class data_base:
 	""" 
@@ -139,12 +140,13 @@ cdef class mostly_continuous_data_container(data_base):
 			self.thisptr.add_data_point(&feats[i,0], feats.shape[1], resp[i])
 
 
+"""
+The actual forests:
+===================
+"""
 
 
 cdef class regression_forest_base:
-	"""
- 	The actual forests
-	"""
 	# attributes for the forest parameters
 	cdef public index_t num_trees
 	cdef public index_t num_data_points_per_tree
