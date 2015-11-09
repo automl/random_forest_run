@@ -17,7 +17,6 @@ ctypedef default_random_engine rng_t
 ctypedef tree_base[rng_t, num_t, response_t, index_t] tree_base_t
 ctypedef regression_forest[ tree_base_t, rng_t, num_t, response_t, index_t] regression_forest_base_t
 
-
 ctypedef  k_ary_random_tree[two, binary_split_one_feature_rss_loss[rng_t, num_t, response_t,index_t], rng_t, num_t, response_t, index_t] binary_rss_tree_t
 
 
@@ -247,4 +246,52 @@ cdef class binary_rss(regression_forest_base):
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
 		return self.forest_ptr.predict_mean_std(&feats[0])
 
+'''
+Needs all the observations in the leafs from the k-node class
+This is only a sketch (at the moment)
+'''
+# TODO: getting leaf_info from k_ary_node class
+
+cdef class quantile_rf():
+	"""
+	Quantile regression forest as explained in "Quantile Regression Forests" by Nicolai Meinhausen (ETH Zürich)
+	"""
+
+	def calculate_quantiles(leaf_responses):
+	"""
+	Quantiles are calculated giving more information about the distribution of y as a function of the predictor variable X than the conditional mean alone.
+	"""
+		# first we need to sort the values into order:
+		leaf_responses = sorted(leaf_responses)
+		fractions = []
+		for i in range(len(leaf_responses)):
+			#q = (leaf_responses[i]-1)/ (len(leaf_responses)-1)
+			p = (i-1)/(len(leaf_responses)-1)
+			fractions.append(p)
+			# TODO: find out the exact quantiles because they should not be equal to response values.
+		return quantiles
+
+	def quantile_estimator(leaf_responses, leaf_mean):
+		"""
+		For estimating the conditional quantiles from data.
+		With 0 < alpha < 1
+		"""
+		alpha = [.75,.50,.25]
+		expected_loss_all = []
+		# calculate the quantiles for all leafs in the tree
+		q = calculate_quantiles(leaf_responses)
+		for j in range(len(alpha)):
+			for k in range(len(q)):
+				for i in range(len(leaf_responses)):
+					if (leaf_responses[i] < q[k]):
+						loss_smaller += abs(leaf_responses[i]-q[k])
+					else:
+						loss_bigger += abs(leaf_responses[i] - q[k])
+			expected_loss = (1-alpha[j])*loss_smaller + alpha[j]*loss_bigger
+			# now I want the expected loss for each alpha/quantile
+			expected_loss_all.append(expected_loss)
+		# want the quantile which minimizes the expected loss
+		Q_alpha = min(expected_loss)
+		return Q_alpha
+		
 
