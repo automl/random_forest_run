@@ -60,7 +60,7 @@ int main (int argc, char** argv){
 		data.add_data_point(feature_vector, num_features, response);
 	}
 
-	t
+	rfr::forests::forest_options
 
 
     return(0);
