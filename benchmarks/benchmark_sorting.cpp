@@ -17,7 +17,7 @@ typedef double response_type;
 typedef unsigned int index_type;
 
 
-typedef rfr::mostly_continuous_data<num_type, response_type, index_type> data_type;
+typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type> data_type;
 
 
 template < typename T>

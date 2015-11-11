@@ -63,11 +63,15 @@ cdef extern from "<random>" namespace "std":
 #      Splits          #
 ########################
 cdef extern from "rfr/splits/split_base.hpp" namespace "rfr::splits":
-	cdef cppclass  k_ary_split_base[k, rng_type, num_type, response_type,index_type]:
+	cdef cppclass k_ary_split_base[k, rng_type, num_type, response_type,index_type]:
 		pass
 
 cdef extern from "rfr/splits/binary_split_one_feature_rss_loss.hpp" namespace "rfr::splits":
 	cdef cppclass binary_split_one_feature_rss_loss[rng_type, num_type, response_type,index_type](k_ary_split_base[two, rng_type, num_type, response_type,index_type]):
+		pass
+
+cdef extern from "rfr/splits/binary_split_one_feature_rss_lossv2.hpp" namespace "rfr::splits":
+	cdef cppclass binary_split_one_feature_rss_loss_v2[rng_type, num_type, response_type,index_type](k_ary_split_base[two, rng_type, num_type, response_type,index_type]):
 		pass
 
 
