@@ -83,8 +83,6 @@ the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can
 
 
 
-print(the_forest.seed)
-
 the_forest.fit(data1)
 
 
@@ -93,8 +91,14 @@ the_forest.fit(data1)
 
 
 # the predict method will return a tuple containing the predicted mean and the standard deviation.
-#print(the_forest.predict(features[0]))
+print(the_forest.predict(features[0]))
 
+
+
+# it is possible to get the actual response values from the corresponding
+# leaf in each tree that the given feature vector falls into
+# The method returns a nested list
+print(the_forest.all_leaf_values(features[0]))
 
 
 

@@ -55,14 +55,24 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 		return(response_values[sample_index]);
 	}
 
-	virtual bool add_data_point (num_type* feats, index_type num_elements, response_type response){
+	virtual void add_data_point (num_type* feats, index_type num_elements, response_type response){
 
-		if (num_features() != num_elements) return(false);
+		if (num_features() != num_elements)
+					throw std::runtime_error("Number of elements does not match.");
+
+		for (size_t i=0; i<num_elements; i++){
+			if (get_type_of_feature(i) > 0){
+				if (feats[i] >= get_type_of_feature(i))
+					throw std::runtime_error("Feature values not consistent with provided type. Data contains a value larger than allowed.");
+				if (feats[i]< 0)
+					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
+			}
+		}
 
 		for (size_t i=0; i<num_elements; i++)
-			feature_values.at(i).push_back(feats[i]);
+				feature_values[i].push_back(feats[i]);
+
 		response_values.push_back(response);
-		return(true);
 	}
 
 	virtual std::vector<num_type> retrieve_data_point (index_type index){
@@ -92,26 +102,28 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 	}
 
 
-	virtual bool set_type_of_feature(index_type index, index_type type){
+	virtual void set_type_of_feature(index_type index, index_type type){
 		if (index >= num_features())
 			throw std::runtime_error("Unknown index specified.");
 		if (type < 0)
 			throw std::runtime_error("Type value should be >= 0");
-		// here, only store the categorical values
-
 
 		if (type > 0){
 			//check if the data so far is consistent with the choice
-			for (auto &fv: feature_values[index])
+			for (auto &fv: feature_values[index]){
 				if (!(fv<type))
-					throw std::runtime_error("Feature values not consistent with provided type.");
+					throw std::runtime_error("Feature values not consistent with provided type. Data contains a value larger than allowed.");
+				if (fv < 0)
+					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
+				}
+
+
 			categorical_ranges[index] = type;
 		}
 		else{
 			
 		}
 	}
-
 
 	virtual index_type num_features() const {return(feature_values.size());}
 	virtual index_type num_data_points() const {return(feature_values[0].size());}
@@ -147,16 +159,16 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 		return(response_t);		
 	}
 
-	virtual bool set_type_of_response (index_type resp_t){
-		// potentially some sanity checks here
+	virtual void set_type_of_response (index_type resp_t){
 		if (resp_t > 0){
 			for (auto &rv: response_values){
 				if (!(rv < resp_t))
-					throw std::runtime_error("Response value not consistent with provided type.");
+					throw std::runtime_error("Response value not consistent with provided type. Data contains a value larger than allowed.");
+				if (rv < 0)
+					throw std::runtime_error("Response values contain a negative value, can't make that a categorical value.");
 			}
+			response_t = resp_t;
 		}
-		response_t = resp_t;
-		return(true);
 	}
 
 
