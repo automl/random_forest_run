@@ -48,14 +48,13 @@ class data_container_base{
 	 * \return bool whether the action was sucessful
 	 *
 	 */
-	virtual bool add_data_point (num_type* features, index_type num_elements, response_type response) = 0;
+	virtual void add_data_point (num_type* features, index_type num_elements, response_type response) = 0;
 
 	/** \brief method to retrieve a data point
 	 *
 	 * \param index index of the datapoint to extract
 	 * \param num_features length of the array
 	 * \param response The corresponding response value
-	 * \return
 	 *
 	 */
 	virtual std::vector<num_type> retrieve_data_point (index_type index) = 0;
@@ -81,14 +80,14 @@ class data_container_base{
 	 * \param feature_type the actual type (0 - numerical, value >0 catergorical with values from {1,2,...value}
 	 * \return bool success of the operation (fail do to consistency checks)
 	 */
-	virtual bool set_type_of_feature (index_type feature_index, index_type feature_type) = 0;
+	virtual void set_type_of_feature (index_type feature_index, index_type feature_type) = 0;
 
 	/** \brief specifying the type of the response
 	 *
 	 * \param feature_t the actual type (0 - numerical, value >0 catergorical with values from {0,2,...value-1}
 	 * \return bool success of the operation (fail do to consistency checks)
 	 */
-	virtual bool set_type_of_response (index_type response_t) = 0;
+	virtual void set_type_of_response (index_type response_t) = 0;
 
 
 	virtual index_type num_features() const = 0;

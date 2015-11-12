@@ -66,9 +66,8 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 		return (response_array[sample_index]);
 	}
 	
-	virtual bool add_data_point (num_type* features, index_type num_elements, response_type response){
+	virtual void add_data_point (num_type* features, index_type num_elements, response_type response){
 		throw std::runtime_error("Array data containers do not support adding new data points.");
-		return(false);
 	}
 	
 	virtual std::vector<num_type> retrieve_data_point (index_type index){
@@ -82,9 +81,8 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 		return(type_array[feature_index]);		
 	}
 
-	virtual bool set_type_of_feature (index_type feature_index, index_type feature_type){
+	virtual void set_type_of_feature (index_type feature_index, index_type feature_type){
 		throw std::runtime_error("Array data containers do not support changing a feature type.");
-		return(false);
 	}
 
 
@@ -92,19 +90,16 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 		return(response_t);		
 	}
 
-	virtual bool set_type_of_response (index_type resp_t){
-
-		// potentially some sanity checks here
-
+	virtual void set_type_of_response (index_type resp_t){
 		if (resp_t > 0){
 			for (auto i=0u; i < n_data_points; i++){
 				if (!(response_array[i] < resp_t))
-					throw std::runtime_error("Response value not consistent with set type.");
+					throw std::runtime_error("Response value not consistent with provided type. Data contains a value larger than allowed.");
+				if (response_array[i] < 0)
+					throw std::runtime_error("Response values contain a negative value, can't make that a categorical value.");
 			}
-		}
 		response_t = resp_t;
-		
-		return(true);
+		}
 	}
 
 

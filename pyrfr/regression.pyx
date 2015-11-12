@@ -128,6 +128,7 @@ cdef class mostly_continuous_data_container(data_base):
 # The actual forests #
 ######################
 cdef class regression_forest_base:
+	""" base class providing the basic functionality needed for any of the C++ forest classes"""
 	# attributes for the forest parameters
 	cdef public index_t num_trees
 	cdef public index_t num_data_points_per_tree
@@ -144,9 +145,9 @@ cdef class regression_forest_base:
 	# to (re)seed the rng
 	cdef public index_t seed
 
+
 	cdef rng_t *rng_ptr
-	# pointer to the (abstract) C++ class
-	#cdef regression_forest_base_t * forest_ptr
+
 
 	def __init__(self):
 		self.num_trees=10
@@ -164,10 +165,6 @@ cdef class regression_forest_base:
 
 	def __dealloc__(self):
 		del self.rng_ptr
-		#del self.forest_ptr
-
-	cdef create_forest_instance(self,forest_options[num_t, response_t, index_t] fo):
-		raise NotImplementedError
 
 	cdef forest_options[num_t, response_t, index_t] build_forest_options(self, data_base data):
 
@@ -213,6 +210,9 @@ cdef class binary_rss(regression_forest_base):
 
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
 		return self.forest_ptr.predict_mean_std(&feats[0])
+
+	def all_leaf_values(self, np.ndarray[num_t, ndim=1] feats):
+		return (self.forest_ptr.all_leaf_values(&feats[0]))
 
 
 

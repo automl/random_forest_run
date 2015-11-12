@@ -93,6 +93,16 @@ class regression_forest{
 		return(std::pair<num_type, num_type> (sum/N, sqrt( (sum_squared - sum*sum/N)/(N*(N-1)))));
 	}
 
+	std::vector< std::vector<num_type> > all_leaf_values (num_type * feature_vector){
+		std::vector< std::vector<num_type> > rv;
+		rv.reserve(the_trees.size());
+
+		for (auto &t: the_trees){
+			rv.push_back(t.leaf_entries(feature_vector));
+		}
+		return(rv);
+	}
+
 
 	/* \brief stores a latex document for every individual tree
 	 * 

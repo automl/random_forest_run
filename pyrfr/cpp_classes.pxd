@@ -23,8 +23,8 @@ cdef extern from "rfr/data_containers/data_container_base.hpp" namespace "rfr::d
 		index_type num_features()
 		index_type num_data_points()
 		index_type get_type_of_feature (index_type)
-		bool add_data_point(num_type*, index_type, response_type)
-		bool set_type_of_feature (index_type, index_type)
+		void add_data_point(num_type*, index_type, response_type)
+		void set_type_of_feature (index_type, index_type)
 		vector[num_type] retrieve_data_point (index_type index)
 		response_type response(index_type)
 
@@ -123,3 +123,4 @@ cdef extern from "rfr/forests/regression_forest.hpp" namespace "rfr::forests":
 
 		void fit(data_container_base[num_type, response_type, index_type] &data, rng_type &rng)
 		pair[num_type, num_type] predict_mean_std( num_type * feats)
+		vector[ vector[num_type] ] all_leaf_values (num_type * feature_vector)
