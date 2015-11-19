@@ -16,7 +16,7 @@ ENDIF()
 enable_testing()
 
 # required libaries
-find_package(Boost COMPONENTS unit_test_framework python3 REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(PythonLibs REQUIRED)
 find_package(Doxygen)
 
