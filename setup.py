@@ -5,9 +5,6 @@ from subprocess import call
 from Cython.Build import cythonize
 
 
-#call(["make", "-C", "./documentation", "html"])
-
-
 
 include_dirs = ['./include', np.get_include()]
 
