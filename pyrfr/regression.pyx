@@ -231,21 +231,49 @@ cdef class binary_rss(regression_forest_base):
 		del self.forest_ptr
 
 	def fit(self, data_base data):
+		""" The fit method.
+
+		:param data: a regression data container with the input data
+		:type data: pyrfr.regression.data_base
+		"""
 		del self.forest_ptr
 		fo = self.build_forest_options(data)
 		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] (fo)
 		self.forest_ptr.fit(deref(data.thisptr), deref(self.rng_ptr))
 
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
+		""" The basic prediction method.
+
+		:param feats: feature vector
+		:type feats: 1d numpy array of doubles
+
+		:returns: a tuple containing the mean and the standard deviation prediction
+		"""
 		return self.forest_ptr.predict_mean_std(&feats[0])
 
 	def all_leaf_values(self, np.ndarray[num_t, ndim=1] feats):
+		"""
+		helper function to get all the repsonses from each tree
+
+		:param feats: feature vector
+		:type feats: 1d numpy array of doubles
+
+		:returns: a nested list with the responses of the leafs x falls into from each tree.
+		"""
 		return (self.forest_ptr.all_leaf_values(&feats[0]))
 
-	"""
-	Quantile regression forest as explained in "Quantile Regression Forests" by Nicolai Meinhausen (ETH Zürich)
-	"""
-	def quantile_rf(self, feats, alphas):
+
+	def quantile_prediction(self, np.ndarray[num_t,ndim=1] feats, np.ndarray[num_t,ndim=1] alphas):
+		"""
+		Quantile regression forest as explained in "Quantile Regression Forests" by Nicolai Meinhausen.
+
+ 		:param feats: feature vector to condition on
+ 		:type feats: 1d numpy array of doubles
+		:param alphas: requested quantiles to estimate
+		:type alphas: 1d numpy array of doubles
+
+		:returns: the alhpa quantiles for the response at the given feature vector
+		"""
 		# some variables:
 		weights = []
 		estimates = 0
@@ -285,6 +313,7 @@ cdef class binary_rss(regression_forest_base):
 			a_q = values[index]
 			q.append(a_q)
 			# Compute the estimate distr. funct for all responses using the weights:
+			estimates = 0
 			for i in range(len(leaf_info[k])):
 			# we only need to check if value is smaller (or equal) than alpha-quantile otherwise it would sum up 0s
 				if leaf_info[k][i] <= q[a]:
