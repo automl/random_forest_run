@@ -250,50 +250,69 @@ cdef class binary_rss(regression_forest_base):
 		weights = []
 		estimates = 0
 		w_k_sum = []
+		weight_sum = []
 		leaf_values = []
+		cond_Qs = []
 		# Need the information of each leaf in each tree:
 		leaf_info = self.all_leaf_values(feats)
 		for k in range(len(leaf_info)):
 			for l in range(len(leaf_info[k])):
 				elt = leaf_info[k][l]
 				leaf_values.append(elt)
-		# Compute the weight of the observation for every tree:
-		for k in range(len(leaf_info)):
-			weight_sum = 0
-			for l in range(len(leaf_values)):
-				if leaf_values[l] in leaf_info[k]:
-					w = float(1)/len(leaf_info[k])
-				else:
-					w = 0
-				# additionally sum up the weights
-				weights.append(w)
-				weight_sum +=w
-			w_k_sum.append(weight_sum)
-					
-					
-		# Compute the weight for every observation as an average over the trees:
-		aver_weights = (float(1)/len(leaf_info))* np.array(w_k_sum)
 
-		# Sort the values into order:
-		values = sorted(leaf_values)
-		q = []
-		estimate=[]
+		# Compute the weight of the observation for every tree:
 		# calculating the quantile according to alphas
-		for a in range(len(alphas)):
+		for a in range(len(alphas)): 
+			for k in range(len(leaf_info)):
+				weight_sum = 0
+				for l in range(len(leaf_values)):
+					if leaf_values[l] in leaf_info[k]:
+						w = float(1)/len(leaf_info[k])
+					
+					else:
+						w = 0
+					# additionally sum up the weights
+					weights.append(w)
+					weight_sum +=w
+				
+				w_k_sum.append(weight_sum)
+			
+			#weight_sum.append([w_k_sum])
+				
+					
+					
+			# Compute the weight for every observation as an average over the trees:
+			
+			aver_weights = (float(1)/len(leaf_info))* np.array(w_k_sum)
+			# Sort the values into order:
+			values = sorted(leaf_values)
+			q = []
+			estimate=[]
+			
 			# calculate the alpha-th value of observations
 			index = int(alphas[a]*len(values))
+			
 			a_q = values[index]
 			q.append(a_q)
+			
 			# Compute the estimate distr. funct for all responses using the weights:
 			for i in range(len(leaf_info[k])):
 			# we only need to check if value is smaller (or equal) than alpha-quantile otherwise it would sum up 0s
-				if leaf_info[k][i] <= q[a]:
-					estimates += aver_weights
-				else:
-					estimates += 0
-			estimate.append(estimates)
-
-		return(estimate)
+				for j in range(len(aver_weights)):
+					if leaf_info[k][i] <= q:
+						estimates += aver_weights[i]
+					else:
+						estimates += 0
+					estimate.append(estimates)
+				
+			f = []
+			if (estimate >= alphas[a]):
+				
+				f.append(estimate)
+				
+			cond_Q = min(min(f))
+			cond_Qs.append([cond_Q])
+		return(cond_Qs)
 				
 
 
