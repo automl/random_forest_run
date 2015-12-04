@@ -146,27 +146,45 @@ The actual forests:
 
 
 cdef class regression_forest_base:
-	""" base class providing the basic functionality needed for any of the C++ forest classes"""
+	""" base class providing the basic functionality needed for any of
+	the C++ forest classes
+	"""
+
 	# attributes for the forest parameters
 	cdef public index_t num_trees
+	"""Sets the number of trees in the forest (Default 10)."""
+	
 	cdef public index_t num_data_points_per_tree
-	cdef public bool do_bootstrapping
+	""" Determines how many data points are used for each tree. 
 
+	If set to zero the whole data will be used for each tree, otherwise
+	this sets the size of the (sub)sample drawn from the data. Note, if
+	do_bootstrapping = False, this number must not exceed the number of
+	data points in the data container. 
+	"""
+	
+	cdef public bool do_bootstrapping
+	""" Whether to sample from the data with (True) or without (False)
+	replacement (Default: True).
+	"""
 
 	#attributes for the individual trees.
 
 	cdef public index_t max_features
+	""" how many (randomly selected) features are considered for easch split (Default: 0 - all features)."""
 	cdef public index_t max_depth
+	""" Limits the depth of the trees (Default: 0 - *virtually* no restriction)."""
 	cdef public index_t max_num_nodes
+	""" Limits the number of nodes (internal and leafs) of each tree (Default: 0 - *virtually* no restriction)"""
 	cdef public index_t min_samples_to_split
+	""" The minimal number of samples considered to be split (Default: 2)"""
 	cdef public index_t min_samples_in_leaf
+	""" The smallest number of samples allowed in a leaf (Default: 2)"""
 	cdef public response_t epsilon_purity
-
-
-	#to (re)seed the rng.
+	""" A small float that specifies when two feature values are consider equal (Default: 1e-8)"""
 
 	cdef public index_t seed
-
+	""" Set this to anything other than zero to reseed the random number generator."""
 
 	cdef rng_t *rng_ptr
 
@@ -191,8 +209,8 @@ cdef class regression_forest_base:
 				
 		cdef tree_options[num_t, response_t, index_t] to
 		to.max_features = self.max_features if self.max_features > 0 else data.num_features()
-		to.max_depth = self.max_depth
-		to.max_num_nodes = self.max_num_nodes
+		to.max_depth = self.max_depth if self.max_features > 0 else 2*data.num_data_points()+1
+		to.max_num_nodes = self.max_num_nodes if self.max_num_nodes > 0 else 2*data.num_data_points()+1
 		to.min_samples_to_split = self.min_samples_to_split
 		to.min_samples_in_leaf = self.min_samples_in_leaf
 		to.epsilon_purity = self.epsilon_purity
@@ -327,6 +345,7 @@ cdef class binary_rss(regression_forest_base):
 
 
 cdef class binary_rss_v2(regression_forest_base):
+	""" test class for benchmarks! ***DO NOT USE***"""
 	cdef regression_forest[ binary_rss_tree_v2_t, rng_t, num_t, response_t, index_t]* forest_ptr
 	
 	def __init(self):

@@ -72,25 +72,29 @@ class regression_forest{
 	 *
 	 * \param feature_vector a valid (size and values) array containing features
 	 *
-	 * \return std::pair<num_type, num_type> mean and standard error of the mean as prediction and uncertainty 
+	 * \return std::pair<num_type, num_type> mean and sqrt( total variance = mean of variances + variance of means )
 	 */
 	std::pair<num_type, num_type> predict_mean_std( num_type * feature_vector){
 
-		num_type sum=0;
-		num_type sum_squared = 0;
+		num_type sum_mean=0;
+		num_type sum_squared_mean = 0;
+
+		num_type sum_var=0;
 
 		for (auto &tree: the_trees){
-			num_type m , s;
+			num_type m , v;
 			index_type n;
 
-			std::tie(m, s, n) = tree.predict_mean_std_N(feature_vector);
+			std::tie(m, v, n) = tree.predict_mean_var_N(feature_vector);
 			
-			sum += m;
-			sum_squared += m*m;
+			sum_mean += m;
+			sum_squared_mean += m*m;
+			
+			sum_var += v;
 		}
 		
 		unsigned int N = the_trees.size();
-		return(std::pair<num_type, num_type> (sum/N, sqrt( (sum_squared - sum*sum/N)/(N*(N-1)))));
+		return(std::pair<num_type, num_type> (sum_mean/N, sqrt( sum_var/N + sum_squared_mean/N - (sum_mean/N)*(sum_mean/N)    )));
 	}
 
 	std::vector< std::vector<num_type> > all_leaf_values (num_type * feature_vector){

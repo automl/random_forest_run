@@ -75,7 +75,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 				split_criterion_copy.assign(2, 0);
 
 				// find best split for the current feature_index
-				loss = best_split_continuous(current_features, responses, split_criterion_copy, sum, sum2);
+				loss = best_split_continuous(current_features, responses, split_criterion_copy, sum, sum2, rng);
 			}
 			// a positive feature type encodes the number of possible values
 			if (ft > 0){
@@ -214,13 +214,15 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * \param split_criterion a reference to store the split criterion
 	 * \param S_y_right the sum of all the response values
 	 * \param S_y2_right the sum of all squared response values
+	 * \param rng an pseudo random number generator instance
 	 * 
 	 * \return float the loss of this split
 	 */
 	virtual num_type best_split_continuous(	const std::vector<num_type> & features,
 									const std::vector<response_type> & responses,
 									std::vector<num_type> &split_criterion,
-									num_type S_y_right, num_type S_y2_right){
+									num_type S_y_right, num_type S_y2_right,
+									rng_type &rng){
 
 		// find the best split by looking at any meaningful value for the feature
 		// first some temporary variables
@@ -232,13 +234,13 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		std::iota(tmp_indices.begin(), tmp_indices.end(), 0);
 
 		std::sort(	tmp_indices.begin(), tmp_indices.end(),
-					[&](index_type a, index_type b){return features[a] < features[b];}		//! > uses C++11 lambda function, how exciting :)
+					[&features](index_type a, index_type b){return features[a] < features[b];}		//! > uses C++11 lambda function, how exciting :)
 		);
 
 
 		// now we can increase the splitting value to move data points from the right to the left child
 		// this way we do not consider a split with everything in the right child
-				auto tmp_i = 0u;
+		auto tmp_i = 0u;
 		while (tmp_i != tmp_indices.size()){
 			num_type psv = features[tmp_indices[tmp_i]]+ 1e-6; // potential split value add small delta for numerical inaccuracy
 			// combine data points that are very close
@@ -254,6 +256,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 				N_left++;
 				tmp_i++;
 			} while ((tmp_i != tmp_indices.size()) && (features[tmp_indices[tmp_i]] - psv <= 0));
+			
 			// stop if all data points are now in the left child as this is not a meaningful split
 			if (N_right == 0) {break;}
 
@@ -263,8 +266,9 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 			// store the best split
 			if (loss < best_loss){
+				std::uniform_real_distribution<num_type> dist(0.0,1.0);
 				best_loss = loss;
-				split_criterion[1] = psv;
+				split_criterion[1] = psv + dist(rng)*(features[tmp_indices[tmp_i]] - psv);
 			}
 		}
 		return(best_loss);
@@ -278,6 +282,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * \param split_criterion a reference to store the split criterion
 	 * \param S_y_right the sum of all the response values
 	 * \param S_y2_right the sum of all squared response values
+	 * \param rng an pseudo random number generator instance
 	 * 
 	 * \return float the loss of this split
 	 */

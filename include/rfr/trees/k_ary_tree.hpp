@@ -155,7 +155,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 		return(the_nodes[node_index].mean());
 	}
 	
-	virtual std::tuple<num_type, num_type, index_type> predict_mean_std_N(num_type *feature_vector){
+	virtual std::tuple<num_type, num_type, index_type> predict_mean_var_N(num_type *feature_vector){
 		index_type node_index = find_leaf(feature_vector);
 		return(the_nodes[node_index].mean_variance_N());
 	}
