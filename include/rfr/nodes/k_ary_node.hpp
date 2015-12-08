@@ -12,6 +12,11 @@
 #include "rfr/data_containers/data_container_utils.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 
+#include "cereal/cereal.hpp"
+#include <cereal/types/vector.hpp>
+#include <cereal/types/array.hpp>
+
+
 #include <iostream>
 
 
@@ -37,6 +42,16 @@ class k_ary_node{
 	split_type split;
 	
   public:
+
+	k_ary_node (): response_values(), children(), split(){}
+
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( parent_index, is_leaf, response_values, children, split); 
+	}
+
   
 	/** \brief If the temporary node should be split further, this member turns this node into an internal node.
 	*
@@ -196,7 +211,6 @@ class k_ary_node{
 		return(str.str());
 	}
 };
-
 
 
 }} // namespace rfr::nodes

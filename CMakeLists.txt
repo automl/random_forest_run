@@ -17,7 +17,6 @@ enable_testing()
 
 # required libaries
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
-find_package(PythonLibs REQUIRED)
 find_package(Doxygen)
 
 SET(Boost_USE_STATIC_LIBS OFF)
@@ -28,7 +27,6 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 # define all include directories within the project for different splits, data containers, node types etc...
 include_directories ("${PROJECT_SOURCE_DIR}/include")
 include_directories ("${PROJECT_SOURCE_DIR}/boost_numpy")
-include_directories ("${PYTHON_INCLUDE_DIRS}")
 include_directories ("${Boost_INCLUDE_DIR}")
 
 link_libraries(${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) # Deprecated but so convenient!

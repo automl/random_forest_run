@@ -8,9 +8,13 @@
 #include <numeric>
 #include <cstring>
 
+#include <cereal/cereal.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/xml.hpp>
+#include <fstream>
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
-#include "rfr/splits/binary_split_one_feature_rss_lossv2.hpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
 #include "rfr/trees/tree_options.hpp"
@@ -24,8 +28,9 @@ typedef std::default_random_engine rng_type;
 
 typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type> data_container_type;
 
-typedef rfr::splits::binary_split_one_feature_rss_loss_v2<rng_type, num_type, response_type, index_type> split_type;
+typedef rfr::splits::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type> split_type;
 typedef rfr::nodes::k_ary_node<2, split_type, rng_type, num_type, response_type, index_type> node_type;
+
 typedef rfr::nodes::temporary_node<num_type, index_type> tmp_node_type;
 
 typedef rfr::trees::k_ary_random_tree<2, split_type, rng_type, num_type, response_type, index_type> tree_type;
@@ -64,4 +69,25 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	sprintf(filename, "/tmp/tree_%i.tex", i);
 	the_tree.save_latex_representation(filename);
     }
+    
+    
+    
+    tree_type the_tree;
+	the_tree.fit(data, tree_opts, rng_engine);
+    
+	{
+		std::ofstream ofs("test_binary_tree.xml");
+		cereal::XMLOutputArchive oarchive(ofs);
+		oarchive(the_tree);
+	}
+    
+        		
+	tree_type the_tree2;
+	{
+		std::ifstream ifs("test_binary_tree.xml");
+		cereal::XMLInputArchive iarchive(ifs);
+		//iarchive(the_tree2);
+	}
+    
+    
 }

@@ -3,6 +3,10 @@
 
 #include <cmath>
 #include <limits>
+
+#include "cereal/cereal.hpp"
+
+
 #include "rfr/data_containers/data_container_base.hpp"
 
 namespace rfr{ namespace trees{
@@ -20,6 +24,13 @@ struct tree_options{
     response_type epsilon_purity;
 
 
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( max_features, max_depth, min_samples_to_split, min_samples_in_leaf, max_num_nodes, epsilon_purity);
+	}
+
     /** (Re)set to default values with no limits on the size of the tree
      * 
      * If nothing is know about the data, this member can be used
@@ -30,15 +41,15 @@ struct tree_options{
      * slows the training down, but also makes this tree deterministic!
      */
     void set_default_values(){
-	max_features =  std::numeric_limits<index_type>::max();
-	max_depth = std::numeric_limits<index_type>::max();
+		max_features =  std::numeric_limits<index_type>::max();
+		max_depth = std::numeric_limits<index_type>::max();
 	
-	min_samples_to_split = 2;
-	min_samples_in_leaf = 1;
+		min_samples_to_split = 2;
+		min_samples_in_leaf = 1;
 	
-	max_num_nodes = std::numeric_limits<index_type>::max();
+		max_num_nodes = std::numeric_limits<index_type>::max();
 	
-	epsilon_purity = 1e-10;
+		epsilon_purity = 1e-10;
     }
 
 

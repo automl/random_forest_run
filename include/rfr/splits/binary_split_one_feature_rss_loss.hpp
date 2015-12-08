@@ -9,6 +9,7 @@
 
 
 #include "cereal/cereal.hpp"
+#include <cereal/types/vector.hpp>
 
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/splits/split_base.hpp"
@@ -26,6 +27,14 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	//!< The split criterion contains its type (first element = 0 for numerical, >=1 for categoricals), and the split value in the second/ the categories that fall into the left child respectively
 	std::vector<num_type> split_criterion; //!< one could consider to use a dynamically sized array here to save some memory (vector stores size and capacity + it might allocate more memory than needed!)
   public:
+  	
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( feature_index, split_criterion); 
+	}
+  	
   	
 	/** \brief the implementation to find the best binary split using only one feature minimizing the RSS loss
 	 *
@@ -425,6 +434,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	}
 	
 	std::vector<num_type> get_split_criterion(){return(split_criterion);}
+	index_type get_feature_index() {return(feature_index);}
 
 };
 

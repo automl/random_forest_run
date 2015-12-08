@@ -13,6 +13,11 @@
 
 
 
+#include <cereal/cereal.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/xml.hpp>
+#include <fstream>
+
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/nodes/temporary_node.hpp"
@@ -102,4 +107,21 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 	BOOST_CHECK_CLOSE(std::get<0>(info2), ((num_type) 7)/2, 1e-10);
 	BOOST_CHECK_CLOSE(std::get<1>(info2), ((num_type) 1)/4, 1e-10);
 	BOOST_CHECK(std::get<2>(info2) == 40);
+	
+	
+	
+	{
+		std::ofstream ofs("test_binary_nodes.xml");
+		cereal::XMLOutputArchive oarchive(ofs);
+		oarchive(nodes);
+	}
+	
+		
+	std::vector<node_type> nodes2;
+	{
+		std::ifstream ifs("test_binary_nodes.xml");
+		cereal::XMLInputArchive iarchive(ifs);
+		iarchive(nodes2);
+	}
+
 }

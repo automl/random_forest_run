@@ -247,6 +247,18 @@ cdef class binary_rss(regression_forest_base):
 	def __dealloc__(self):
 		del self.forest_ptr
 
+	def save_to_binary_file(self, filename):
+		# todo: make sure directory exists and all permissions are OK
+		self.forest_ptr.save_to_binary_file(filename)
+	
+	def load_from_binary_file(self, filename):
+		del self.forest_ptr
+		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] ()
+		self.forest_ptr.load_from_binary_file(filename)
+		#todo: extract all options from the loaded tree
+		
+		
+
 	def fit(self, data_base data):
 		""" The fit method.
 

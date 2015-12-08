@@ -12,8 +12,16 @@
 #include <functional>  // std::bind
 
 
+#include "cereal/cereal.hpp"
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <iostream>
+
+
+
 #include "rfr/trees/tree_options.hpp"
 #include "rfr/forests/forest_options.hpp"
+
 
 namespace rfr{ namespace forests{
 
@@ -26,6 +34,17 @@ class regression_forest{
 	std::vector<tree_type> the_trees;
 
   public:
+
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( forest_opts, the_trees);
+	}
+
+
+	regression_forest(){}
+
 
 	regression_forest(forest_options<num_type, response_type, index_type> forest_opts): forest_opts(forest_opts){
 		the_trees.resize(forest_opts.num_trees);
@@ -108,12 +127,27 @@ class regression_forest{
 	}
 
 
+	void save_to_binary_file(const std::string filename){
+		std::ofstream ofs(filename, std::ios::binary);
+		cereal::PortableBinaryOutputArchive oarch(ofs);
+		serialize(oarch);
+	}
+
+
+	void load_from_binary_file(const std::string filename){
+		std::ifstream ifs(filename, std::ios::binary);
+		std::cout<<"opening file "<<filename<<std::endl;
+		cereal::PortableBinaryInputArchive iarch(ifs);
+		serialize(iarch);
+	}
+
+
 	/* \brief stores a latex document for every individual tree
 	 * 
 	 * \param filename_template a string to specify the location and the naming scheme. Note the directory is not created, so make sure it exists.
 	 * 
 	 */
-	void save_latex_representation(const char* filename_template){
+	void save_latex_representation(const std::string filename_template){
 		for (auto i = 0u; i<the_trees.size(); i++){
 			std::stringstream filename;
 			filename << filename_template<<i<<".tex";

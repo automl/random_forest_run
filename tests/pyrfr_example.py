@@ -1,3 +1,7 @@
+import sys
+sys.path.append("..")
+
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -71,10 +75,7 @@ the_forest.num_trees = 2
 # the forest's parameters
 the_forest.seed=12					# reset to reseed the rng for the next fit
 the_forest.do_bootstrapping=True	# default: false
-
-
 the_forest.num_data_points_per_tree=0 # means same number as data points
-
 the_forest.max_features = features.shape[1]//2 # 0 would mean all the features
 the_forest.min_samples_to_split = 0	# 0 means split until pure
 the_forest.min_samples_in_leaf = 0	# 0 means no restriction 
@@ -82,12 +83,33 @@ the_forest.max_depth=1024			# 0 means no restriction
 the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
 
 
-
 the_forest.fit(data1)
+
+# you can save the forest to disk
+the_forest.save_to_binary_file(b"/tmp/pyrfr_test.bin")
+
+
+
+# loading it works like that
+
+the_forest = pyrfr.regression.binary_rss()
+the_forest.load_from_binary_file(b"/tmp/pyrfr_test.bin")
+
+
+# TEMPORARY FIX: the python parameters are forgotten right now, so we have to set them manually
+# the forest's parameters
+the_forest.seed=12					# reset to reseed the rng for the next fit
+the_forest.do_bootstrapping=True	# default: false
+the_forest.num_data_points_per_tree=0 # means same number as data points
+the_forest.max_features = features.shape[1]//2 # 0 would mean all the features
+the_forest.min_samples_to_split = 0	# 0 means split until pure
+the_forest.min_samples_in_leaf = 0	# 0 means no restriction 
+the_forest.max_depth=1024			# 0 means no restriction
+the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
 
 
 # you can save a LaTeX document that you can compile with pdflatex
-#the_forest.save_latex_representation("/tmp/rfr_test")
+the_forest.save_latex_representation(b"/tmp/rfr_test")
 
 
 # the predict method will return a tuple containing the predicted mean and the standard deviation.

@@ -12,6 +12,9 @@
 #include<fstream>
 
 
+#include "cereal/cereal.hpp"
+#include <cereal/types/vector.hpp>
+
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
@@ -24,11 +27,21 @@ namespace rfr{ namespace trees{
 template <const int k,typename split_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
 class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, response_type, index_type> {
   private:
-	std::vector< rfr::nodes::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> > the_nodes;
+	typedef rfr::nodes::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> node_type;
+  
+	std::vector<node_type> the_nodes;
 	index_type num_leafs;
 	index_type actual_depth;
 	
   public:
+  
+    /* serialize function for saving forests */
+  	template<class Archive>
+  	void serialize(Archive & archive){
+		archive(the_nodes, num_leafs, actual_depth);
+	}
+	
+
 	// make overloaded fit function with only 3 arguments from the base class visible here!
 	using rfr::trees::tree_base<rng_type, num_type, response_type, index_type>::fit;
 

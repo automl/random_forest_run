@@ -17,6 +17,9 @@
 #include "rfr/forests/forest_options.hpp"
 
 
+#include <cereal/archives/xml.hpp>
+#include <fstream>
+
 
 typedef double num_type;
 typedef double response_type;
@@ -72,8 +75,33 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 	std::vector<response_type> data_point_five = data.retrieve_data_point(5);
 	tmp = the_forest.predict_mean_std(data_point_five.data());
 
-	the_forest.save_latex_representation("/tmp/tree");
+	the_forest.save_latex_representation("/tmp/rfr_trees1/tree_");
+	
+	
+	{
+		std::ofstream ofs("test.xml");
+		cereal::XMLOutputArchive oarchive(ofs);
+		oarchive(the_forest);
+	}
+	
+	
+	the_forest.save_to_binary_file("/tmp/rfr_binary1");
+	
+	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest2;
 
-	std::cout<<std::get<0>(tmp) <<" "<<std::get<1>(tmp)<<"\n";
+	{
+		std::ifstream ifs("test.xml");
+		cereal::XMLInputArchive iarchive(ifs);
+		iarchive(the_forest2);
+	}	
+
+	the_forest2.save_latex_representation("/tmp/rfr_trees2/tree_");
+	
+	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest3;
+	the_forest3.load_from_binary_file("/tmp/rfr_binary1");
+	
+		the_forest2.save_latex_representation("/tmp/rfr_trees3/tree_");
+	
+	
     free(filename);
 }
