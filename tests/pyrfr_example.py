@@ -89,24 +89,20 @@ the_forest.fit(data1)
 the_forest.save_to_binary_file(b"/tmp/pyrfr_test.bin")
 
 
+num_datapoints_old = the_forest.num_data_points_per_tree
+
 
 # loading it works like that
 
 the_forest = pyrfr.regression.binary_rss()
 the_forest.load_from_binary_file(b"/tmp/pyrfr_test.bin")
 
+num_data_points_new = the_forest.num_data_points_per_tree
 
-# TEMPORARY FIX: the python parameters are forgotten right now, so we have to set them manually
-# the forest's parameters
-the_forest.seed=12					# reset to reseed the rng for the next fit
-the_forest.do_bootstrapping=True	# default: false
-the_forest.num_data_points_per_tree=0 # means same number as data points
-the_forest.max_features = features.shape[1]//2 # 0 would mean all the features
-the_forest.min_samples_to_split = 0	# 0 means split until pure
-the_forest.min_samples_in_leaf = 0	# 0 means no restriction 
-the_forest.max_depth=1024			# 0 means no restriction
-the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
-
+print("Beware that some values are not restored as you might expect:")
+print("{} != {}".format(num_datapoints_old, num_data_points_new))
+print("If you set some variables,e.g. max_features, to zero, the underlying value this shorthand represents is recovered!")
+print("As the saving/loading should only be used for predictions rather than refitting, this should not be a problem!")
 
 # you can save a LaTeX document that you can compile with pdflatex
 the_forest.save_latex_representation(b"/tmp/rfr_test")

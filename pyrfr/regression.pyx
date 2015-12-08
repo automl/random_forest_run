@@ -204,6 +204,19 @@ cdef class regression_forest_base:
 	def __dealloc__(self):
 		del self.rng_ptr
 
+	cdef recover_settings_from_forest_options(self, forest_options[num_t, response_t, index_t] fo):
+		self.num_trees = fo.num_trees
+		self.num_data_points_per_tree = fo.num_data_points_per_tree
+		self.do_bootstrapping = fo.do_bootstrapping
+				
+		self.max_features = fo.tree_opts.max_features
+		self.max_depth = fo.tree_opts.max_depth
+		self.max_num_nodes = fo.tree_opts.max_num_nodes
+		self.min_samples_to_split = fo.tree_opts.min_samples_to_split
+		self.min_samples_in_leaf = fo.tree_opts.min_samples_to_split
+		self.epsilon_purity = fo.tree_opts.epsilon_purity
+
+
 	cdef forest_options[num_t, response_t, index_t] build_forest_options(self, data_base data):
 				
 		cdef tree_options[num_t, response_t, index_t] to
@@ -214,10 +227,7 @@ cdef class regression_forest_base:
 		to.min_samples_in_leaf = self.min_samples_in_leaf
 		to.epsilon_purity = self.epsilon_purity
 
-
-
 		#construct the forest option object.
-
 		cdef forest_options[num_t, response_t, index_t] fo
 
 		fo.num_trees=self.num_trees
@@ -225,9 +235,7 @@ cdef class regression_forest_base:
 		fo.do_bootstrapping = self.do_bootstrapping
 		fo.tree_opts = to
 
-
 		#reseed the rng if needed.
-
 		if (self.seed > 0):
 			self.rng_ptr.seed(self.seed)
 			self.seed=0
@@ -252,13 +260,21 @@ cdef class binary_rss(regression_forest_base):
 		self.forest_ptr.save_to_binary_file(filename)
 	
 	def load_from_binary_file(self, filename):
+		""" Simple wrapper around the C++ deserialization function.
+		
+		Beware: the recovered settings for the forest might not be the
+		same in the python world. In particular, settings like
+		num_data_points_per_tree = 0 have no equivalent in the C++ world, but
+		are merely a convenience setting for pyrfr. As the serialization only
+		knows about the C++ settings, the values used there are recovered. In
+		the example of num_data_points_per_tree, the restored value equals the 
+		number of data points available at training.		
+		"""
 		del self.forest_ptr
 		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] ()
 		self.forest_ptr.load_from_binary_file(filename)
-		#todo: extract all options from the loaded tree
+		self.recover_settings_from_forest_options(self.forest_ptr.get_forest_options())
 		
-		
-
 	def fit(self, data_base data):
 		""" The fit method.
 

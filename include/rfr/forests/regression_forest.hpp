@@ -30,7 +30,6 @@ template <typename tree_type, typename rng_type, typename num_type = float, type
 class regression_forest{
   private:
 	forest_options<num_type, response_type, index_type> forest_opts;
-
 	std::vector<tree_type> the_trees;
 
   public:
@@ -141,6 +140,8 @@ class regression_forest{
 		serialize(iarch);
 	}
 
+
+	forest_options<num_type, response_type, index_type> get_forest_options(){return(forest_opts);}
 
 	/* \brief stores a latex document for every individual tree
 	 * 
