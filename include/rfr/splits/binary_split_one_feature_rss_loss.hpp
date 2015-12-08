@@ -7,6 +7,9 @@
 #include <string>
 #include <sstream>
 
+
+#include "cereal/cereal.hpp"
+
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/splits/split_base.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"

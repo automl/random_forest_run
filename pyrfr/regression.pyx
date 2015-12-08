@@ -144,7 +144,6 @@ The actual forests:
 ===================
 """
 
-
 cdef class regression_forest_base:
 	""" base class providing the basic functionality needed for any of
 	the C++ forest classes
@@ -281,6 +280,9 @@ cdef class binary_rss(regression_forest_base):
 		return (self.forest_ptr.all_leaf_values(&feats[0]))
 
 
+	def save_latex_representation(self, pattern):
+		self.forest_ptr.save_latex_representation(pattern)
+
 	def quantile_prediction(self, np.ndarray[num_t,ndim=1] feats, np.ndarray[num_t,ndim=1] alphas):
 		"""
 		Quantile regression forest as explained in "Quantile Regression Forests" by Nicolai Meinhausen.
@@ -363,4 +365,6 @@ cdef class binary_rss_v2(regression_forest_base):
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
 		return self.forest_ptr.predict_mean_std(&feats[0])
 
+	def save_latex_representation(self, pattern):
+		self.forest_ptr.save_latex_representation(pattern)
 

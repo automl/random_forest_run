@@ -101,8 +101,8 @@ print(the_forest.predict(features[0]))
 print(the_forest.all_leaf_values(features[0]))
 
 # quantile regression forest estimations
-alphas =[0.25, 0.5, 0.75]
-print(the_forest.quantile_rf(features[0], alphas))
+#alphas =[0.25, 0.5, 0.75]
+#print(the_forest.quantile_rf(features[0], alphas))
 
 
 # let's play around a bit and train different numbers of trees and compare the speed to scikit learn
