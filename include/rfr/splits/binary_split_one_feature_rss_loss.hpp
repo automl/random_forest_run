@@ -108,83 +108,43 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		if (best_loss < std::numeric_limits<num_type>::infinity()){
 			
 			split_criterion.shrink_to_fit();
-			
-			// now we have to rearrange the indices based on which leaf they fall into
-			
-			// first for a continuous variable
-			if (split_criterion[0] == 0){
-				
-				auto i_it1 = indices.begin();
-				auto i_it2 = --indices.end();
-				auto f_it1 = best_features.begin();
-				auto f_it2 = --best_features.end();
-				
-				while (i_it1 != i_it2){
-					// find the left most entry which should go to the right child
-					while ((*f_it1 <= split_criterion[1]) && (i_it1 != i_it2))
-						{
-							i_it1++; f_it1++;
-						}
-					// find the right most entry that should go into the left child
-					while ((*f_it2 > split_criterion[1]) && (i_it1 != i_it2))
-						{
-							i_it2--; f_it2--;
-						}
-					// swap the indices (don't worry about the feature vector as no index will be visited twice
-					std::iter_swap(i_it1, i_it2);
-					
-					// advance the left iterator (if necessary)
-					if (i_it1 != i_it2)
-						{i_it1++; f_it1++;}
-					// advance the right iterator (if necessary)
-					if (i_it1 != i_it2)
-						{ i_it2--; f_it2--;}
-					// should never happen, but just in case
-					if ((i_it1 == indices.end()) || (i_it2 == indices.begin())){
-						exit(42);
-					}
-				}
-				
-				split_indices_it[1] = i_it1;
-			}
-			// and then for a categorical feature
-			else{
-				std::sort(++split_criterion.begin(), split_criterion.end());
-				auto i_it1 = indices.begin();
-				auto i_it2 = --indices.end();
-				auto f_it1 = best_features.begin();
-				auto f_it2 = --best_features.end();
 
-				while (i_it1 != i_it2){
-					// find the left most entry which should go to the right child
-					while ((std::binary_search(++split_criterion.begin(), split_criterion.end(), *f_it1)) && (i_it1 != i_it2))
-						{
-							i_it1++; f_it1++;
-						}
-					// find the right most entry that should go into the left child
-					while (!(std::binary_search(++split_criterion.begin(), split_criterion.end(), *f_it2)) && (i_it1 != i_it2))
-						{
-							i_it2--; f_it2--;
-						}
-					// swap the indices (don't worry about the feature vector as no index will be visited twice
-					std::iter_swap(i_it1, i_it2);
-					
-					// advance the left iterator (if necessary)
-					if (i_it1 != i_it2)
-						{i_it1++; f_it1++;}
-					// advance the right iterator (if necessary)
-					if (i_it1 != i_it2)
-						{ i_it2--; f_it2--;}
-					
-					if ((i_it1 == indices.end()) || (i_it2 == indices.begin())){
-						exit(1);
-					}
-				}
-				split_indices_it[1] = i_it1;
-			}
+			// make sure the classes are sorted for categorical values
+			if (split_criterion[0] != 0)
+					std::sort(++split_criterion.begin(), split_criterion.end());
+
+			// now we have to rearrange the indices based on which leaf they fall into
+
 			// the default values for the two split iterators
 			split_indices_it[0] = indices.begin();
-			split_indices_it[2] = indices.end();			
+			split_indices_it[2] = indices.end();    
+
+			// adapted from http://www.cplusplus.com/reference/algorithm/partition/
+			// because std::partition is not usable in the use case here
+			auto i_first = indices.begin();
+			auto i_last  = indices.end();
+			auto f_first = best_features.begin();
+			auto f_last  = best_features.end();                     
+
+			while (i_first != i_last){
+					while ( !operator()(*f_first)){
+							++f_first; ++i_first;
+							if (i_first == i_last){
+									split_indices_it[1] = i_first;
+									return(best_loss);
+							}
+					}
+					do{
+							--f_last; -- i_last;
+							if (i_first == i_last){
+									split_indices_it[1] = i_first;
+									return(best_loss);
+							}                       
+					} while (operator()(*f_last));
+					std::iter_swap(i_first, i_last);
+					++f_first; ++i_first;
+			}
+			split_indices_it[1] = i_first;
 		}
 		return(best_loss);
 	}

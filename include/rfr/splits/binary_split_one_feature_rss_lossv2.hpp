@@ -1,11 +1,15 @@
-#ifndef RFR_BINARY_SPLIT_RSS_v2_HPP
-#define RFR_BINARY_SPLIT_RSS_v2_HPP
+#ifndef RFR_BINARY_SPLIT_RSS_V2_HPP
+#define RFR_BINARY_SPLIT_RSS_V2_HPP
 
 #include <vector>
 #include <array>
 #include <algorithm>
 #include <string>
 #include <sstream>
+
+
+#include "cereal/cereal.hpp"
+#include <cereal/types/vector.hpp>
 
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/splits/split_base.hpp"
@@ -23,6 +27,14 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 	//!< The split criterion contains its type (first element = 0 for numerical, >=1 for categoricals), and the split value in the second/ the categories that fall into the left child respectively
 	std::vector<num_type> split_criterion; //!< one could consider to use a dynamically sized array here to save some memory (vector stores size and capacity + it might allocate more memory than needed!)
   public:
+  	
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( feature_index, split_criterion); 
+	}
+  	
   	
 	/** \brief the implementation to find the best binary split using only one feature minimizing the RSS loss
 	 *
@@ -75,7 +87,7 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 				split_criterion_copy.assign(2, 0);
 
 				// find best split for the current feature_index
-				loss = best_split_continuous(current_features, responses, split_criterion_copy, sum, sum2);
+				loss = best_split_continuous(current_features, responses, split_criterion_copy, sum, sum2, rng);
 			}
 			// a positive feature type encodes the number of possible values
 			if (ft > 0){
@@ -96,83 +108,43 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 		if (best_loss < std::numeric_limits<num_type>::infinity()){
 			
 			split_criterion.shrink_to_fit();
-			
-			// now we have to rearrange the indices based on which leaf they fall into
-			
-			// first for a continuous variable
-			if (split_criterion[0] == 0){
-				
-				auto i_it1 = indices.begin();
-				auto i_it2 = --indices.end();
-				auto f_it1 = best_features.begin();
-				auto f_it2 = --best_features.end();
-				
-				while (i_it1 != i_it2){
-					// find the left most entry which should go to the right child
-					while ((*f_it1 <= split_criterion[1]) && (i_it1 != i_it2))
-						{
-							i_it1++; f_it1++;
-						}
-					// find the right most entry that should go into the left child
-					while ((*f_it2 > split_criterion[1]) && (i_it1 != i_it2))
-						{
-							i_it2--; f_it2--;
-						}
-					// swap the indices (don't worry about the feature vector as no index will be visited twice
-					std::iter_swap(i_it1, i_it2);
-					
-					// advance the left iterator (if necessary)
-					if (i_it1 != i_it2)
-						{i_it1++; f_it1++;}
-					// advance the right iterator (if necessary)
-					if (i_it1 != i_it2)
-						{ i_it2--; f_it2--;}
-					// should never happen, but just in case
-					if ((i_it1 == indices.end()) || (i_it2 == indices.begin())){
-						exit(42);
-					}
-				}
-				
-				split_indices_it[1] = i_it1;
-			}
-			// and then for a categorical feature
-			else{
-				std::sort(++split_criterion.begin(), split_criterion.end());
-				auto i_it1 = indices.begin();
-				auto i_it2 = --indices.end();
-				auto f_it1 = best_features.begin();
-				auto f_it2 = --best_features.end();
 
-				while (i_it1 != i_it2){
-					// find the left most entry which should go to the right child
-					while ((std::binary_search(++split_criterion.begin(), split_criterion.end(), *f_it1)) && (i_it1 != i_it2))
-						{
-							i_it1++; f_it1++;
-						}
-					// find the right most entry that should go into the left child
-					while (!(std::binary_search(++split_criterion.begin(), split_criterion.end(), *f_it2)) && (i_it1 != i_it2))
-						{
-							i_it2--; f_it2--;
-						}
-					// swap the indices (don't worry about the feature vector as no index will be visited twice
-					std::iter_swap(i_it1, i_it2);
-					
-					// advance the left iterator (if necessary)
-					if (i_it1 != i_it2)
-						{i_it1++; f_it1++;}
-					// advance the right iterator (if necessary)
-					if (i_it1 != i_it2)
-						{ i_it2--; f_it2--;}
-					
-					if ((i_it1 == indices.end()) || (i_it2 == indices.begin())){
-						exit(1);
-					}
-				}
-				split_indices_it[1] = i_it1;
-			}
+			// make sure the classes are sorted for categorical values
+			if (split_criterion[0] != 0)
+					std::sort(++split_criterion.begin(), split_criterion.end());
+
+			// now we have to rearrange the indices based on which leaf they fall into
+
 			// the default values for the two split iterators
 			split_indices_it[0] = indices.begin();
-			split_indices_it[2] = indices.end();			
+			split_indices_it[2] = indices.end();    
+
+			// adapted from http://www.cplusplus.com/reference/algorithm/partition/
+			// because std::partition is not usable in the use case here
+			auto i_first = indices.begin();
+			auto i_last  = indices.end();
+			auto f_first = best_features.begin();
+			auto f_last  = best_features.end();                     
+
+			while (i_first != i_last){
+					while ( !operator()(*f_first)){
+							++f_first; ++i_first;
+							if (i_first == i_last){
+									split_indices_it[1] = i_first;
+									return(best_loss);
+							}
+					}
+					do{
+							--f_last; -- i_last;
+							if (i_first == i_last){
+									split_indices_it[1] = i_first;
+									return(best_loss);
+							}                       
+					} while (operator()(*f_last));
+					std::iter_swap(i_first, i_last);
+					++f_first; ++i_first;
+			}
+			split_indices_it[1] = i_first;
 		}
 		return(best_loss);
 	}
@@ -214,13 +186,15 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 	 * \param split_criterion a reference to store the split criterion
 	 * \param S_y_right the sum of all the response values
 	 * \param S_y2_right the sum of all squared response values
+	 * \param rng an pseudo random number generator instance
 	 * 
 	 * \return float the loss of this split
 	 */
 	virtual num_type best_split_continuous(	const std::vector<num_type> & features,
 									const std::vector<response_type> & responses,
 									std::vector<num_type> &split_criterion,
-									num_type S_y_right, num_type S_y2_right){
+									num_type S_y_right, num_type S_y2_right,
+									rng_type &rng){
 
 		// find the best split by looking at any meaningful value for the feature
 		// first some temporary variables
@@ -232,13 +206,13 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 		std::iota(tmp_indices.begin(), tmp_indices.end(), 0);
 
 		std::sort(	tmp_indices.begin(), tmp_indices.end(),
-					[&](index_type a, index_type b){return features[a] < features[b];}		//! > uses C++11 lambda function, how exciting :)
+					[&features](index_type a, index_type b){return features[a] < features[b];}		//! > uses C++11 lambda function, how exciting :)
 		);
 
 
 		// now we can increase the splitting value to move data points from the right to the left child
 		// this way we do not consider a split with everything in the right child
-				auto tmp_i = 0u;
+		auto tmp_i = 0u;
 		while (tmp_i != tmp_indices.size()){
 			num_type psv = features[tmp_indices[tmp_i]]+ 1e-6; // potential split value add small delta for numerical inaccuracy
 			// combine data points that are very close
@@ -254,6 +228,7 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 				N_left++;
 				tmp_i++;
 			} while ((tmp_i != tmp_indices.size()) && (features[tmp_indices[tmp_i]] - psv <= 0));
+			
 			// stop if all data points are now in the left child as this is not a meaningful split
 			if (N_right == 0) {break;}
 
@@ -278,6 +253,7 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 	 * \param split_criterion a reference to store the split criterion
 	 * \param S_y_right the sum of all the response values
 	 * \param S_y2_right the sum of all squared response values
+	 * \param rng an pseudo random number generator instance
 	 * 
 	 * \return float the loss of this split
 	 */
@@ -417,6 +393,7 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 	}
 	
 	std::vector<num_type> get_split_criterion(){return(split_criterion);}
+	index_type get_feature_index() {return(feature_index);}
 
 };
 
