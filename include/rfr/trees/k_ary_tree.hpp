@@ -7,7 +7,7 @@
 #include<utility>       // std::pair
 #include<algorithm>     // std::shuffle
 #include<numeric>       // std::iota
-#include<cmath>         // abs
+#include<cmath>         // std::abs
 #include<iterator>      // std::advance
 #include<fstream>
 
@@ -89,7 +89,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 				num_type ref = data.response(tmp_nodes.front().data_indices[0]);
 				
 				for(auto it = ++tmp_nodes.front().data_indices.begin(); it!= tmp_nodes.front().data_indices.end(); it++){
-							if (abs(data.response(*it)- ref) > tree_opts.epsilon_purity){
+							if (std::abs(data.response(*it)- ref) > tree_opts.epsilon_purity){
 									is_not_pure = true;
 									break;
 							}
@@ -107,7 +107,6 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 				std::vector<index_type> feature_subset(feature_indices.begin(), std::next(feature_indices.begin(), tree_opts.max_features));
 
 				//split the node
-				
 				num_type best_loss = the_nodes[tmp_nodes.front().node_index].make_internal_node(
 										tmp_nodes.front(), data, feature_subset,
 										the_nodes.size(), tmp_nodes,rng);
