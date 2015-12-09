@@ -112,7 +112,7 @@ class regression_forest{
 		}
 		
 		unsigned int N = the_trees.size();
-		return(std::pair<num_type, num_type> (sum_mean/N, sqrt( sum_var/N + sum_squared_mean/N - (sum_mean/N)*(sum_mean/N)    )));
+		return(std::pair<num_type, num_type> (sum_mean/N, sqrt( std::max<num_type>(0, sum_var/N + sum_squared_mean/N - (sum_mean/N)*(sum_mean/N))  )));
 	}
 
 	std::vector< std::vector<num_type> > all_leaf_values (num_type * feature_vector){

@@ -153,7 +153,7 @@ class k_ary_node{
 			sum_squared += v*v;	
 		}
 		return( std::tuple<num_type, num_type, index_type> (sum/N,
-															sum_squared/N - (sum/N)*(sum/N),
+															std::max<num_type>(0,sum_squared/N - (sum/N)*(sum/N)),
 															N));
 	}
 
