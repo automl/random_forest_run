@@ -26,10 +26,9 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 
 # define all include directories within the project for different splits, data containers, node types etc...
 include_directories ("${PROJECT_SOURCE_DIR}/include")
-include_directories ("${PROJECT_SOURCE_DIR}/boost_numpy")
 include_directories ("${Boost_INCLUDE_DIR}")
 
-link_libraries(${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) # Deprecated but so convenient!
+link_libraries(${Boost_LIBRARIES}) # Deprecated but so convenient!
 
 
 
@@ -42,7 +41,6 @@ if(DOXYGEN_FOUND)
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 
 endif(DOXYGEN_FOUND)
-
 
 
 

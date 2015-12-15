@@ -103,6 +103,14 @@ cdef class numpy_data_container(data_base):
 		self.features = np.ascontiguousarray(feats)
 		self.responses= np.ascontiguousarray(resp)
 		self.types    = np.ascontiguousarray(types)
+		
+		if (self.features.shape[0] != self.responses.shape[0]):
+			print(self.features.shape, self.responses.shape)
+			raise ValueError("Number of datapoints and responses are incompatible!")
+		
+		if (self.features.shape[1] != self.types.shape[0]):
+			raise ValueError("Number of features and types are incompatible!")
+		
 		self.thisptr = new array_data_container[num_t,response_t, index_t] (&feats[0,0], &resp[0], &types[0], feats.shape[0], feats.shape[1])
 
 
@@ -110,7 +118,8 @@ cdef class numpy_data_container(data_base):
 		""" 
 		adds a data point by creating new python arrays, thus copies the data
 		"""
-		assert fs.shape[0] == self.features.shape[1]
+		if (fs.shape[0] != self.features.shape[1]):
+			raise(ValueError, "Wrong number of features supplied.")
 
 		# create new numpy arrays with the extended data
 		cdef np.ndarray[np.double_t,ndim=2] feats = np.vstack([self.features, fs])
