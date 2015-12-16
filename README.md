@@ -4,7 +4,8 @@ A extensible C++ library for random forests with Python bindings.
 ## Requirements
 
 For the C++ library itself, you need no additional libaries, only a C++11 capable compiler.
-The development is done using GCC 4.8 and 5.2.
+The development is done using GCC 4.8 and 5.2. You probably have to set 
+CMAKE\_CXX\_FLAGS to -std=c++11
 
 For the Python bindings, you will need
 
@@ -25,5 +26,5 @@ The above commands work for Python 3.4 and 3.5 on Gentoo and ArchLinux. With Pyt
 
 ##USAGE
 
-For now, the file `./tests/python_test.py` inside the repository serves as the
+For now, the file `./tests/pyrfr_example.py` inside the repository serves as the
 only real documentation of the Python bindings.

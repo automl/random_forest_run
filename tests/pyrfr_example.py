@@ -1,6 +1,7 @@
 import sys
 sys.path.append("..")
-
+import os
+here = os.path.dirname(os.path.realpath(__file__))
 
 import time
 import numpy as np
@@ -10,7 +11,7 @@ from sklearn.ensemble import RandomForestRegressor
 import pyrfr.regression
 
 
-data_set_prefix = '../test_data_sets/diabetes_'
+data_set_prefix = '%(here)s/../test_data_sets/diabetes_' % {"here":here}
 
 # feature matrix contains one data point per row
 features  = np.loadtxt(data_set_prefix+'features.csv', delimiter=",")
