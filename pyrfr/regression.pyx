@@ -331,56 +331,30 @@ cdef class binary_rss(regression_forest_base):
 
 		:returns: the alhpa quantiles for the response at the given feature vector
 		"""
-		# some variables:
-		weights = []
-		estimates = 0
-		w_k_sum = []
-		leaf_values = []
-		# Need the information of each leaf in each tree:
-		leaf_info = self.all_leaf_values(feats)
-		for k in range(len(leaf_info)):
-			for l in range(len(leaf_info[k])):
-				elt = leaf_info[k][l]
-				leaf_values.append(elt)
-		# Compute the weight of the observation for every tree:
-		for k in range(len(leaf_info)):
-			weight_sum = 0
-			for l in range(len(leaf_values)):
-				if leaf_values[l] in leaf_info[k]:
-					w = float(1)/len(leaf_info[k])
-				else:
-					w = 0
-				# additionally sum up the weights
-				weights.append(w)
-				weight_sum +=w
-			w_k_sum.append(weight_sum)
-					
-					
-		# Compute the weight for every observation as an average over the trees:
-		aver_weights = (float(1)/len(leaf_info))* np.array(w_k_sum)
 
-		# Sort the values into order:
-		values = sorted(leaf_values)
-		q = []
-		estimate=[]
-		# calculating the quantile according to alphas
-		for a in range(len(alphas)):
-			# calculate the alpha-th value of observations
-			index = int(alphas[a]*len(values))
-			a_q = values[index]
-			q.append(a_q)
-			# Compute the estimate distr. funct for all responses using the weights:
-			estimates = 0
-			for i in range(len(leaf_info[k])):
-			# we only need to check if value is smaller (or equal) than alpha-quantile otherwise it would sum up 0s
-				if leaf_info[k][i] <= q[a]:
-					estimates += aver_weights
-				else:
-					estimates += 0
-			estimate.append(estimates)
+		leaf_values = self.all_leaf_values(feats)
+		
+		# compute the weights for each leaf value
+		weights = map(lambda v: [1./(len(v)*len(leaf_values))]*len(v), leaf_values)
+			
+		# flatten the nested lists using list addition
+		weights = np.array(sum(weights,[]))
+		values = np.array(sum(leaf_values,[]))
 
-		return(estimate)
-				
+		# sort them according to the response values
+		sort_indices = np.argsort(values)
+		weights = weights[sort_indices]
+		values = values[sort_indices]
+
+		# find the indices where the quantiles would have to be inserted
+		cum_weights = np.cumsum(weights)
+		alpha_indices = np.searchsorted (cum_weights, alphas)
+
+		# for now just return the value at that point. One could do a linear
+		# interpolation, but that should be good enough for now
+		quantiles = values[alpha_indices]
+
+		return(quantiles)
 
 
 cdef class binary_rss_v2(regression_forest_base):
