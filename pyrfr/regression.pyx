@@ -352,7 +352,7 @@ cdef class binary_rss(regression_forest_base):
 
 		# for now just return the value at that point. One could do a linear
 		# interpolation, but that should be good enough for now
-		quantiles = values[alpha_indices]
+		quantiles = values[np.minimum(alpha_indices, values.shape[0]-1)]
 
 		return(quantiles)
 
