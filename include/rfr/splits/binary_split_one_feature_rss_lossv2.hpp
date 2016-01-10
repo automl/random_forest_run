@@ -239,7 +239,7 @@ class binary_split_one_feature_rss_loss_v2: public rfr::splits::k_ary_split_base
 			// store the best split
 			if (loss < best_loss){
 				best_loss = loss;
-				split_criterion[1] = psv;
+				split_criterion[1] = 0.5*(features[tmp_indices[tmp_i]] + psv);
 			}
 		}
 		return(best_loss);
