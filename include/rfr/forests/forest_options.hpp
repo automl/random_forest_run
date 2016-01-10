@@ -2,6 +2,9 @@
 #define RFR_FOREST_OPTIONS_HPP
 
 
+#include "cereal/cereal.hpp"
+
+
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/trees/tree_options.hpp"
 
@@ -16,6 +19,14 @@ struct forest_options{
 	bool do_bootstrapping;
 	
 	rfr::trees::tree_options<num_type,response_type,index_type> tree_opts;
+
+
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( num_trees,num_data_points_per_tree, do_bootstrapping, tree_opts);
+	}
 
 
 	/** (Re)set to default values with no limits on the size of the tree

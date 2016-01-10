@@ -103,6 +103,14 @@ cdef class numpy_data_container(data_base):
 		self.features = np.ascontiguousarray(feats)
 		self.responses= np.ascontiguousarray(resp)
 		self.types    = np.ascontiguousarray(types)
+		
+		if (self.features.shape[0] != self.responses.shape[0]):
+			print(self.features.shape, self.responses.shape)
+			raise ValueError("Number of datapoints and responses are incompatible!")
+		
+		if (self.features.shape[1] != self.types.shape[0]):
+			raise ValueError("Number of features and types are incompatible!")
+		
 		self.thisptr = new array_data_container[num_t,response_t, index_t] (&feats[0,0], &resp[0], &types[0], feats.shape[0], feats.shape[1])
 
 
@@ -110,7 +118,8 @@ cdef class numpy_data_container(data_base):
 		""" 
 		adds a data point by creating new python arrays, thus copies the data
 		"""
-		assert fs.shape[0] == self.features.shape[1]
+		if (fs.shape[0] != self.features.shape[1]):
+			raise(ValueError, "Wrong number of features supplied.")
 
 		# create new numpy arrays with the extended data
 		cdef np.ndarray[np.double_t,ndim=2] feats = np.vstack([self.features, fs])
@@ -144,29 +153,46 @@ The actual forests:
 ===================
 """
 
-
 cdef class regression_forest_base:
-	""" base class providing the basic functionality needed for any of the C++ forest classes"""
+	""" base class providing the basic functionality needed for any of
+	the C++ forest classes
+	"""
+
 	# attributes for the forest parameters
 	cdef public index_t num_trees
+	"""Sets the number of trees in the forest (Default 10)."""
+	
 	cdef public index_t num_data_points_per_tree
-	cdef public bool do_bootstrapping
+	""" Determines how many data points are used for each tree. 
 
+	If set to zero the whole data will be used for each tree, otherwise
+	this sets the size of the (sub)sample drawn from the data. Note, if
+	do_bootstrapping = False, this number must not exceed the number of
+	data points in the data container. 
+	"""
+	
+	cdef public bool do_bootstrapping
+	""" Whether to sample from the data with (True) or without (False)
+	replacement (Default: True).
+	"""
 
 	#attributes for the individual trees.
 
 	cdef public index_t max_features
+	""" how many (randomly selected) features are considered for easch split (Default: 0 - all features)."""
 	cdef public index_t max_depth
+	""" Limits the depth of the trees (Default: 0 - *virtually* no restriction)."""
 	cdef public index_t max_num_nodes
+	""" Limits the number of nodes (internal and leafs) of each tree (Default: 0 - *virtually* no restriction)"""
 	cdef public index_t min_samples_to_split
+	""" The minimal number of samples considered to be split (Default: 2)"""
 	cdef public index_t min_samples_in_leaf
+	""" The smallest number of samples allowed in a leaf (Default: 2)"""
 	cdef public response_t epsilon_purity
-
-
-	#to (re)seed the rng.
+	""" A small float that specifies when two feature values are consider equal (Default: 1e-8)"""
 
 	cdef public index_t seed
-
+	""" Set this to anything other than zero to reseed the random number generator."""
 
 	cdef rng_t *rng_ptr
 
@@ -187,20 +213,30 @@ cdef class regression_forest_base:
 	def __dealloc__(self):
 		del self.rng_ptr
 
+	cdef recover_settings_from_forest_options(self, forest_options[num_t, response_t, index_t] fo):
+		self.num_trees = fo.num_trees
+		self.num_data_points_per_tree = fo.num_data_points_per_tree
+		self.do_bootstrapping = fo.do_bootstrapping
+				
+		self.max_features = fo.tree_opts.max_features
+		self.max_depth = fo.tree_opts.max_depth
+		self.max_num_nodes = fo.tree_opts.max_num_nodes
+		self.min_samples_to_split = fo.tree_opts.min_samples_to_split
+		self.min_samples_in_leaf = fo.tree_opts.min_samples_to_split
+		self.epsilon_purity = fo.tree_opts.epsilon_purity
+
+
 	cdef forest_options[num_t, response_t, index_t] build_forest_options(self, data_base data):
 				
 		cdef tree_options[num_t, response_t, index_t] to
 		to.max_features = self.max_features if self.max_features > 0 else data.num_features()
-		to.max_depth = self.max_depth
-		to.max_num_nodes = self.max_num_nodes
+		to.max_depth = self.max_depth if self.max_features > 0 else 2*data.num_data_points()+1
+		to.max_num_nodes = self.max_num_nodes if self.max_num_nodes > 0 else 2*data.num_data_points()+1
 		to.min_samples_to_split = self.min_samples_to_split
 		to.min_samples_in_leaf = self.min_samples_in_leaf
 		to.epsilon_purity = self.epsilon_purity
 
-
-
 		#construct the forest option object.
-
 		cdef forest_options[num_t, response_t, index_t] fo
 
 		fo.num_trees=self.num_trees
@@ -208,9 +244,7 @@ cdef class regression_forest_base:
 		fo.do_bootstrapping = self.do_bootstrapping
 		fo.tree_opts = to
 
-
 		#reseed the rng if needed.
-
 		if (self.seed > 0):
 			self.rng_ptr.seed(self.seed)
 			self.seed=0
@@ -230,93 +264,100 @@ cdef class binary_rss(regression_forest_base):
 	def __dealloc__(self):
 		del self.forest_ptr
 
+	def save_to_binary_file(self, filename):
+		# todo: make sure directory exists and all permissions are OK
+		self.forest_ptr.save_to_binary_file(filename)
+	
+	def load_from_binary_file(self, filename):
+		""" Simple wrapper around the C++ deserialization function.
+		
+		Beware: the recovered settings for the forest might not be the
+		same in the python world. In particular, settings like
+		num_data_points_per_tree = 0 have no equivalent in the C++ world, but
+		are merely a convenience setting for pyrfr. As the serialization only
+		knows about the C++ settings, the values used there are recovered. In
+		the example of num_data_points_per_tree, the restored value equals the 
+		number of data points available at training.		
+		"""
+		del self.forest_ptr
+		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] ()
+		self.forest_ptr.load_from_binary_file(filename)
+		self.recover_settings_from_forest_options(self.forest_ptr.get_forest_options())
+		
 	def fit(self, data_base data):
+		""" The fit method.
+
+		:param data: a regression data container with the input data
+		:type data: pyrfr.regression.data_base
+		"""
 		del self.forest_ptr
 		fo = self.build_forest_options(data)
 		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] (fo)
 		self.forest_ptr.fit(deref(data.thisptr), deref(self.rng_ptr))
 
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
+		""" The basic prediction method.
+
+		:param feats: feature vector
+		:type feats: 1d numpy array of doubles
+
+		:returns: a tuple containing the mean and the standard deviation prediction
+		"""
 		return self.forest_ptr.predict_mean_std(&feats[0])
 
 	def all_leaf_values(self, np.ndarray[num_t, ndim=1] feats):
+		"""
+		helper function to get all the repsonses from each tree
+
+		:param feats: feature vector
+		:type feats: 1d numpy array of doubles
+
+		:returns: a nested list with the responses of the leafs x falls into from each tree.
+		"""
 		return (self.forest_ptr.all_leaf_values(&feats[0]))
 
-	"""
-	Quantile regression forest as explained in "Quantile Regression Forests" by Nicolai Meinhausen (ETH Zürich)
-	"""
-	def quantile_rf(self, feats, alphas):
-		# some variables:
-		weights = []
-		estimates = 0
-		w_k_sum = []
-		weight_sum = []
-		leaf_values = []
-		cond_Qs = []
-		# Need the information of each leaf in each tree:
-		leaf_info = self.all_leaf_values(feats)
-		for k in range(len(leaf_info)):
-			for l in range(len(leaf_info[k])):
-				elt = leaf_info[k][l]
-				leaf_values.append(elt)
+	def save_latex_representation(self, pattern):
+		self.forest_ptr.save_latex_representation(pattern)
 
-		# Compute the weight of the observation for every tree:
-		# calculating the quantile according to alphas
-		for a in range(len(alphas)): 
-			for k in range(len(leaf_info)):
-				weight_sum = 0
-				for l in range(len(leaf_values)):
-					if leaf_values[l] in leaf_info[k]:
-						w = float(1)/len(leaf_info[k])
-					
-					else:
-						w = 0
-					# additionally sum up the weights
-					weights.append(w)
-					weight_sum +=w
-				
-				w_k_sum.append(weight_sum)
+	def quantile_prediction(self, np.ndarray[num_t,ndim=1] feats, np.ndarray[num_t,ndim=1] alphas):
+		"""
+		Quantile regression forest as explained in "Quantile Regression Forests" by Nicolai Meinhausen.
+
+ 		:param feats: feature vector to condition on
+ 		:type feats: 1d numpy array of doubles
+		:param alphas: requested quantiles to estimate
+		:type alphas: 1d numpy array of doubles
+
+		:returns: the alhpa quantiles for the response at the given feature vector
+		"""
+
+		leaf_values = self.all_leaf_values(feats)
+		
+		# compute the weights for each leaf value
+		weights = map(lambda v: [1./(len(v)*len(leaf_values))]*len(v), leaf_values)
 			
-			#weight_sum.append([w_k_sum])
-				
-					
-					
-			# Compute the weight for every observation as an average over the trees:
-			
-			aver_weights = (float(1)/len(leaf_info))* np.array(w_k_sum)
-			# Sort the values into order:
-			values = sorted(leaf_values)
-			q = []
-			estimate=[]
-			
-			# calculate the alpha-th value of observations
-			index = int(alphas[a]*len(values))
-			
-			a_q = values[index]
-			q.append(a_q)
-			
-			# Compute the estimate distr. funct for all responses using the weights:
-			for i in range(len(leaf_info[k])):
-			# we only need to check if value is smaller (or equal) than alpha-quantile otherwise it would sum up 0s
-				for j in range(len(aver_weights)):
-					if leaf_info[k][i] <= q:
-						estimates += aver_weights[i]
-					else:
-						estimates += 0
-					estimate.append(estimates)
-				
-			f = []
-			if (estimate >= alphas[a]):
-				
-				f.append(estimate)
-				
-			cond_Q = min(min(f))
-			cond_Qs.append([cond_Q])
-		return(cond_Qs)
-				
+		# flatten the nested lists using list addition
+		weights = np.array(sum(weights,[]))
+		values = np.array(sum(leaf_values,[]))
+
+		# sort them according to the response values
+		sort_indices = np.argsort(values)
+		weights = weights[sort_indices]
+		values = values[sort_indices]
+
+		# find the indices where the quantiles would have to be inserted
+		cum_weights = np.cumsum(weights)
+		alpha_indices = np.searchsorted (cum_weights, alphas)
+
+		# for now just return the value at that point. One could do a linear
+		# interpolation, but that should be good enough for now
+		quantiles = values[np.minimum(alpha_indices, values.shape[0]-1)]
+
+		return(quantiles)
 
 
 cdef class binary_rss_v2(regression_forest_base):
+	""" test class for benchmarks! ***DO NOT USE***"""
 	cdef regression_forest[ binary_rss_tree_v2_t, rng_t, num_t, response_t, index_t]* forest_ptr
 	
 	def __init(self):
@@ -334,4 +375,6 @@ cdef class binary_rss_v2(regression_forest_base):
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
 		return self.forest_ptr.predict_mean_std(&feats[0])
 
+	def save_latex_representation(self, pattern):
+		self.forest_ptr.save_latex_representation(pattern)
 

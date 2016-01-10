@@ -7,8 +7,8 @@ set (RFR_VERSION_MINOR 1)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
- #SET(CMAKE_BUILD_TYPE "DEBUG")
- SET(CMAKE_BUILD_TYPE "RELEASE")
+ SET(CMAKE_BUILD_TYPE "DEBUG")
+ #SET(CMAKE_BUILD_TYPE "RELEASE")
  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
@@ -16,8 +16,7 @@ ENDIF()
 enable_testing()
 
 # required libaries
-find_package(Boost COMPONENTS unit_test_framework python3 REQUIRED)
-find_package(PythonLibs REQUIRED)
+find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Doxygen)
 
 SET(Boost_USE_STATIC_LIBS OFF)
@@ -27,11 +26,9 @@ SET(Boost_USE_STATIC_RUNTIME OFF)
 
 # define all include directories within the project for different splits, data containers, node types etc...
 include_directories ("${PROJECT_SOURCE_DIR}/include")
-include_directories ("${PROJECT_SOURCE_DIR}/boost_numpy")
-include_directories ("${PYTHON_INCLUDE_DIRS}")
 include_directories ("${Boost_INCLUDE_DIR}")
 
-link_libraries(${Boost_LIBRARIES} ${PYTHON_LIBRARIES}) # Deprecated but so convenient!
+link_libraries(${Boost_LIBRARIES}) # Deprecated but so convenient!
 
 
 
@@ -44,7 +41,6 @@ if(DOXYGEN_FOUND)
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 
 endif(DOXYGEN_FOUND)
-
 
 
 

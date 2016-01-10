@@ -2,6 +2,7 @@ import cython
 from libcpp cimport bool
 from libcpp.vector cimport vector
 from libcpp.pair cimport pair
+from libcpp.string cimport string
 
 import numpy as np
 cimport numpy as np
@@ -119,8 +120,12 @@ cdef extern from "rfr/forests/forest_options.hpp" namespace "rfr::forests":
 
 cdef extern from "rfr/forests/regression_forest.hpp" namespace "rfr::forests":
 	cdef cppclass regression_forest[ tree_type, rng_type, num_type, response_type, index_type]:
+		regression_forest()
 		regression_forest(forest_options[num_type, response_type, index_type])
-
+		void save_latex_representation(const char* filename_template)
+		void save_to_binary_file(const string filename)
+		void load_from_binary_file(const string filename)
 		void fit(data_container_base[num_type, response_type, index_type] &data, rng_type &rng)
 		pair[num_type, num_type] predict_mean_std( num_type * feats)
 		vector[ vector[num_type] ] all_leaf_values (num_type * feature_vector)
+		forest_options[num_type, response_type, index_type] get_forest_options()

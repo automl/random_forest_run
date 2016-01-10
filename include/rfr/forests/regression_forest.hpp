@@ -12,8 +12,16 @@
 #include <functional>  // std::bind
 
 
+#include "cereal/cereal.hpp"
+#include <cereal/types/vector.hpp>
+#include <cereal/archives/portable_binary.hpp>
+#include <iostream>
+
+
+
 #include "rfr/trees/tree_options.hpp"
 #include "rfr/forests/forest_options.hpp"
+
 
 namespace rfr{ namespace forests{
 
@@ -22,10 +30,20 @@ template <typename tree_type, typename rng_type, typename num_type = float, type
 class regression_forest{
   private:
 	forest_options<num_type, response_type, index_type> forest_opts;
-
 	std::vector<tree_type> the_trees;
 
   public:
+
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		archive( forest_opts, the_trees);
+	}
+
+
+	regression_forest(){}
+
 
 	regression_forest(forest_options<num_type, response_type, index_type> forest_opts): forest_opts(forest_opts){
 		the_trees.resize(forest_opts.num_trees);
@@ -72,25 +90,29 @@ class regression_forest{
 	 *
 	 * \param feature_vector a valid (size and values) array containing features
 	 *
-	 * \return std::pair<num_type, num_type> mean and standard error of the mean as prediction and uncertainty 
+	 * \return std::pair<num_type, num_type> mean and sqrt( total variance = mean of variances + variance of means )
 	 */
 	std::pair<num_type, num_type> predict_mean_std( num_type * feature_vector){
 
-		num_type sum=0;
-		num_type sum_squared = 0;
+		num_type sum_mean=0;
+		num_type sum_squared_mean = 0;
+
+		num_type sum_var=0;
 
 		for (auto &tree: the_trees){
-			num_type m , s;
+			num_type m , v;
 			index_type n;
 
-			std::tie(m, s, n) = tree.predict_mean_std_N(feature_vector);
+			std::tie(m, v, n) = tree.predict_mean_var_N(feature_vector);
 			
-			sum += m;
-			sum_squared += m*m;
+			sum_mean += m;
+			sum_squared_mean += m*m;
+			
+			sum_var += v;
 		}
 		
 		unsigned int N = the_trees.size();
-		return(std::pair<num_type, num_type> (sum/N, sqrt( (sum_squared - sum*sum/N)/(N*(N-1)))));
+		return(std::pair<num_type, num_type> (sum_mean/N, sqrt( std::max<num_type>(0, sum_var/N + sum_squared_mean/N - (sum_mean/N)*(sum_mean/N))  )));
 	}
 
 	std::vector< std::vector<num_type> > all_leaf_values (num_type * feature_vector){
@@ -104,12 +126,29 @@ class regression_forest{
 	}
 
 
+	void save_to_binary_file(const std::string filename){
+		std::ofstream ofs(filename, std::ios::binary);
+		cereal::PortableBinaryOutputArchive oarch(ofs);
+		serialize(oarch);
+	}
+
+
+	void load_from_binary_file(const std::string filename){
+		std::ifstream ifs(filename, std::ios::binary);
+		std::cout<<"opening file "<<filename<<std::endl;
+		cereal::PortableBinaryInputArchive iarch(ifs);
+		serialize(iarch);
+	}
+
+
+	forest_options<num_type, response_type, index_type> get_forest_options(){return(forest_opts);}
+
 	/* \brief stores a latex document for every individual tree
 	 * 
 	 * \param filename_template a string to specify the location and the naming scheme. Note the directory is not created, so make sure it exists.
 	 * 
 	 */
-	void save_latex_representation(const char* filename_template){
+	void save_latex_representation(const std::string filename_template){
 		for (auto i = 0u; i<the_trees.size(); i++){
 			std::stringstream filename;
 			filename << filename_template<<i<<".tex";

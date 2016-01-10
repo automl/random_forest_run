@@ -1,3 +1,8 @@
+import sys
+sys.path.append("..")
+import os
+here = os.path.dirname(os.path.realpath(__file__))
+
 import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -6,7 +11,7 @@ from sklearn.ensemble import RandomForestRegressor
 import pyrfr.regression
 
 
-data_set_prefix = '../test_data_sets/diabetes_'
+data_set_prefix = '%(here)s/../test_data_sets/diabetes_' % {"here":here}
 
 # feature matrix contains one data point per row
 features  = np.loadtxt(data_set_prefix+'features.csv', delimiter=",")
@@ -71,10 +76,7 @@ the_forest.num_trees = 2
 # the forest's parameters
 the_forest.seed=12					# reset to reseed the rng for the next fit
 the_forest.do_bootstrapping=True	# default: false
-
-
 the_forest.num_data_points_per_tree=0 # means same number as data points
-
 the_forest.max_features = features.shape[1]//2 # 0 would mean all the features
 the_forest.min_samples_to_split = 0	# 0 means split until pure
 the_forest.min_samples_in_leaf = 0	# 0 means no restriction 
@@ -82,12 +84,29 @@ the_forest.max_depth=1024			# 0 means no restriction
 the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
 
 
-
 the_forest.fit(data1)
 
+# you can save the forest to disk
+the_forest.save_to_binary_file(b"/tmp/pyrfr_test.bin")
+
+
+num_datapoints_old = the_forest.num_data_points_per_tree
+
+
+# loading it works like that
+
+the_forest = pyrfr.regression.binary_rss()
+the_forest.load_from_binary_file(b"/tmp/pyrfr_test.bin")
+
+num_data_points_new = the_forest.num_data_points_per_tree
+
+print("Beware that some values are not restored as you might expect:")
+print("{} != {}".format(num_datapoints_old, num_data_points_new))
+print("If you set some variables,e.g. max_features, to zero, the underlying value this shorthand represents is recovered!")
+print("As the saving/loading should only be used for predictions rather than refitting, this should not be a problem!")
 
 # you can save a LaTeX document that you can compile with pdflatex
-#the_forest.save_latex_representation("/tmp/rfr_test")
+the_forest.save_latex_representation(b"/tmp/rfr_test")
 
 
 # the predict method will return a tuple containing the predicted mean and the standard deviation.
@@ -101,8 +120,8 @@ print(the_forest.predict(features[0]))
 print(the_forest.all_leaf_values(features[0]))
 
 # quantile regression forest estimations
-alphas =[0.25, 0.5, 0.75]
-print(the_forest.quantile_rf(features[0], alphas))
+#alphas =[0.25, 0.5, 0.75]
+#print(the_forest.quantile_rf(features[0], alphas))
 
 
 # let's play around a bit and train different numbers of trees and compare the speed to scikit learn

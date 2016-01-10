@@ -80,10 +80,7 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 
 	// check that setting and retrieving the feature type works
 	BOOST_CHECK( data.get_type_of_feature(0) == 0 );
-	BOOST_CHECK( data.set_type_of_feature(1,10));
-	BOOST_CHECK( data.get_type_of_feature(1) == 10);
-
-
+	BOOST_CHECK_THROW( data.set_type_of_feature(1,10), std::runtime_error);
 	
 
     free(filename);

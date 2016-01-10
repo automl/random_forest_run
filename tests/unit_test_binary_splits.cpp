@@ -12,6 +12,10 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cereal/archives/xml.hpp>
+#include <fstream>
+
+
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 
@@ -61,7 +65,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	BOOST_REQUIRE(split_criterion[1] < 60);
 	
 	// test the () operator for the trainings data
-	std::vector<bool> operator_test = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+	std::vector<index_type> operator_test = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	
 	for (size_t i=0; i<operator_test.size(); i++){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
@@ -107,7 +111,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	
 	
 	// test the () operator for the trainings data
-	std::vector<bool> operator_test = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+	std::vector<index_type> operator_test = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	
 	for (size_t i=0; i<operator_test.size(); i++){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
@@ -139,7 +143,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	std::iota(indices.begin(), indices.end(), 0);
 
 	std::array<std::vector<index_type>::iterator, 3>indices_split_it;
-	std::vector<index_type> features_to_try({1,0});
+	std::vector<index_type> features_to_try({0,1});
 
 
 	split_type split3;
@@ -150,3 +154,60 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	BOOST_REQUIRE(split_criterion[1] >=59);
 	BOOST_REQUIRE(split_criterion[1] < 60);
 }
+
+
+// test serialization
+BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
+	char filename[1000];
+	
+	// read the test dataset
+	data_container_type data;
+	
+	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
+    strcat(filename, "toy_data_set_features.csv");
+    data.read_feature_file(filename);
+
+    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
+    strcat(filename, "toy_data_set_responses.csv");
+    data.read_response_file(filename);
+	
+	data.set_type_of_feature(1,10);
+
+	rng_type rng;
+
+	std::vector<index_type> indices(data.num_data_points());
+	std::iota(indices.begin(), indices.end(), 0);
+
+	std::array<std::vector<index_type>::iterator, 3>indices_split_it;
+	std::vector<index_type> features_to_try({0,1});
+
+
+	split_type split4;
+	split4.find_best_split(data, features_to_try, indices, indices_split_it, rng);
+	
+	index_type index4 = split4.get_feature_index();
+	std::vector<num_type> split_criterion4 = split4.get_split_criterion();
+	
+	
+	{
+		std::ofstream ofs("test.xml");
+		cereal::XMLOutputArchive oarchive(ofs);
+		oarchive(split4);
+	}
+	
+		
+	split_type split5;
+	{
+		std::ifstream ifs("test.xml");
+		cereal::XMLInputArchive iarchive(ifs);
+		iarchive(split5);
+	}
+	
+	index_type index5 = split5.get_feature_index();
+	std::vector<num_type> split_criterion5 = split5.get_split_criterion();
+	
+	BOOST_REQUIRE(index4 == index5);
+	BOOST_REQUIRE(split_criterion4 == split_criterion5);
+	
+}
+
