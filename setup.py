@@ -28,6 +28,6 @@ setup(
 	author_email='sfalkner@cs.uni-freiburg.de',
 	license='Use as you wish. No guarantees whatsoever.',
 	classifiers=['Development Status :: 3 - Alpha'],
-    packages=['pyrfr'],
+	packages=['pyrfr'],
 	ext_modules=extensions
 )
