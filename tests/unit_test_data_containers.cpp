@@ -10,6 +10,7 @@
 
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/data_containers/mostly_continuous_data_with_instances_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 
 typedef double num_type;
@@ -18,6 +19,7 @@ typedef unsigned int index_type;
 typedef std::default_random_engine rng_type;
 
 typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type> data_container_type;
+typedef rfr::data_containers::mostly_continuous_data_with_instances<num_type, response_type, index_type> data_container_type2;
 
 
 BOOST_AUTO_TEST_CASE( data_container_tests ){
@@ -61,7 +63,7 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 
 	BOOST_CHECK_EQUAL_COLLECTIONS ( data_point_zero_reference.begin(), data_point_zero_reference.end(),
 					  data_point_zero.begin(), data_point_zero.end());
-		
+
 	for (size_t i =0; i < responses_reference.size(); i++){
         BOOST_CHECK( data.feature(0,i) == feature_zero_reference[i] );
 	}
@@ -76,12 +78,55 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
         BOOST_CHECK( data.feature(5,i) == feature_five_reference[i] );
 	}
 
-
-
 	// check that setting and retrieving the feature type works
 	BOOST_CHECK( data.get_type_of_feature(0) == 0 );
 	BOOST_CHECK_THROW( data.set_type_of_feature(1,10), std::runtime_error);
-	
 
     free(filename);
+}
+
+
+BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
+
+	data_container_type2 data(2,2);
+
+	data.set_type_of_configuration_feature(0,1);
+	BOOST_CHECK(data.get_type_of_feature(0) == 1);
+
+	data.set_type_of_instance_feature(0,2);
+	BOOST_CHECK(data.get_type_of_feature(2) == 2);
+
+	data.set_type_of_feature(0,0);
+	data.set_type_of_instance_feature(0,0);
+
+
+
+	num_type config1 [] = {1,1};
+	num_type config2 [] = {2,2};
+	num_type config3 [] = {3,3};
+
+	num_type instance1 [] = {4,4};
+	num_type instance2 [] = {5,5};
+
+
+	BOOST_CHECK( data.add_configuration(config1, 2) == 0);
+	BOOST_CHECK( data.add_configuration(config2, 2) == 1);
+	BOOST_CHECK( data.add_configuration(config3, 2) == 2);
+	BOOST_CHECK( data.number_of_configurations() == 3);
+
+	BOOST_CHECK( data.add_instance(instance1,2) == 0);
+	BOOST_CHECK( data.add_instance(instance2,2) == 1);
+	BOOST_CHECK( data.number_of_instances() == 2);
+
+	data.add_data_point(0,0);
+	data.add_data_point(0,1);
+	data.add_data_point(1,0);
+	data.add_data_point(1,1);
+	data.add_data_point(2,0);
+	data.add_data_point(2,1);
+
+	BOOST_CHECK_THROW(data.add_data_point(3,0), std::runtime_error);
+	BOOST_CHECK_THROW(data.add_data_point(0,3), std::runtime_error);
+
+
 }

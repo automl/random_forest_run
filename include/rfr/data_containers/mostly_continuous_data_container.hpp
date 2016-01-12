@@ -115,9 +115,7 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 					throw std::runtime_error("Feature values not consistent with provided type. Data contains a value larger than allowed.");
 				if (fv < 0)
 					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
-				}
-
-
+			}
 			categorical_ranges[index] = type;
 		}
 		else{
