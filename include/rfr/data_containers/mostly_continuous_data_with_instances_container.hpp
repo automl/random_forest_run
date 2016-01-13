@@ -33,9 +33,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 	// empty constructor. Use this only if you read the data from a file!
 	// the private vectors are not properly initialized! Adding data
 	// points via 'add_data_point' may or may not fail!
-	mostly_continuous_data_with_instances() {
-		throw std::runtime_error("The empty constructor is not supported by this container.");
-		}
+	mostly_continuous_data_with_instances() { throw std::runtime_error("The empty constructor is not supported by this container.");}
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features for configurations and instances
@@ -57,7 +55,6 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(instances[feature_index][i]);
 	}
 
-
 	virtual std::vector<num_type> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
 		std::vector<num_type> rv;
 		rv.reserve(sample_indices.size());
@@ -71,35 +68,33 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 			for (auto i : sample_indices)
 				rv.push_back(instances[feature_index][config_instance_pairs[i].second]);
 		}
-
 		return(rv);
 	}
-
 
 	virtual response_type response (index_type sample_index) const{
 		return(response_values[sample_index]);
 	}
 
-
 	virtual void add_data_point (num_type* features, index_type num_elements, response_type response){
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 
-	void add_data_point( index_type config_index, index_type instance_index){
-		if (config_index >= number_of_configurations() )
+	void add_data_point( index_type config_index, index_type instance_index, response_type r){
+		if (config_index >= num_configurations() )
 			throw std::runtime_error("Configuration index too large.");
-		if (instance_index >= number_of_instances() )
+		if (instance_index >= num_instances() )
 			throw std::runtime_error("Instance index too large.");
 		config_instance_pairs.emplace_back(std::pair<index_type, index_type> (config_index, instance_index));
+		response_values.emplace_back(r);
 	}
 
-	index_type number_of_configurations(){
+	index_type num_configurations(){
 		if (configurations.size() > 0)
 			return(configurations[0].size());
 		return(0);
 	}
 
-	index_type number_of_instances(){
+	index_type num_instances(){
 		if (instances.size() > 0)
 			return(instances[0].size());
 		return(0);
@@ -111,7 +106,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 
 		for (auto i = 0u; i< num_elements; i++)
 			configurations[i].push_back(config_features[i]);
-		return(number_of_configurations()-1);
+		return(num_configurations()-1);
 	}
 
 	index_type add_instance(num_type* instance_features, index_type num_elements){
@@ -119,7 +114,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 			throw std::runtime_error("Number of instance features is not what it should be!");
 		for (auto i = 0u; i< num_elements; i++)
 			instances[i].push_back(instance_features[i]);
-		return(number_of_instances()-1);
+		return(num_instances()-1);
 	}
 
 	virtual std::vector<num_type> retrieve_data_point (index_type index){
@@ -150,7 +145,6 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 			return(0);
 		return(it->second);
 	}
-
 
 	void set_type_of_configuration_feature(index_type index, index_type type){
 		if (type > 0){
@@ -204,8 +198,8 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 	}
 
 	virtual index_type num_features() const {return(configurations.size() + instances.size());}
-	virtual index_type num_data_points() const {return(config_instance_pairs.size());}
 
+	virtual index_type num_data_points() const {return(config_instance_pairs.size());}
 
 	void check_consistency(){
 
@@ -222,9 +216,9 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 
 
 		for (auto p: config_instance_pairs){
-			if ( (p.first <0 ) || (p.first >= number_of_configurations()))
+			if ( (p.first <0 ) || (p.first >= num_configurations()))
 				throw std::runtime_error("Invalid configuration index");
-			if ( (p.second <0 ) || (p.second >= number_of_instances()))
+			if ( (p.second <0 ) || (p.second >= num_instances()))
 				throw std::runtime_error("Invalid instance index");
 		}
 

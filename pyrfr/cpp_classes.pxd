@@ -24,8 +24,8 @@ cdef extern from "rfr/data_containers/data_container_base.hpp" namespace "rfr::d
 		index_type num_features()
 		index_type num_data_points()
 		index_type get_type_of_feature (index_type)
-		void add_data_point(num_type*, index_type, response_type)
-		void set_type_of_feature (index_type, index_type)
+		void add_data_point(num_type*, index_type, response_type) except +
+		void set_type_of_feature (index_type, index_type) except +
 		vector[num_type] retrieve_data_point (index_type index)
 		response_type response(index_type)
 
@@ -35,10 +35,9 @@ cdef extern from "rfr/data_containers/array_wrapper.hpp" namespace "rfr::data_co
 		index_type num_features()
 		index_type num_data_points()
 		index_type get_type_of_feature (index_type)
-		bool add_data_point(num_type*, index_type, response_type)
-		bool set_type_of_feature (index_type, index_type)
+		void add_data_point(num_type*, index_type, response_type) except +
+		void set_type_of_feature (index_type, index_type) except +
 		vector[num_type] retrieve_data_point (index_type)
-
 
 cdef extern from "rfr/data_containers/mostly_continuous_data_container.hpp" namespace "rfr::data_containers":
 	cdef cppclass mostly_continuous_data[num_type, response_type, index_type](data_container_base[num_type, response_type, index_type]):
@@ -46,9 +45,26 @@ cdef extern from "rfr/data_containers/mostly_continuous_data_container.hpp" name
 		index_type num_features()
 		index_type num_data_points()
 		index_type get_type_of_feature (index_type)
-		bool add_data_point(num_type*, index_type, response_type)
-		bool set_type_of_feature (index_type, index_type)
+		void add_data_point(num_type*, index_type, response_type) except +
+		void set_type_of_feature (index_type, index_type) except +
+		void set_type_of_response (index_type, index_type) except +
 		vector[num_type] retrieve_data_point (index_type)
+
+cdef extern from "rfr/data_containers/mostly_continuous_data_with_instances_container.hpp" namespace "rfr::data_containers":
+	cdef cppclass mostly_continuous_data_with_instances[num_type, response_type, index_type](data_container_base[num_type, response_type, index_type]):
+		mostly_continuous_data_with_instances (index_type, index_type)
+		index_type num_features()
+		index_type num_data_points()
+		index_type num_configurations()
+		index_type num_instances()
+		index_type get_type_of_feature (index_type)
+		void add_data_point(index_type, index_type, response_type) except +
+		index_type add_configuration (num_type*, index_type) except +
+		index_type add_instance (num_type*, index_type) except +
+		void set_type_of_feature (index_type, index_type) except +
+		void set_type_of_response (index_type, index_type) except +
+		vector[num_type] retrieve_data_point (index_type)
+		void check_consistency() except +
 
 
 

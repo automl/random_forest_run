@@ -148,6 +148,41 @@ cdef class mostly_continuous_data_container(data_base):
 			self.thisptr.add_data_point(&feats[i,0], feats.shape[1], resp[i])
 
 
+cdef class mostly_continuous_data_with_instances_container(data_base):
+	""" 
+	A python wrapper around the C++ data container for mostly continuous data with instances.
+	"""
+
+	def __cinit__(self, int num_configuration_features, int num_instance_features):
+		self.thisptr = new mostly_continuous_data_with_instances[num_t, response_t, index_t] (num_configuration_features, num_instance_features)
+
+	def add_configuration(self, np.ndarray[num_t, ndim=1] c_fs):
+		tmpptr = <mostly_continuous_data_with_instances[num_t, response_t, index_t]*> self.thisptr
+		return(tmpptr.add_configuration(&c_fs[0], c_fs.shape[0]))
+	
+	def add_instance(self, np.ndarray[num_t, ndim = 1] i_fs):
+		tmpptr = <mostly_continuous_data_with_instances[num_t, response_t, index_t]*> self.thisptr
+		return(tmpptr.add_instance(&i_fs[0], i_fs.shape[0]))
+
+	def add_data_point(self, index_t config_index, index_t instance_index, num_t rs):
+		tmpptr = <mostly_continuous_data_with_instances[num_t, response_t, index_t]*> self.thisptr
+		return(tmpptr.add_data_point(config_index, instance_index, rs))
+
+	def import_instances(self, np.ndarray[num_t, ndim = 2] instances):
+		tmpptr = <mostly_continuous_data_with_instances[num_t, response_t, index_t]*> self.thisptr
+		for i in range(instances.shape[0]):
+			tmpptr.add_instance(&instances[i,0], instances.shape[1])
+	
+	def import_configurations(self, np.ndarray[num_t, ndim = 2] configurations):
+		tmpptr = <mostly_continuous_data_with_instances[num_t, response_t, index_t]*> self.thisptr
+		for i in range(configurations.shape[0]):
+			tmpptr.add_configuration(&configurations[i,0], configurations.shape[1])
+	
+	def add_data_points(self,  np.ndarray[index_t, ndim = 2] config_instance_pairs, np.ndarray[response_t, ndim = 1] responses):
+		if (config_instance_pairs.shape[0] != responses.shape[0]):
+			raise ValueError("Number of configuration-instance-pairs and response values do not match!")
+		
+
 """
 The actual forests:
 ===================

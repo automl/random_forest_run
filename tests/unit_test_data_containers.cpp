@@ -99,8 +99,6 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 	data.set_type_of_feature(0,0);
 	data.set_type_of_instance_feature(0,0);
 
-
-
 	num_type config1 [] = {1,1};
 	num_type config2 [] = {2,2};
 	num_type config3 [] = {3,3};
@@ -108,15 +106,14 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 	num_type instance1 [] = {4,4};
 	num_type instance2 [] = {5,5};
 
-
 	BOOST_CHECK( data.add_configuration(config1, 2) == 0);
 	BOOST_CHECK( data.add_configuration(config2, 2) == 1);
 	BOOST_CHECK( data.add_configuration(config3, 2) == 2);
-	BOOST_CHECK( data.number_of_configurations() == 3);
+	BOOST_CHECK( data.num_configurations() == 3);
 
 	BOOST_CHECK( data.add_instance(instance1,2) == 0);
 	BOOST_CHECK( data.add_instance(instance2,2) == 1);
-	BOOST_CHECK( data.number_of_instances() == 2);
+	BOOST_CHECK( data.num_instances() == 2);
 
 	data.add_data_point(0,0);
 	data.add_data_point(0,1);
@@ -125,8 +122,45 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 	data.add_data_point(2,0);
 	data.add_data_point(2,1);
 
+	BOOST_CHECK (data.num_data_points() == 6);
+
 	BOOST_CHECK_THROW(data.add_data_point(3,0), std::runtime_error);
 	BOOST_CHECK_THROW(data.add_data_point(0,3), std::runtime_error);
 
+	std::vector<num_type> features0a = {1,1,4,4};
+	std::vector<num_type> features0b = data.retrieve_data_point(0);
+	
+	BOOST_CHECK_EQUAL_COLLECTIONS(features0a.begin(), features0a.end(),
+								  features0b.begin(), features0b.end());
+
+	std::vector<num_type> features1a = {1,1,5,5};
+	std::vector<num_type> features1b = data.retrieve_data_point(1);
+	
+	BOOST_CHECK_EQUAL_COLLECTIONS(features1a.begin(), features1a.end(),
+								  features1b.begin(), features1b.end());
+
+	std::vector<num_type> features2a = {2,2,4,4};
+	std::vector<num_type> features2b = data.retrieve_data_point(2);
+	
+	BOOST_CHECK_EQUAL_COLLECTIONS(features2a.begin(), features2a.end(),
+								  features2b.begin(), features2b.end());
+
+	std::vector<num_type> features3a = {2,2,5,5};
+	std::vector<num_type> features3b = data.retrieve_data_point(3);
+	
+	BOOST_CHECK_EQUAL_COLLECTIONS(features3a.begin(), features3a.end(),
+								  features3b.begin(), features3b.end());
+
+	std::vector<num_type> features4a = {3,3,4,4};
+	std::vector<num_type> features4b = data.retrieve_data_point(4);
+	
+	BOOST_CHECK_EQUAL_COLLECTIONS(features4a.begin(), features4a.end(),
+								  features4b.begin(), features4b.end());
+
+	std::vector<num_type> features5a = {3,3,5,5};
+	std::vector<num_type> features5b = data.retrieve_data_point(5);
+	
+	BOOST_CHECK_EQUAL_COLLECTIONS(features5a.begin(), features5a.end(),
+								  features5b.begin(), features5b.end());
 
 }
