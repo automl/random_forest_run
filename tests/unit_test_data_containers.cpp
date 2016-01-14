@@ -115,17 +115,17 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 	BOOST_CHECK( data.add_instance(instance2,2) == 1);
 	BOOST_CHECK( data.num_instances() == 2);
 
-	data.add_data_point(0,0);
-	data.add_data_point(0,1);
-	data.add_data_point(1,0);
-	data.add_data_point(1,1);
-	data.add_data_point(2,0);
-	data.add_data_point(2,1);
+	data.add_data_point(0u,0,0.1); // first argument cannot be "0" because than the compiler has trouble resolving the overloading!
+	data.add_data_point(0u,1,0.2); // b/c "0" is also a valid pointer to a double!
+	data.add_data_point(1,0,0.3);
+	data.add_data_point(1,1,0.4);
+	data.add_data_point(2,0,0.5);
+	data.add_data_point(2,1,0.6);
 
 	BOOST_CHECK (data.num_data_points() == 6);
 
-	BOOST_CHECK_THROW(data.add_data_point(3,0), std::runtime_error);
-	BOOST_CHECK_THROW(data.add_data_point(0,3), std::runtime_error);
+	BOOST_CHECK_THROW(data.add_data_point(3,0,0.7), std::runtime_error);
+	BOOST_CHECK_THROW(data.add_data_point(0u,3,0.8), std::runtime_error);
 
 	std::vector<num_type> features0a = {1,1,4,4};
 	std::vector<num_type> features0b = data.retrieve_data_point(0);
