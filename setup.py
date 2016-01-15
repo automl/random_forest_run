@@ -7,7 +7,8 @@ from Cython.Build import cythonize
 
 
 include_dirs = ['./include', np.get_include()]
-
+#extra_compile_args = ['-O0','-g', '-std=c++11'])
+extra_compile_args = ['-O2', '-std=c++11']
 
 extensions = cythonize(
 					[
@@ -15,8 +16,15 @@ extensions = cythonize(
 						sources=['pyrfr/regression.pyx'],
 						language="c++",
 						include_dirs=include_dirs,
-						#extra_compile_args = ['-O0','-g', '-std=c++11'])
-						extra_compile_args = ['-O2', '-std=c++11'])
+						extra_compile_args = extra_compile_args
+						),
+						
+						Extension('pyrfr.regression32',
+						sources=['pyrfr/regression32.pyx'],
+						language="c++",
+						include_dirs=include_dirs,
+						extra_compile_args = extra_compile_args
+						)
 					])
 
 
