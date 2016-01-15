@@ -78,8 +78,7 @@ class tree_base{
 	 * \return std::vector<num_type> the predictions for all points in a vector.
 	 */	
 	//virtual std::vector<response_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
-	
-	
+		
 	
 	virtual index_type number_of_nodes() = 0;
 	virtual index_type number_of_leafs() = 0;
@@ -87,7 +86,6 @@ class tree_base{
 	
 	/** \brief creates a LaTeX document visualizing the tree*/
 	virtual void save_latex_representation(const char* filename) = 0;
-	
 	
 };
 

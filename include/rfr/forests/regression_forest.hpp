@@ -31,6 +31,7 @@ class regression_forest{
   private:
 	forest_options<num_type, response_type, index_type> forest_opts;
 	std::vector<tree_type> the_trees;
+	index_type num_features;
 
   public:
 
@@ -67,6 +68,8 @@ class regression_forest{
 		std::iota(data_indices.begin(), data_indices.end(), 0);
 		std::vector<index_type> data_indices_to_be_used( forest_opts.num_data_points_per_tree);
 	  
+		num_features = data.num_features();
+		
 		for (auto &tree : the_trees){
 			// prepare the data(sub)set
 			if (forest_opts.do_bootstrapping){
@@ -90,15 +93,14 @@ class regression_forest{
 	 *
 	 * \param feature_vector a valid (size and values) array containing features
 	 *
-	 * \return std::pair<num_type, num_type> mean and sqrt( total variance = mean of variances + variance of means )
+	 * \return std::pair<num_type, num_type> mean and total variance (= mean of variances + variance of means )
 	 */
-	std::pair<num_type, num_type> predict_mean_std( num_type * feature_vector){
+	std::pair<num_type, num_type> predict_mean_var( num_type * feature_vector){
 
-		num_type sum_mean=0;
-		num_type sum_squared_mean = 0;
-
-		num_type sum_var=0;
-
+		num_type sum_mean(0), sum_var(0);
+		std::vector<num_type> means;
+		means.reserve(the_trees.size());
+		
 		for (auto &tree: the_trees){
 			num_type m , v;
 			index_type n;
@@ -106,14 +108,140 @@ class regression_forest{
 			std::tie(m, v, n) = tree.predict_mean_var_N(feature_vector);
 			
 			sum_mean += m;
-			sum_squared_mean += m*m;
-			
 			sum_var += v;
+			means.push_back(m);
 		}
 		
-		unsigned int N = the_trees.size();
-		return(std::pair<num_type, num_type> (sum_mean/N, sqrt( std::max<num_type>(0, sum_var/N + sum_squared_mean/N - (sum_mean/N)*(sum_mean/N))  )));
+		num_type N = num_type(means.size());
+		num_type mean_p = sum_mean / N;
+
+		num_type mean_of_vars = sum_var/N;
+		
+		num_type var_of_means = 0;
+		for (auto &m: means)
+			var_of_means += (m - mean_p);
+		var_of_means /= N; 
+		
+		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
 	}
+
+
+	/* \brief combines the prediction of all trees in the forest
+	 *
+	 * Every random tree makes an individual prediction. From that, the mean and the standard
+	 * deviation of those predictions is calculated. (See Frank's PhD thesis section 11.?)
+	 *
+	 * \param feature_vector a valid (size and values) array containing features
+	 *
+	 * \return std::pair<num_type, num_type> mean and sqrt(total variance = mean of variances + variance of means )
+	 */
+	std::pair<num_type, num_type> predict_mean_std( num_type * feature_vector){
+		auto p = predict_mean_std(feature_vector);
+		p.second = sqrt(p.second);
+		return(p);
+	}
+
+
+	/* \brief predict the mean and the standard deviation for a configuration marginalized over a given set of partial configurations
+	 * 
+	 * This function will be mostly used to predict means over a given set of instances, but could be used to marginalize over any discrete set of partial configurations.
+	 * 
+	 * \param features a (partial) configuration where unset values should be set to NaN
+	 * \param set_features a array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features.
+	 */
+	std::pair<num_type, num_type> predict_mean_var_marginalized_over_set (num_type *features, num_type* set_features, index_type set_size){
+		
+		num_type fv[num_features];
+		
+		num_type sum_mean(0), sum_var(0);
+		std::vector<num_type> means;
+		means.reserve(set_size);
+		
+		for (auto i=0u; i < set_size; ++i){
+			// construct the single feature vector
+			std::copy_n(features,num_features, fv);
+			for (auto j=0u; j <num_features; ++j){
+				if (!isnan(set_features[i*num_features + j]))
+					fv[j] = set_features[i*num_features + j];
+			}
+			num_type m , v;
+			index_type n;
+			std::tie(m, v, n) = predict_mean_var(fv);
+			
+			sum_mean += m;
+			sum_var += v;
+			means.emplace_back(m);
+		}
+		
+		// compute the mean and the parts of the total variance
+		num_type N = num_type(set_size);
+		num_type mean_p = sum_mean / N;
+
+		num_type mean_of_vars = sum_var/N;
+		
+		num_type var_of_means = 0;
+		for (auto &m: means)
+			var_of_means += (m - mean_p);
+		var_of_means /= N; 
+		
+		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+	}
+
+
+	/* \brief estimates the covariance of two feature vectors
+	 * 
+	 * The covariance between to input vectors contains information about the
+	 * feature space. For other models, like GPs, this is a natural quantity
+	 * (e.g., property of the kernel). Here, we try to estimate it using the
+	 * total covariance of the individual tree's prediction and the assumption
+	 * that cov(X,Y) = 0, if X and Y fall into different leafs, and cov(X,Y) = var(X) = var(Y)
+	 * otherwise.
+	 * 
+	 * \param f1 a valid feature vector (no sanity checks are performed!)
+	 * \param f2 a second feature vector (no sanity checks are performed!)
+	 */
+	num_type covariance (num_type* f1, num_type* f2){
+		std::vector<num_type> means1, means2;
+		means1.reserve(the_trees.size());
+		means2.reserve(the_trees.size());
+		
+		num_type sum_mean1(0), sum_mean2(0), sum_cov(0); 
+		
+		for (auto &t: the_trees){
+			auto l1 = t.find_leaf(f1);
+			auto l2 = t.find_leaf(f2);
+			
+			num_type m , v;
+			index_type n;
+
+			std::tie(m, v, n) = t.predict_mean_var_N(f1);
+			sum_mean1 += m;
+			means1.push_back(m);
+
+			std::tie(m, v, n) = t.predict_mean_var_N(f2);
+			sum_mean2 += m;
+			means2.push_back(m);
+			
+			// assumption here: cov = 0 if the leafs are different, and cov = var if both feature vectors fall into the same leaf
+			if (l1 == l2)
+				sum_cov += v;
+		}
+		
+		
+		num_type N = num_type (the_trees.size());
+		num_type mean_covs = sum_cov/N;
+		num_type m1 = sum_mean1/N, m2 = sum_mean2/N;
+		
+		num_type cov_means = 0;
+		
+		for (auto i=0u; i < the_trees.size(); ++i)
+			cov_means += (means1-m1)*(means2-m2);
+
+		cov_means /= N; 
+
+		return(mean_covs + cov_means);
+	}
+
 
 	std::vector< std::vector<num_type> > all_leaf_values (num_type * feature_vector){
 		std::vector< std::vector<num_type> > rv;
