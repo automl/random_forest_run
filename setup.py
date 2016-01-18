@@ -7,8 +7,8 @@ from Cython.Build import cythonize
 
 
 include_dirs = ['./include', np.get_include()]
-#extra_compile_args = ['-O0','-g', '-std=c++11'])
 extra_compile_args = ['-O2', '-std=c++11']
+#extra_compile_args = ['-O0','-g', '-std=c++11']
 
 extensions = cythonize(
 					[

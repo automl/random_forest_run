@@ -136,7 +136,7 @@ class regression_forest{
 	 * \return std::pair<num_type, num_type> mean and sqrt(total variance = mean of variances + variance of means )
 	 */
 	std::pair<num_type, num_type> predict_mean_std( num_type * feature_vector){
-		auto p = predict_mean_std(feature_vector);
+		auto p = predict_mean_var(feature_vector);
 		p.second = sqrt(p.second);
 		return(p);
 	}
