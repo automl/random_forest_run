@@ -22,7 +22,7 @@
 
 #include "rfr/trees/tree_options.hpp"
 #include "rfr/forests/forest_options.hpp"
-
+#include "rfr/util.hpp"
 
 namespace rfr{ namespace forests{
 
@@ -166,12 +166,9 @@ class regression_forest{
 		means.reserve(set_size);
 		
 		for (auto i=0u; i < set_size; ++i){
-			// construct the single feature vector
-			std::copy_n(features,num_features, fv);
-			for (auto j=0u; j <num_features; ++j){
-				if (!isnan(set_features[i*num_features + j]))
-					fv[j] = set_features[i*num_features + j];
-			}
+			
+			rfr::merge_feature_vectors(features, &set_features[i*num_features], fv, num_features);
+
 			num_type m , v;
 			index_type n;
 			std::tie(m, v, n) = predict_mean_var(fv);
@@ -181,7 +178,7 @@ class regression_forest{
 			means.emplace_back(m);
 		}
 		
-		// compute the mean and the parts of the total variance
+		// compute the mean and the total variance
 		num_type N = num_type(set_size);
 		num_type mean_p = sum_mean / N;
 
@@ -262,6 +259,7 @@ class regression_forest{
 	}
 
 
+	// writes serialized representation into string (used for pickling in python)
 	void save_to_binary_file(const std::string filename){
 		std::ofstream ofs(filename, std::ios::binary);
 		oarch_type oarch(ofs);
@@ -269,6 +267,7 @@ class regression_forest{
 	}
 
 
+	// dserialized from representation in provided string (used for unpickling in python)
 	void load_from_binary_file(const std::string filename){
 		std::ifstream ifs(filename, std::ios::binary);
 		std::cout<<"opening file "<<filename<<std::endl;
