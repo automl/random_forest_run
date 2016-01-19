@@ -16,6 +16,7 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/portable_binary.hpp>
 #include <iostream>
+#include <sstream>
 
 
 
@@ -24,6 +25,10 @@
 
 
 namespace rfr{ namespace forests{
+
+typedef cereal::PortableBinaryInputArchive iarch_type;
+typedef cereal::PortableBinaryOutputArchive oarch_type;
+
 
 
 template <typename tree_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
@@ -142,12 +147,15 @@ class regression_forest{
 	}
 
 
-	/* \brief predict the mean and the standard deviation for a configuration marginalized over a given set of partial configurations
+	/* \brief predict the mean and the variance deviation for a configuration marginalized over a given set of partial configurations
 	 * 
-	 * This function will be mostly used to predict means over a given set of instances, but could be used to marginalize over any discrete set of partial configurations.
+	 * This function will be mostly used to predict the mean over a given set of instances, but could be used to marginalize over any discrete set of partial configurations.
 	 * 
 	 * \param features a (partial) configuration where unset values should be set to NaN
 	 * \param set_features a array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features.
+	 * \param set_size number of feature vectors in set_features
+	 * 
+	 * \return std::pair<num_type, num_type> mean and variance prediction
 	 */
 	std::pair<num_type, num_type> predict_mean_var_marginalized_over_set (num_type *features, num_type* set_features, index_type set_size){
 		
@@ -256,7 +264,7 @@ class regression_forest{
 
 	void save_to_binary_file(const std::string filename){
 		std::ofstream ofs(filename, std::ios::binary);
-		cereal::PortableBinaryOutputArchive oarch(ofs);
+		oarch_type oarch(ofs);
 		serialize(oarch);
 	}
 
@@ -264,7 +272,22 @@ class regression_forest{
 	void load_from_binary_file(const std::string filename){
 		std::ifstream ifs(filename, std::ios::binary);
 		std::cout<<"opening file "<<filename<<std::endl;
-		cereal::PortableBinaryInputArchive iarch(ifs);
+		iarch_type iarch(ifs);
+		serialize(iarch);
+	}
+
+
+	std::string save_into_string(){
+		std::stringstream oss;
+		oarch_type oarch(oss);
+		serialize(oarch);
+		return(oss.str());
+	}
+
+	void load_from_string( std::string str){
+		std::stringstream iss;
+		iss.str(str);
+		iarch_type iarch(iss);
 		serialize(iarch);
 	}
 

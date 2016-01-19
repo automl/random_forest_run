@@ -322,7 +322,18 @@ cdef class binary_rss(regression_forest_base):
 		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] ()
 		self.forest_ptr.load_from_binary_file(filename)
 		self.recover_settings_from_forest_options(self.forest_ptr.get_forest_options())
-		
+
+	def __reduce__(self):
+		d = {}
+		d['str_representation'] = self.forest_ptr.save_into_string()
+		return (binary_rss, (), d)
+	
+	def __setstate__(self, d):
+		del self.forest_ptr
+		self.forest_ptr = new regression_forest[ binary_rss_tree_t, rng_t, num_t, response_t, index_t] ()
+		self.forest_ptr.load_from_string(d['str_representation'])
+		self.recover_settings_from_forest_options(self.forest_ptr.get_forest_options())
+
 	def fit(self, data_base data):
 		""" The fit method.
 
@@ -405,7 +416,7 @@ cdef class binary_rss_v2(regression_forest_base):
 	
 	def __dealloc__(self):
 		del self.forest_ptr
-	
+
 	def fit(self, data_base data):
 		del self.forest_ptr
 		fo = self.build_forest_options(data)
