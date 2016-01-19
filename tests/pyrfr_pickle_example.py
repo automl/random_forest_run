@@ -57,11 +57,17 @@ for i in range(features.shape[0]):
 	predictions_1[i] = the_forest.predict(sample)[0]
 
 
+fname = None
 
-f = tempfile.NamedTemporaryFile(mode='w+b')
-pickle.dump(the_forest, f)
-with open(f.name, 'r+b') as fh:
+
+with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as f:
+	fname = f.name
+	pickle.dump(the_forest, f)
+
+
+with open(fname, 'r+b') as fh:
 	a_second_forest = pickle.load(fh)
+os.remove(fname)
 
 
 predictions_2 = np.zeros_like(responses);
