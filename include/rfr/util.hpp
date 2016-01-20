@@ -20,5 +20,38 @@ inline void merge_feature_vectors ( num_type* f1, num_type* f2, num_type* dest, 
 
 
 
+
+class running_statistics{
+  private:
+	long unsigned int N;
+	double m, v;
+	
+	running_statistics(): N = 0, m=0, v=0 {};
+	
+	void operator() (double x){
+		++N;
+		// initial setup
+		if (N == 1){
+			m = x;
+			v = 0;
+		}
+		else{
+			double m_old = m;
+			// adjust mean
+			m = m_old + (x-m_old)/N;
+			// adjust variance
+			v = v + (x-m_old)*(x-m);
+		}
+	}
+	
+	double mean(){ return(m);}
+	double variance(){return(v/(N-1));}
+};
+
+
+
+
+
+
 }//namespace rfr::forests
 #endif

@@ -155,7 +155,7 @@ class regression_forest{
 	 * \param set_features a array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features.
 	 * \param set_size number of feature vectors in set_features
 	 * 
-	 * \return std::pair<num_type, num_type> mean and variance prediction
+	 * \return std::pair<num_type, num_type> mean and variance prediction of a feature vector averaged over 
 	 */
 	std::pair<num_type, num_type> predict_mean_var_marginalized_over_set (num_type *features, num_type* set_features, index_type set_size){
 		
@@ -189,6 +189,50 @@ class regression_forest{
 			var_of_means += (m - mean_p);
 		var_of_means /= N; 
 		
+		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+	}
+
+
+	/* \brief predict the mean and the variance of the mean prediction across a set of partial features
+	 * 
+	 * A very special function to predict the mean response of a a partial assignment for a given set.
+	 * It takes the prediction of set-mean of every individual tree and combines to estimate the mean its
+	 * total variance. The predictions of two trees are considered uncorrelated
+	 * 
+	 * \param features a (partial) configuration where unset values should be set to NaN
+	 * \param set_features a array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features.
+	 * \param set_size number of feature vectors in set_features
+	 * 
+	 * \return std::pair<num_type, num_type> mean and variance prediction of a feature vector averaged over 
+	 */
+	std::pair<num_type, num_type> predict_mean_var_of_mean_response_on_set (num_type *features, num_type* set_features, index_type set_size){
+
+		num_type fv[num_features];
+		
+		num_type sum_mean(0), sum_var(0);
+		std::vector<num_type> means;
+		means.reserve(the_trees.size());
+
+		for (auto &t : the_trees){
+
+			num_type tree_sum_mean(0), tree_sum_var(0);
+			std::vector<num_type> tree_means;
+			tree_means.reserve(set_size);
+			
+			for (auto i=0u; i < set_size; ++i){
+			
+				rfr::merge_feature_vectors(features, &set_features[i*num_features], fv, num_features);
+
+				num_type m , v;
+				index_type n;
+				std::tie(m, v, n) = t.predict_mean_var_N(fv);
+			
+				tree_sum_mean += m;
+				tree_sum_var += v;
+				tree_means.emplace_back(m);
+			}
+		}	
+
 		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
 	}
 
@@ -267,7 +311,7 @@ class regression_forest{
 	}
 
 
-	// dserialized from representation in provided string (used for unpickling in python)
+	// deserialize from a representation provided by the string (used for unpickling in python)
 	void load_from_binary_file(const std::string filename){
 		std::ifstream ifs(filename, std::ios::binary);
 		std::cout<<"opening file "<<filename<<std::endl;
