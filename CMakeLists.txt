@@ -96,6 +96,14 @@ add_test (UTRegressionForest ut_regression_forest "${PROJECT_SOURCE_DIR}/test_da
 set_tests_properties (UTRegressionForest PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
 
 
+add_executable(ut_utils "${PROJECT_SOURCE_DIR}/tests/unit_test_utils.cpp")
+set_property(TARGET ut_utils PROPERTY CXX_STANDARD 11)
+set_property(TARGET ut_utils PROPERTY CXX_STANDARD_REQUIRED ON)
+target_link_libraries(ut_utils ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+
+add_test (UTUtils ut_utils)
+set_tests_properties (UTUtils PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+
 #add_executable(ut_classification_forest "${PROJECT_SOURCE_DIR}/tests/unit_test_classification_forest.cpp")
 #set_property(TARGET ut_classification_forest PROPERTY CXX_STANDARD 11)
 #set_property(TARGET ut_classification_forest PROPERTY CXX_STANDARD_REQUIRED ON)

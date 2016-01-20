@@ -6,14 +6,14 @@ namespace rfr{
 
 /* Merges f1 and f2 into dest without copying NaNs. This allows for easy marginalization */
 template <typename num_type, typename index_type>
-inline void merge_feature_vectors ( num_type* f1, num_type* f2, num_type* dest, index_type n){
+inline void merge_two_vectors ( num_type* f1, num_type* f2, num_type* dest, index_type n){
 	// make full copy of first vector
 	std::copy_n(f1,n, dest);
-			for (auto j=0u; j <n; ++j){
+			for (index_type j=0u; j <n; ++j){
 				// copy everything from the second vector that is not NaN
 				if (!isnan(f2[j]))
 					dest[j] = f2[j];
-				else if (isnan[dest[j])
+				else if (isnan(dest[j]))
 					throw std::runtime_error("Merged feature vector still contains a NaN");
 			}
 }
@@ -25,8 +25,8 @@ class running_statistics{
   private:
 	long unsigned int N;
 	double m, v;
-	
-	running_statistics(): N = 0, m=0, v=0 {};
+  public:
+	running_statistics(): N(0), m(0), v(0) {}
 	
 	void operator() (double x){
 		++N;
@@ -44,6 +44,7 @@ class running_statistics{
 		}
 	}
 	
+	long unsigned int number_of_points() {return(N);}
 	double mean(){ return(m);}
 	double variance(){return(v/(N-1));}
 };

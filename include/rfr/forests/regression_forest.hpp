@@ -167,7 +167,7 @@ class regression_forest{
 		
 		for (auto i=0u; i < set_size; ++i){
 			
-			rfr::merge_feature_vectors(features, &set_features[i*num_features], fv, num_features);
+			rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
 
 			num_type m , v;
 			index_type n;
@@ -221,7 +221,7 @@ class regression_forest{
 			
 			for (auto i=0u; i < set_size; ++i){
 			
-				rfr::merge_feature_vectors(features, &set_features[i*num_features], fv, num_features);
+				rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
 
 				num_type m , v;
 				index_type n;
@@ -233,7 +233,7 @@ class regression_forest{
 			}
 		}	
 
-		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+		//return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
 	}
 
 
