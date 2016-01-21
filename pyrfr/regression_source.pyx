@@ -269,7 +269,7 @@ cdef class regression_forest_base:
 				
 		cdef tree_options[num_t, response_t, index_t] to
 		to.max_features = self.max_features if self.max_features > 0 else data.num_features()
-		to.max_depth = self.max_depth if self.max_features > 0 else 2*data.num_data_points()+1
+		to.max_depth = self.max_depth if self.max_depth > 0 else 2*data.num_data_points()+1
 		to.max_num_nodes = self.max_num_nodes if self.max_num_nodes > 0 else 2*data.num_data_points()+1
 		to.min_samples_to_split = self.min_samples_to_split
 		to.min_samples_in_leaf = self.min_samples_in_leaf
