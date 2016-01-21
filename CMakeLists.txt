@@ -18,6 +18,7 @@ enable_testing()
 # required libaries
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Doxygen)
+find_package(PythonInterp)
 
 SET(Boost_USE_STATIC_LIBS OFF)
 SET(Boost_USE_MULTITHREADED OFF)
@@ -102,7 +103,16 @@ set_property(TARGET ut_utils PROPERTY CXX_STANDARD_REQUIRED ON)
 target_link_libraries(ut_utils ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 
 add_test (UTUtils ut_utils)
-set_tests_properties (UTUtils PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+#set_tests_properties (UTUtils PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
+
+
+if(PYTHONINTERP_FOUND)
+	add_test(	NAME BuildPyRFR
+				COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/setup.py build_ext --force --inplace
+				WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+endif(PYTHONINTERP_FOUND)
+
+
 
 #add_executable(ut_classification_forest "${PROJECT_SOURCE_DIR}/tests/unit_test_classification_forest.cpp")
 #set_property(TARGET ut_classification_forest PROPERTY CXX_STANDARD 11)
