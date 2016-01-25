@@ -102,32 +102,18 @@ class regression_forest{
 	 */
 	std::pair<num_type, num_type> predict_mean_var( num_type * feature_vector){
 
-		num_type sum_mean(0), sum_var(0);
-		std::vector<num_type> means;
-		means.reserve(the_trees.size());
-		
+		// collect the predictions of individual trees
+		rfr::running_statistics<num_type> mean_stats, var_stats;
 		for (auto &tree: the_trees){
-			num_type m , v;
-			index_type n;
+			num_type m , v;	index_type n;
 
 			std::tie(m, v, n) = tree.predict_mean_var_N(feature_vector);
-			
-			sum_mean += m;
-			sum_var += v;
-			means.push_back(m);
+
+			mean_stats(m); 
+			var_stats(v);
 		}
 		
-		num_type N = num_type(means.size());
-		num_type mean_p = sum_mean / N;
-
-		num_type mean_of_vars = sum_var/N;
-		
-		num_type var_of_means = 0;
-		for (auto &m: means)
-			var_of_means += (m - mean_p);
-		var_of_means /= N; 
-		
-		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+		return(std::pair<num_type, num_type> (mean_stats.mean(), std::max<num_type>(0, mean_stats.variance() + var_stats.mean()) ));
 	}
 
 
@@ -160,36 +146,20 @@ class regression_forest{
 	std::pair<num_type, num_type> predict_mean_var_marginalized_over_set (num_type *features, num_type* set_features, index_type set_size){
 		
 		num_type fv[num_features];
-		
-		num_type sum_mean(0), sum_var(0);
-		std::vector<num_type> means;
-		means.reserve(set_size);
-		
+
+		// collect the predictions of individual trees
+		rfr::running_statistics<num_type> mean_stats, var_stats;
 		for (auto i=0u; i < set_size; ++i){
-			
+			// construct the actual feature vector
 			rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
 
-			num_type m , v;
-			index_type n;
+			num_type m , v; index_type n;
 			std::tie(m, v, n) = predict_mean_var(fv);
-			
-			sum_mean += m;
-			sum_var += v;
-			means.emplace_back(m);
-		}
-		
-		// compute the mean and the total variance
-		num_type N = num_type(set_size);
-		num_type mean_p = sum_mean / N;
 
-		num_type mean_of_vars = sum_var/N;
-		
-		num_type var_of_means = 0;
-		for (auto &m: means)
-			var_of_means += (m - mean_p);
-		var_of_means /= N; 
-		
-		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+			mean_stats(m);
+			var_stats(v);
+		}
+		return(std::pair<num_type, num_type> (mean_stats.mean(), std::max<num_type>(0, mean_stats.variance() + var_stats.mean()) ));
 	}
 
 
@@ -200,7 +170,7 @@ class regression_forest{
 	 * total variance. The predictions of two trees are considered uncorrelated
 	 * 
 	 * \param features a (partial) configuration where unset values should be set to NaN
-	 * \param set_features a array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features.
+	 * \param set_features a 1d-array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features. The array must hold set_size times the number of features entries! There is no consistency check!
 	 * \param set_size number of feature vectors in set_features
 	 * 
 	 * \return std::pair<num_type, num_type> mean and variance prediction of a feature vector averaged over 
@@ -209,31 +179,26 @@ class regression_forest{
 
 		num_type fv[num_features];
 		
-		num_type sum_mean(0), sum_var(0);
-		std::vector<num_type> means;
-		means.reserve(the_trees.size());
-
+		rfr::running_statistics<num_type> mean_stats, var_stats;
+		
 		for (auto &t : the_trees){
 
-			num_type tree_sum_mean(0), tree_sum_var(0);
-			std::vector<num_type> tree_means;
-			tree_means.reserve(set_size);
+			rfr::running_statistics<num_type> tree_mean_stats, tree_var_stats;
 			
 			for (auto i=0u; i < set_size; ++i){
 			
 				rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
 
-				num_type m , v;
-				index_type n;
+				num_type m , v;	index_type n;
 				std::tie(m, v, n) = t.predict_mean_var_N(fv);
-			
-				tree_sum_mean += m;
-				tree_sum_var += v;
-				tree_means.emplace_back(m);
+				
+				tree_mean_stats(m); tree_var_stats(v);
 			}
+			
+			mean_stats(tree_mean_stats.mean());
+			var_stats(std::max<num_type>(0,tree_mean_stats.variance() + tree_var_stats.mean()));
 		}	
-
-		//return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+		return(std::pair<num_type, num_type> (mean_stats.mean(), std::max<num_type>(0, mean_stats.variance() + var_stats.mean()) ));
 	}
 
 
@@ -250,18 +215,14 @@ class regression_forest{
 	 * \param f2 a second feature vector (no sanity checks are performed!)
 	 */
 	num_type covariance (num_type* f1, num_type* f2){
-		std::vector<num_type> means1, means2;
-		means1.reserve(the_trees.size());
-		means2.reserve(the_trees.size());
-		
-		num_type sum_mean1(0), sum_mean2(0), sum_cov(0); 
-		
+		rfr::running_statistics<double> cov_stats;
+		rfr::running_covariance<double> run_cov;
+		/*
 		for (auto &t: the_trees){
 			auto l1 = t.find_leaf(f1);
 			auto l2 = t.find_leaf(f2);
 			
-			num_type m , v;
-			index_type n;
+			num_type m , v;	index_type n;
 
 			std::tie(m, v, n) = t.predict_mean_var_N(f1);
 			sum_mean1 += m;
@@ -273,7 +234,9 @@ class regression_forest{
 			
 			// assumption here: cov = 0 if the leafs are different, and cov = var if both feature vectors fall into the same leaf
 			if (l1 == l2)
-				sum_cov += v;
+				cov_stats(v);
+			else
+				cov_stats(0);
 		}
 		
 		
@@ -289,6 +252,7 @@ class regression_forest{
 		cov_means /= N; 
 
 		return(mean_covs + cov_means);
+		* */
 	}
 
 

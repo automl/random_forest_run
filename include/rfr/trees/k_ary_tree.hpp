@@ -95,7 +95,6 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 							}
 				}
 			}
-			
 			// check if it should be split
 			if ((tmp_nodes.front().node_level < tree_opts.max_depth) &&                     // don't grow the tree to deep!
 				(tmp_nodes.front().data_indices.size() >= tree_opts.min_samples_to_split)&& // are enough sample left in the node?

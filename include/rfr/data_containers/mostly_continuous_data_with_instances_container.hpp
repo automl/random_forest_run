@@ -241,6 +241,13 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 				}
 			}
 		}
+		
+		index_type t = get_type_of_response();
+		for (auto r: response_values){
+			if (isnan(r))
+				throw std::runtime_error("Responses contain a NaN!");
+		}
+		
 	}
 
 	virtual index_type get_type_of_response () const{
