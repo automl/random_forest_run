@@ -266,20 +266,34 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		}
 	}
 	
-	virtual std::vector< std::vector<num_type> > get_instance_set(){
-		std::vector< std::vector<num_type> > vec;
-		vec.reserve(num_instances());
+	/** \brief method to get instance as set_feature for predict_mean_var_of_mean_response_on_set method in regression forest
+	 */
+	virtual std::vector<num_type> get_instance_set(){
+		std::vector<num_type> set_feature;
+		set_feature.reserve( num_instances() * num_features());
+		index_type c = 0;
 		for (auto instance_idx = 0; instance_idx < num_instances(); ++instance_idx){
-				vec.emplace_back();
-				vec[instance_idx].reserve(num_features());
 				for (auto i = 0; i <  configurations.size(); ++i){
-						vec[instance_idx].emplace_back(NAN);
+						set_feature[c] = NAN;
+						++c;
 				}
 				for (auto i = 0; i < instances.size(); ++i){
-						vec[instance_idx].emplace_back(instances[instance_idx][i]);
+						set_feature[c] = instances[i][instance_idx];
+						++c;
 				}       
 		}
-		return vec;
+		return set_feature;
+	}
+	virtual std::vector<num_type> get_configuration_set(num_type configuration_index){
+		std::vector<num_type> features;
+		features.reserve(num_features());
+		for (auto i = 0; i < configurations.size(); ++i){
+				features[i] = configurations[i][configuration_index];
+		}
+		for (auto i = configurations.size(); i < configurations.size() +  instances.size(); ++i){
+				features[i] = NAN;
+		}   
+		return features;
 	}
 
 };
