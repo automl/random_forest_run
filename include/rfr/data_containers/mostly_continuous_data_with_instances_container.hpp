@@ -75,7 +75,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(response_values[sample_index]);
 	}
 
-	virtual void add_data_point (num_type* features, index_type num_elements, response_type response){
+	virtual void add_data_point (num_type*, index_type, response_type){
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 
@@ -265,6 +265,23 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 			response_t = resp_t;
 		}
 	}
+	
+	virtual std::vector< std::vector<num_type> > get_instance_set(){
+		std::vector< std::vector<num_type> > vec;
+		vec.reserve(num_instances());
+		for (auto instance_idx = 0; instance_idx < num_instances(); ++instance_idx){
+				vec.emplace_back();
+				vec[instance_idx].reserve(num_features());
+				for (auto i = 0; i <  configurations.size(); ++i){
+						vec[instance_idx].emplace_back(NAN);
+				}
+				for (auto i = 0; i < instances.size(); ++i){
+						vec[instance_idx].emplace_back(instances[instance_idx][i]);
+				}       
+		}
+		return vec;
+	}
+
 };
 
 
