@@ -21,11 +21,16 @@
 #include "rfr/trees/tree_base.hpp"
 #include "rfr/trees/tree_options.hpp"
 
+#include "rfr/forests/regression_forest.hpp"
+
 
 namespace rfr{ namespace trees{
 
 template <const int k,typename split_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
 class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, response_type, index_type> {
+	
+	friend class rfr::forests::regression_forest<k_ary_random_tree<k,split_type, rng_type,num_type,response_type,index_type>, rng_type,num_type, response_type, index_type>;
+	
   private:
 	typedef rfr::nodes::k_ary_node<k, split_type, rng_type, num_type, response_type, index_type> node_type;
   
