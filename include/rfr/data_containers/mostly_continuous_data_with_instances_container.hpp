@@ -75,7 +75,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(response_values[sample_index]);
 	}
 
-	virtual void add_data_point (num_type* features, index_type num_elements, response_type response){
+	virtual void add_data_point (num_type*, index_type, response_type){
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 
@@ -265,6 +265,37 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 			response_t = resp_t;
 		}
 	}
+	
+	/** \brief method to get instance as set_feature for predict_mean_var_of_mean_response_on_set method in regression forest
+	 */
+	virtual std::vector<num_type> get_instance_set(){
+		std::vector<num_type> set_feature;
+		set_feature.reserve( num_instances() * num_features());
+		index_type c = 0;
+		for (auto instance_idx = 0; instance_idx < num_instances(); ++instance_idx){
+				for (auto i = 0; i <  configurations.size(); ++i){
+						set_feature[c] = NAN;
+						++c;
+				}
+				for (auto i = 0; i < instances.size(); ++i){
+						set_feature[c] = instances[i][instance_idx];
+						++c;
+				}       
+		}
+		return set_feature;
+	}
+	virtual std::vector<num_type> get_configuration_set(num_type configuration_index){
+		std::vector<num_type> features;
+		features.reserve(num_features());
+		for (auto i = 0; i < configurations.size(); ++i){
+				features[i] = configurations[i][configuration_index];
+		}
+		for (auto i = configurations.size(); i < configurations.size() +  instances.size(); ++i){
+				features[i] = NAN;
+		}   
+		return features;
+	}
+
 };
 
 
