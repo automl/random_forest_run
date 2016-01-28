@@ -181,13 +181,13 @@ class regression_forest{
 	 * \param set_features a 1d-array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features. The array must hold set_size times the number of features entries! There is no consistency check!
 	 * \param set_size number of feature vectors in set_features
 	 * 
-	 * \return std::pair<num_type, num_type> mean and variance of empirical mean prediction of a feature vector averaged over 
+	 * \return std::pair<num_type, num_type, tuple> mean and variance of empirical mean prediction of a feature vector averaged over. The last one is the estimated variance of a sample drawn from partial assignment
 	 */
-	std::pair<num_type, num_type> predict_mean_var_of_mean_response_on_set (num_type *features, num_type* set_features, index_type set_size){
+	std::tuple<num_type, num_type, num_type> predict_mean_var_of_mean_response_on_set (num_type *features, num_type* set_features, index_type set_size){
 
 			num_type fv[num_features];
 
-			rfr::running_statistics<num_type> mean_stats, var_stats;
+			rfr::running_statistics<num_type> mean_stats, var_stats, sample_var_stats, sample_mean_stats;
 
 			for (auto &t : the_trees){
 
@@ -200,14 +200,15 @@ class regression_forest{
 							num_type m , v; index_type n;
 							std::tie(m, v, n) = t.predict_mean_var_N(fv);
 
-							tree_mean_stats(m); tree_var_stats(v);
+							tree_mean_stats(m); tree_var_stats(v); sample_mean_stats(m); sample_var_stats(v);
 					}
 
 					mean_stats(tree_mean_stats.mean());
-					var_stats(std::max<num_type>(0, tree_var_stats.mean()/set_size));
+					var_stats(std::max<num_type>(0, tree_var_stats.mean()));
+					
 			}
 			
-			return(std::pair<num_type, num_type>(mean_stats.mean(), std::max<num_type>(0, mean_stats.variance()) + std::max<num_type>(0, var_stats.mean())));
+			return(std::make_tuple(mean_stats.mean(), std::max<num_type>(0, mean_stats.variance()) + std::max<num_type>(0, var_stats.mean()/set_size), std::max<num_type>(0,sample_mean_stats.variance() + sample_var_stats.mean())));
 	}
 
 
