@@ -181,7 +181,7 @@ class regression_forest{
 	 * \param set_features a 1d-array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features. The array must hold set_size times the number of features entries! There is no consistency check!
 	 * \param set_size number of feature vectors in set_features
 	 * 
-	 * \return std::pair<num_type, num_type, tuple> mean and variance of empirical mean prediction of a feature vector averaged over. The last one is the estimated variance of a sample drawn from partial assignment
+	 * \return std::tuple<num_type, num_type, num_type> mean and variance of empirical mean prediction of a feature vector averaged over. The last one is the estimated variance of a sample drawn from partial assignment.
 	 */
 	std::tuple<num_type, num_type, num_type> predict_mean_var_of_mean_response_on_set (num_type *features, num_type* set_features, index_type set_size){
 
