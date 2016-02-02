@@ -83,6 +83,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		if (config_index >= num_configurations() )
 			throw std::runtime_error("Configuration index too large.");
 		if (instance_index >= num_instances() )
+			
 			throw std::runtime_error("Instance index too large.");
 		config_instance_pairs.emplace_back(std::pair<index_type, index_type> (config_index, instance_index));
 		response_values.emplace_back(r);
@@ -271,15 +272,12 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 	virtual std::vector<num_type> get_instance_set(){
 		std::vector<num_type> set_feature;
 		set_feature.reserve( num_instances() * num_features());
-		index_type c = 0;
 		for (auto instance_idx = 0; instance_idx < num_instances(); ++instance_idx){
 				for (auto i = 0; i <  configurations.size(); ++i){
-						set_feature[c] = NAN;
-						++c;
+						set_feature.emplace_back(NAN);
 				}
 				for (auto i = 0; i < instances.size(); ++i){
-						set_feature[c] = instances[i][instance_idx];
-						++c;
+						set_feature.emplace_back(instances[i][instance_idx]);
 				}       
 		}
 		return set_feature;
@@ -288,10 +286,10 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		std::vector<num_type> features;
 		features.reserve(num_features());
 		for (auto i = 0; i < configurations.size(); ++i){
-				features[i] = configurations[i][configuration_index];
+				features.emplace_back(configurations[i][configuration_index]);
 		}
 		for (auto i = configurations.size(); i < configurations.size() +  instances.size(); ++i){
-				features[i] = NAN;
+				features.emplace_back(NAN);
 		}   
 		return features;
 	}
