@@ -67,7 +67,7 @@ struct tree_options{
     
     
     void adjust_limits_to_data (const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
-	max_features = std::min(max_features, data.num_features());
+		max_features = std::min(max_features, data.num_features());
     }
     
 };

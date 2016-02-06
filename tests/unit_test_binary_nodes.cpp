@@ -100,12 +100,12 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 	// now the two leaves:
 	auto info1 = nodes[1].mean_variance_N();
 	BOOST_CHECK_CLOSE(std::get<0>(info1), ((num_type) 5)/3, 1e-10);
-	BOOST_CHECK_CLOSE(std::get<1>(info1), ((num_type) 2)/9, 1e-10);
+	BOOST_CHECK_CLOSE(std::get<1>(info1), ((num_type) 40)/177, 1e-10);
 	BOOST_CHECK(std::get<2>(info1) == 60);
 
 	auto info2 = nodes[2].mean_variance_N();
 	BOOST_CHECK_CLOSE(std::get<0>(info2), ((num_type) 7)/2, 1e-10);
-	BOOST_CHECK_CLOSE(std::get<1>(info2), ((num_type) 1)/4, 1e-10);
+	BOOST_CHECK_CLOSE(std::get<1>(info2), ((num_type) 10)/39, 1e-10);
 	BOOST_CHECK(std::get<2>(info2) == 40);
 	
 	

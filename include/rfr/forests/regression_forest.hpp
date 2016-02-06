@@ -7,6 +7,7 @@
 #include <utility>
 #include <cmath>
 #include <numeric>
+#include <tuple>
 #include <random>
 #include <algorithm>
 #include <functional>  // std::bind
@@ -38,6 +39,8 @@ class regression_forest{
 	std::vector<tree_type> the_trees;
 	index_type num_features;
 
+	std::vector<std::vector<index_type> > dirty_leafs;
+
   public:
 
   	/* serialize function for saving forests */
@@ -51,10 +54,7 @@ class regression_forest{
 	regression_forest(){}
 
 
-	regression_forest(forest_options<num_type, response_type, index_type> forest_opts): forest_opts(forest_opts){
-		the_trees.resize(forest_opts.num_trees);
-	}
-
+	regression_forest(forest_options<num_type, response_type, index_type> forest_opts): forest_opts(forest_opts), the_trees(forest_opts.num_trees){}
 
 
 	/* \brief growing the random forest for a given data set
@@ -72,9 +72,17 @@ class regression_forest{
 		std::vector<index_type> data_indices( data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
 		std::vector<index_type> data_indices_to_be_used( forest_opts.num_data_points_per_tree);
-	  
+
 		num_features = data.num_features();
+
+		// catch some stupid things that will make the forest crash when fitting
+		if (forest_opts.num_data_points_per_tree == 0)
+			throw std::runtime_error("The number of data points per tree is set to zero!");
 		
+		if (forest_opts.tree_opts.max_features == 0)
+			throw std::runtime_error("The number of features used for a split is set to zero!");
+		
+
 		for (auto &tree : the_trees){
 			// prepare the data(sub)set
 			if (forest_opts.do_bootstrapping){
@@ -102,32 +110,18 @@ class regression_forest{
 	 */
 	std::pair<num_type, num_type> predict_mean_var( num_type * feature_vector){
 
-		num_type sum_mean(0), sum_var(0);
-		std::vector<num_type> means;
-		means.reserve(the_trees.size());
-		
+		// collect the predictions of individual trees
+		rfr::running_statistics<num_type> mean_stats, var_stats;
 		for (auto &tree: the_trees){
-			num_type m , v;
-			index_type n;
+			num_type m , v;	index_type n;
 
 			std::tie(m, v, n) = tree.predict_mean_var_N(feature_vector);
-			
-			sum_mean += m;
-			sum_var += v;
-			means.push_back(m);
+
+			mean_stats(m); 
+			var_stats(v);
 		}
 		
-		num_type N = num_type(means.size());
-		num_type mean_p = sum_mean / N;
-
-		num_type mean_of_vars = sum_var/N;
-		
-		num_type var_of_means = 0;
-		for (auto &m: means)
-			var_of_means += (m - mean_p);
-		var_of_means /= N; 
-		
-		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+		return(std::pair<num_type, num_type> (mean_stats.mean(), std::max<num_type>(0, mean_stats.variance() + var_stats.mean()) ));
 	}
 
 
@@ -160,36 +154,20 @@ class regression_forest{
 	std::pair<num_type, num_type> predict_mean_var_marginalized_over_set (num_type *features, num_type* set_features, index_type set_size){
 		
 		num_type fv[num_features];
-		
-		num_type sum_mean(0), sum_var(0);
-		std::vector<num_type> means;
-		means.reserve(set_size);
-		
+
+		// collect the predictions of individual trees
+		rfr::running_statistics<num_type> mean_stats, var_stats;
 		for (auto i=0u; i < set_size; ++i){
-			
+			// construct the actual feature vector
 			rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
 
-			num_type m , v;
-			index_type n;
+			num_type m , v; index_type n;
 			std::tie(m, v, n) = predict_mean_var(fv);
-			
-			sum_mean += m;
-			sum_var += v;
-			means.emplace_back(m);
-		}
-		
-		// compute the mean and the total variance
-		num_type N = num_type(set_size);
-		num_type mean_p = sum_mean / N;
 
-		num_type mean_of_vars = sum_var/N;
-		
-		num_type var_of_means = 0;
-		for (auto &m: means)
-			var_of_means += (m - mean_p);
-		var_of_means /= N; 
-		
-		return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+			mean_stats(m);
+			var_stats(v);
+		}
+		return(std::pair<num_type, num_type> (mean_stats.mean(), std::max<num_type>(0, mean_stats.variance() + var_stats.mean()) ));
 	}
 
 
@@ -200,40 +178,37 @@ class regression_forest{
 	 * total variance. The predictions of two trees are considered uncorrelated
 	 * 
 	 * \param features a (partial) configuration where unset values should be set to NaN
-	 * \param set_features a array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features.
+	 * \param set_features a 1d-array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features. The array must hold set_size times the number of features entries! There is no consistency check!
 	 * \param set_size number of feature vectors in set_features
 	 * 
-	 * \return std::pair<num_type, num_type> mean and variance prediction of a feature vector averaged over 
+	 * \return std::tuple<num_type, num_type, num_type> mean and variance of empirical mean prediction of a feature vector averaged over. The last one is the estimated variance of a sample drawn from partial assignment.
 	 */
-	std::pair<num_type, num_type> predict_mean_var_of_mean_response_on_set (num_type *features, num_type* set_features, index_type set_size){
+	std::tuple<num_type, num_type, num_type> predict_mean_var_of_mean_response_on_set (num_type *features, num_type* set_features, index_type set_size){
 
-		num_type fv[num_features];
-		
-		num_type sum_mean(0), sum_var(0);
-		std::vector<num_type> means;
-		means.reserve(the_trees.size());
+			num_type fv[num_features];
 
-		for (auto &t : the_trees){
+			rfr::running_statistics<num_type> mean_stats, var_stats, sample_var_stats, sample_mean_stats;
 
-			num_type tree_sum_mean(0), tree_sum_var(0);
-			std::vector<num_type> tree_means;
-			tree_means.reserve(set_size);
-			
-			for (auto i=0u; i < set_size; ++i){
-			
-				rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
+			for (auto &t : the_trees){
 
-				num_type m , v;
-				index_type n;
-				std::tie(m, v, n) = t.predict_mean_var_N(fv);
-			
-				tree_sum_mean += m;
-				tree_sum_var += v;
-				tree_means.emplace_back(m);
+					rfr::running_statistics<num_type> tree_mean_stats, tree_var_stats;
+
+					for (auto i=0u; i < set_size; ++i){
+
+							rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
+
+							num_type m , v; index_type n;
+							std::tie(m, v, n) = t.predict_mean_var_N(fv);
+
+							tree_mean_stats(m); tree_var_stats(v); sample_mean_stats(m); sample_var_stats(v);
+					}
+
+					mean_stats(tree_mean_stats.mean());
+					var_stats(std::max<num_type>(0, tree_var_stats.mean()));
+					
 			}
-		}	
-
-		//return(std::pair<num_type, num_type> (mean_p, std::max<num_type>(0, mean_of_vars + var_of_means)));
+			
+			return(std::make_tuple(mean_stats.mean(), std::max<num_type>(0, mean_stats.variance()) + std::max<num_type>(0, var_stats.mean()/set_size), std::max<num_type>(0,sample_mean_stats.variance() + sample_var_stats.mean())));
 	}
 
 
@@ -250,18 +225,14 @@ class regression_forest{
 	 * \param f2 a second feature vector (no sanity checks are performed!)
 	 */
 	num_type covariance (num_type* f1, num_type* f2){
-		std::vector<num_type> means1, means2;
-		means1.reserve(the_trees.size());
-		means2.reserve(the_trees.size());
-		
-		num_type sum_mean1(0), sum_mean2(0), sum_cov(0); 
-		
+		rfr::running_statistics<double> cov_stats;
+		rfr::running_covariance<double> run_cov;
+		/*
 		for (auto &t: the_trees){
 			auto l1 = t.find_leaf(f1);
 			auto l2 = t.find_leaf(f2);
 			
-			num_type m , v;
-			index_type n;
+			num_type m , v;	index_type n;
 
 			std::tie(m, v, n) = t.predict_mean_var_N(f1);
 			sum_mean1 += m;
@@ -273,7 +244,9 @@ class regression_forest{
 			
 			// assumption here: cov = 0 if the leafs are different, and cov = var if both feature vectors fall into the same leaf
 			if (l1 == l2)
-				sum_cov += v;
+				cov_stats(v);
+			else
+				cov_stats(0);
 		}
 		
 		
@@ -289,6 +262,7 @@ class regression_forest{
 		cov_means /= N; 
 
 		return(mean_covs + cov_means);
+		* */
 	}
 
 
@@ -303,13 +277,56 @@ class regression_forest{
 	}
 
 
+	forest_options<num_type, response_type, index_type> get_forest_options(){return(forest_opts);}
+
+
+	/* \brief updates the forest by adding all provided datapoints without a complete retraining
+	 * 
+	 * As retraining can be quite expensive, this function can be used to quickly update the forest
+	 * by finding the leafs the datapoints belong into and just inserting them. This is, of course,
+	 * not the right way to do it for many data points, but it should be a good approximation for a few.
+	 * 
+	 * \param data a data container instance that will be inserted into the tree
+	 */
+	void pseudo_update (const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
+		
+		for (auto i=0u; data.num_data_points(); ++i){
+			
+			auto p = data.retrieve_data_point(i);
+			dirty_leafs.emplace_back(std::vector<index_type> (0, the_trees.size()));
+			auto it = (dirty_leafs.back()).begin();
+			//for each tree
+			for (auto &t: the_trees){
+		
+				index_type index = t.find_leaf(p.data());
+		
+				// add value
+				t.the_nodes[index].push_response_value(data.response(i));
+		
+				// note leaf as changed
+				(*it) = index;
+				it++;
+			}
+			rfr::print_vector(*dirty_leafs.back());
+		}
+	}
+	
+	bool pseudo_downdate(){
+		if (dirty_leafs.empty())
+			return(false);
+		for (auto li: (*dirty_leafs.back()))
+			the_trees.the_nodes[li].pop_back();
+		return(true);
+	}
+	
+
+
 	// writes serialized representation into string (used for pickling in python)
 	void save_to_binary_file(const std::string filename){
 		std::ofstream ofs(filename, std::ios::binary);
 		oarch_type oarch(ofs);
 		serialize(oarch);
 	}
-
 
 	// deserialize from a representation provided by the string (used for unpickling in python)
 	void load_from_binary_file(const std::string filename){
@@ -319,7 +336,7 @@ class regression_forest{
 		serialize(iarch);
 	}
 
-
+	// serialize into a string; used for Python's pickle.dump
 	std::string save_into_string(){
 		std::stringstream oss;
 		oarch_type oarch(oss);
@@ -327,6 +344,7 @@ class regression_forest{
 		return(oss.str());
 	}
 
+	// deserialize from string; used for Python's pickle.load
 	void load_from_string( std::string str){
 		std::stringstream iss;
 		iss.str(str);
@@ -334,8 +352,6 @@ class regression_forest{
 		serialize(iarch);
 	}
 
-
-	forest_options<num_type, response_type, index_type> get_forest_options(){return(forest_opts);}
 
 	/* \brief stores a latex document for every individual tree
 	 * 

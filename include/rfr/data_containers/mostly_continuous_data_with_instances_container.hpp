@@ -75,7 +75,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(response_values[sample_index]);
 	}
 
-	virtual void add_data_point (num_type* features, index_type num_elements, response_type response){
+	virtual void add_data_point (num_type*, index_type, response_type){
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 
@@ -83,6 +83,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		if (config_index >= num_configurations() )
 			throw std::runtime_error("Configuration index too large.");
 		if (instance_index >= num_instances() )
+			
 			throw std::runtime_error("Instance index too large.");
 		config_instance_pairs.emplace_back(std::pair<index_type, index_type> (config_index, instance_index));
 		response_values.emplace_back(r);
@@ -241,6 +242,13 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 				}
 			}
 		}
+		
+		index_type t = get_type_of_response();
+		for (auto r: response_values){
+			if (isnan(r))
+				throw std::runtime_error("Responses contain a NaN!");
+		}
+		
 	}
 
 	virtual index_type get_type_of_response () const{
@@ -258,6 +266,34 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 			response_t = resp_t;
 		}
 	}
+	
+	/** \brief method to get instance as set_feature for predict_mean_var_of_mean_response_on_set method in regression forest
+	 */
+	virtual std::vector<num_type> get_instance_set(){
+		std::vector<num_type> set_feature;
+		set_feature.reserve( num_instances() * num_features());
+		for (auto instance_idx = 0; instance_idx < num_instances(); ++instance_idx){
+				for (auto i = 0; i <  configurations.size(); ++i){
+						set_feature.emplace_back(NAN);
+				}
+				for (auto i = 0; i < instances.size(); ++i){
+						set_feature.emplace_back(instances[i][instance_idx]);
+				}       
+		}
+		return set_feature;
+	}
+	virtual std::vector<num_type> get_configuration_set(num_type configuration_index){
+		std::vector<num_type> features;
+		features.reserve(num_features());
+		for (auto i = 0; i < configurations.size(); ++i){
+				features.emplace_back(configurations[i][configuration_index]);
+		}
+		for (auto i = configurations.size(); i < configurations.size() +  instances.size(); ++i){
+				features.emplace_back(NAN);
+		}   
+		return features;
+	}
+
 };
 
 

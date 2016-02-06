@@ -20,33 +20,52 @@ inline void merge_two_vectors ( num_type* f1, num_type* f2, num_type* dest, inde
 
 
 
-
+template<typename num_type>
 class running_statistics{
   private:
 	long unsigned int N;
-	double m, v;
+	num_type m, v;
   public:
 	running_statistics(): N(0), m(0), v(0) {}
 	
-	void operator() (double x){
+	void operator() (num_type x){
 		++N;
-		// initial setup
-		if (N == 1){
-			m = x;
-			v = 0;
-		}
-		else{
-			double m_old = m;
-			// adjust mean
-			m = m_old + (x-m_old)/N;
-			// adjust variance
-			v = v + (x-m_old)*(x-m);
-		}
+		num_type delta = x - m;
+		// adjust mean
+		m += delta/N;
+		// adjust variance
+		v += delta*(x-m);
 	}
 	
 	long unsigned int number_of_points() {return(N);}
-	double mean(){ return(m);}
-	double variance(){return(v/(N-1));}
+	num_type mean(){ return(m);}
+	num_type variance(){return(std::max<double>(0.,v/(N-1)));}
+};
+
+
+
+template <typename num_type>
+class running_covariance{
+  private:
+	long unsigned int N;
+	num_type m1, m2;
+	num_type cov;
+
+  public:
+	running_covariance(): N(0), m1(0), m2(0), cov(0) {}
+	
+	void operator() (num_type x1, num_type x2){
+		N++;
+		num_type delta1 = (x1-m1)/N;
+		m1 += delta1;
+		num_type delta2 = (x2-m2)/N;
+		m2 += delta2;
+		
+		cov += (N-1) * delta1 * delta2 - cov/N;
+	}
+	
+	long unsigned int number_of_points(){return(N);}
+	num_type covariance(){return(num_type(N)/num_type(N-1)*cov);}
 };
 
 

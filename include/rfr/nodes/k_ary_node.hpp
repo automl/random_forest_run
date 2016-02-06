@@ -11,6 +11,7 @@
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"
 #include "rfr/nodes/temporary_node.hpp"
+#include "rfr/util.hpp"
 
 #include "cereal/cereal.hpp"
 #include <cereal/types/vector.hpp>
@@ -93,7 +94,7 @@ class k_ary_node{
 	/** \brief  turns this node into a leaf node based on a temporary node.
 	*
 	*
-	* \param tmp_node the internal representation for a temporary node. Node that the tmp_node instance is no longer valid after this function has been called!!
+	* \param tmp_node the internal representation for a temporary node.
 	*
 	*/
 	void make_leaf_node(rfr::nodes::temporary_node<num_type, index_type> &tmp_node,
@@ -105,7 +106,8 @@ class k_ary_node{
 		for (size_t i = 0; i < tmp_node.data_indices.size(); i++){
 			response_values[i] = data.response(tmp_node.data_indices[i]);
 		}
-		std::sort(response_values.begin(), response_values.end());
+		//to save some time
+		//std::sort(response_values.begin(), response_values.end());
 	}	
 
 	
@@ -116,10 +118,17 @@ class k_ary_node{
 	 * \return index_type index of the child
 	 */
 	index_type falls_into_child(num_type * sample){
-		// could be removed if performance issues arise here, but that's not very likely
 		if (is_leaf)
 			return(0);
 		return(children[split(sample)]);
+	}
+
+	void push_response_value ( num_type r){
+		response_values.push(r);
+	}
+	
+	void pop_repsonse_value (){
+		response_values.pop();
 	}
 	
 
@@ -132,9 +141,9 @@ class k_ary_node{
 			return(std::numeric_limits<num_type>::quiet_NaN());
 		
 		num_type m = 0;
-		for (auto v : response_values){
+		for (auto v : response_values)
 			m += v;
-		}
+
 		return(m/((num_type) response_values.size()));
 	}
 
@@ -145,16 +154,13 @@ class k_ary_node{
 																std::numeric_limits<num_type>::quiet_NaN(),
 																0));
 		
-		num_type sum = 0;
-		num_type sum_squared = 0;
-		index_type N = response_values.size();
-		for (auto v : response_values){
-			sum += v;
-			sum_squared += v*v;	
-		}
-		return( std::tuple<num_type, num_type, index_type> (sum/N,
-															std::max<num_type>(0,sum_squared/N - (sum/N)*(sum/N)),
-															N));
+		
+		rfr::running_statistics<num_type> stats;
+
+		for (auto v : response_values)
+			stats(v);
+
+		return( std::tuple<num_type, num_type, index_type> (stats.mean(), stats.variance(), stats.number_of_points()));
 	}
 
 
