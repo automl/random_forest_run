@@ -36,7 +36,7 @@ typedef rfr::nodes::temporary_node<num_type, index_type> tmp_node_type;
 typedef rfr::trees::k_ary_random_tree<2, split_type, rng_type, num_type, response_type, index_type> tree_type;
 
 // Test does not actually check the correctness of the split or anything.
-// It makes sure everything compiles and  runs
+// It makes sure everything compiles and runs
 BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
     data_container_type data;
@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	{
 		std::ifstream ifs("test_binary_tree.xml");
 		cereal::XMLInputArchive iarchive(ifs);
-		//iarchive(the_tree2);
+		iarchive(the_tree2);
 	}
     
     

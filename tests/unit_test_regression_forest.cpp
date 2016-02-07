@@ -108,6 +108,9 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 
 
 BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
+	
+	double unique_value = 42.424242;
+	
     data_container_type data;
 
     char *filename = (char*) malloc(1024*sizeof(char));
@@ -143,19 +146,36 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	the_forest.fit(data, rng);
 
 	// get reference leaf values for one configuration
+	std::vector<std::vector< num_type> > before = the_forest.all_leaf_values(data.retrieve_data_point(0).data());
 
 	// update forest with that configuration and a unique response value
+	data_container_type pseudo_data(data.num_features());
+	pseudo_data.add_data_point(data.retrieve_data_point(0).data(), data.num_features(), unique_value);
+	
+	the_forest.pseudo_update(pseudo_data);
 	
 	// get new leaf values
+	std::vector<std::vector< num_type> > after_update = the_forest.all_leaf_values(data.retrieve_data_point(0).data());
 	
 	// compare them to ensure the data point has been added correctly
 	
+	for (auto i=0u; i < before.size(); ++i){
+		BOOST_REQUIRE(before[i].size() == after_update[i].size() -1);
+		BOOST_CHECK_EQUAL_COLLECTIONS( before[i].begin(), before[i].end(), after_update[i].begin(), --after_update[i].end());
+		BOOST_REQUIRE( after_update[i].back() == unique_value);
+	}
+	
 	// downdate the tree
+	BOOST_REQUIRE(the_forest.pseudo_downdate() == true);
 	
 	// get new leaf values
+	std::vector<std::vector< num_type> > after_downdate = the_forest.all_leaf_values(data.retrieve_data_point(0).data());
 	
 	// compare them to ensure the last data point has been removed
+	for (auto i=0u; i < before.size(); ++i)
+		BOOST_CHECK_EQUAL_COLLECTIONS( before[i].begin(), before[i].end(), after_downdate[i].begin(), after_downdate[i].end());
 	
+	BOOST_REQUIRE(the_forest.pseudo_downdate() == false);
 	
     free(filename);
 }

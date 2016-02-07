@@ -118,7 +118,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(num_instances()-1);
 	}
 
-	virtual std::vector<num_type> retrieve_data_point (index_type index){
+	virtual std::vector<num_type> retrieve_data_point (index_type index) const {
 		std::vector<num_type> vec;
 		vec.reserve(num_features());
 

@@ -57,7 +57,7 @@ class data_container_base{
 	 * \param response The corresponding response value
 	 *
 	 */
-	virtual std::vector<num_type> retrieve_data_point (index_type index) = 0;
+	virtual std::vector<num_type> retrieve_data_point (index_type index) const = 0;
 
 	/** \brief query the type of a feature
 	 *

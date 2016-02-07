@@ -75,7 +75,7 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 		response_values.push_back(response);
 	}
 
-	virtual std::vector<num_type> retrieve_data_point (index_type index){
+	virtual std::vector<num_type> retrieve_data_point (index_type index) const {
 		std::vector<num_type> vec(feature_values.size());
 		for (index_type i = 0; i < num_features(); i++)
 			vec[i] = feature_values[i].at(index);

@@ -124,11 +124,11 @@ class k_ary_node{
 	}
 
 	void push_response_value ( num_type r){
-		response_values.push(r);
+		response_values.push_back(r);
 	}
 	
 	void pop_repsonse_value (){
-		response_values.pop();
+		response_values.pop_back();
 	}
 	
 

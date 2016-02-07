@@ -70,7 +70,7 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 		throw std::runtime_error("Array data containers do not support adding new data points.");
 	}
 	
-	virtual std::vector<num_type> retrieve_data_point (index_type index){
+	virtual std::vector<num_type> retrieve_data_point (index_type index) const{
 		std::vector<num_type> rv(n_features);
 		for (auto i = 0u; i < rv.size(); i++)
 			rv[i] = feature_array[index*n_features + i];
