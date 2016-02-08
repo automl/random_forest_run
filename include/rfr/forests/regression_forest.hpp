@@ -273,7 +273,6 @@ class regression_forest{
 	void pseudo_update (const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
 		
 		for (auto i=0u; i<data.num_data_points(); ++i){
-			std::cout<<"starting the pseudo update for point "<<i<<std::endl;
 			auto p = data.retrieve_data_point(i);
 			dirty_leafs.emplace_back(std::vector<index_type> (the_trees.size(),0));
 			auto it = (dirty_leafs.back()).begin();
