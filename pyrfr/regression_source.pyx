@@ -406,6 +406,8 @@ cdef class binary_rss(regression_forest_base):
 
 		return(quantiles)
 
+	def covariance (self, np.ndarray[num_t, ndim=1] f1, np.ndarray[num_t, ndim=1] f2):
+		return(self.forest_ptr.covariance(&f1[0], &f2[0]))
 
 cdef class binary_rss_v2(regression_forest_base):
 	""" test class for benchmarks! ***DO NOT USE***"""

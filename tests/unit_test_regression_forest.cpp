@@ -177,5 +177,15 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	
 	BOOST_REQUIRE(the_forest.pseudo_downdate() == false);
 	
+	
+	std::cout<<the_forest.covariance(data.retrieve_data_point(0).data(), data.retrieve_data_point(1).data())<<std::endl;
+
+	num_type m1 , v1;
+	std::tie(m1, v1) = the_forest.predict_mean_var(data.retrieve_data_point(0).data());
+
+	num_type v2 = the_forest.covariance(data.retrieve_data_point(0).data(), data.retrieve_data_point(0).data());
+
+	BOOST_REQUIRE_CLOSE(v1, v2, 1e-4);
+	
     free(filename);
 }
