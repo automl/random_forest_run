@@ -272,11 +272,11 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 	virtual std::vector<num_type> get_instance_set(){
 		std::vector<num_type> set_feature;
 		set_feature.reserve( num_instances() * num_features());
-		for (auto instance_idx = 0; instance_idx < num_instances(); ++instance_idx){
-				for (auto i = 0; i <  configurations.size(); ++i){
+		for (auto instance_idx = 0u; instance_idx < num_instances(); ++instance_idx){
+				for (auto i = 0u; i <  configurations.size(); ++i){
 						set_feature.emplace_back(NAN);
 				}
-				for (auto i = 0; i < instances.size(); ++i){
+				for (auto i = 0u; i < instances.size(); ++i){
 						set_feature.emplace_back(instances[i][instance_idx]);
 				}       
 		}
@@ -285,7 +285,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 	virtual std::vector<num_type> get_configuration_set(num_type configuration_index){
 		std::vector<num_type> features;
 		features.reserve(num_features());
-		for (auto i = 0; i < configurations.size(); ++i){
+		for (auto i = 0u; i < configurations.size(); ++i){
 				features.emplace_back(configurations[i][configuration_index]);
 		}
 		for (auto i = configurations.size(); i < configurations.size() +  instances.size(); ++i){
