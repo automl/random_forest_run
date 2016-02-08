@@ -225,44 +225,26 @@ class regression_forest{
 	 * \param f2 a second feature vector (no sanity checks are performed!)
 	 */
 	num_type covariance (num_type* f1, num_type* f2){
-		rfr::running_statistics<double> cov_stats;
-		rfr::running_covariance<double> run_cov;
-		/*
+		rfr::running_statistics<num_type> cov_stats;
+		rfr::running_covariance<num_type> run_cov_of_means;
+		
 		for (auto &t: the_trees){
 			auto l1 = t.find_leaf(f1);
 			auto l2 = t.find_leaf(f2);
-			
-			num_type m , v;	index_type n;
+		
+			num_type m1 , v1;	index_type n;
+			std::tie(m1, v1, n) = t.predict_mean_var_N(f1);
 
-			std::tie(m, v, n) = t.predict_mean_var_N(f1);
-			sum_mean1 += m;
-			means1.push_back(m);
-
-			std::tie(m, v, n) = t.predict_mean_var_N(f2);
-			sum_mean2 += m;
-			means2.push_back(m);
+			num_type m2 , v2;
+			std::tie(m2, v2, n) = t.predict_mean_var_N(f2);
 			
 			// assumption here: cov = 0 if the leafs are different, and cov = var if both feature vectors fall into the same leaf
-			if (l1 == l2)
-				cov_stats(v);
-			else
-				cov_stats(0);
+			if (l1 == l2) cov_stats(v2);
+			else cov_stats(0);
+			
+			run_cov_of_means(m1,m2);
 		}
-		
-		
-		num_type N = num_type (the_trees.size());
-		num_type mean_covs = sum_cov/N;
-		num_type m1 = sum_mean1/N, m2 = sum_mean2/N;
-		
-		num_type cov_means = 0;
-		
-		for (auto i=0u; i < the_trees.size(); ++i)
-			cov_means += (means1-m1)*(means2-m2);
-
-		cov_means /= N; 
-
-		return(mean_covs + cov_means);
-		* */
+		return(cov_stats.mean() + run_cov_of_means.covariance());
 	}
 
 
