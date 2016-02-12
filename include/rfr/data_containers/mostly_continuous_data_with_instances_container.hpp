@@ -288,12 +288,22 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		for (auto i = 0u; i < configurations.size(); ++i){
 				features.emplace_back(configurations[i][configuration_index]);
 		}
-		for (auto i = configurations.size(); i < configurations.size() +  instances.size(); ++i){
+		for (auto i = 0; i < instances.size(); ++i){
 				features.emplace_back(NAN);
 		}   
 		return features;
 	}
-
+	virtual std::vector<num_type> get_features_by_configuration_and_instance(num_type configuration_index, num_type instance_index){
+		std::vector<num_type> features;
+		features.reserve(num_features());
+		for (auto i = 0u; i < configurations.size(); ++i){
+				features.emplace_back(configurations[i][configuration_index]);
+		}
+		for (auto i = 0; i < instances.size(); ++i){
+				features.emplace_back(instances[i][instance_index]);
+		}   
+		return features;
+	}
 };
 
 
