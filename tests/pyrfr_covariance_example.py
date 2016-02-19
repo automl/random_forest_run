@@ -33,16 +33,16 @@ data1 = pyrfr.regression.numpy_data_container(features, responses, types)
 # create an instance of a regerssion forest using binary splits and the RSS loss
 the_forest = pyrfr.regression.binary_rss()
 
-the_forest.num_trees = 64
+the_forest.num_trees = 128
 
 
 # the forest's parameters
 the_forest.seed=12					# reset to reseed the rng for the next fit
 the_forest.do_bootstrapping=True	# default: false
-the_forest.num_data_points_per_tree=features.shape[0]*7//10 # means same number as data points
+the_forest.num_data_points_per_tree=features.shape[0]*5//10 # means same number as data points
 the_forest.max_features = 1 # 0 would mean all the features
 the_forest.min_samples_to_split = 0	# 0 means split until pure
-the_forest.min_samples_in_leaf = 1	# 0 means no restriction 
+the_forest.min_samples_in_leaf = 4	# 0 means no restriction 
 the_forest.max_depth=1024			# 0 means no restriction
 the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
 

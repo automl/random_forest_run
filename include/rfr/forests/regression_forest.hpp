@@ -40,6 +40,9 @@ class regression_forest{
 	index_type num_features;
 
 	std::vector<std::vector<index_type> > dirty_leafs;
+	std::vector<std::vector<index_type> > bootstrap_sample_counts;
+	
+	num_type 
 
   public:
 
@@ -64,23 +67,23 @@ class regression_forest{
 	 */
 	void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data, rng_type &rng){
 
-		if ((!forest_opts.do_bootstrapping) && (data.num_data_points() < forest_opts.num_data_points_per_tree)){
-			std::cout<<"You cannot use more data points per tree than actual data point present without bootstrapping!";
-			return;
-		}
+		if ((!forest_opts.do_bootstrapping) && (data.num_data_points() < forest_opts.num_data_points_per_tree))
+			throw std::runtime_error("You cannot use more data points per tree than actual data point present without bootstrapping!");
 
 		std::vector<index_type> data_indices( data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
 		std::vector<index_type> data_indices_to_be_used( forest_opts.num_data_points_per_tree);
 
 		num_features = data.num_features();
-
+		
 		// catch some stupid things that will make the forest crash when fitting
 		if (forest_opts.num_data_points_per_tree == 0)
 			throw std::runtime_error("The number of data points per tree is set to zero!");
 		
 		if (forest_opts.tree_opts.max_features == 0)
 			throw std::runtime_error("The number of features used for a split is set to zero!");
+		
+		bootstrap_sample_counts.clear();
 		
 
 		for (auto &tree : the_trees){
@@ -95,6 +98,12 @@ class regression_forest{
 				data_indices_to_be_used.assign(data_indices.begin(), data_indices.begin()+ forest_opts.num_data_points_per_tree);
 			}
 			tree.fit(data, forest_opts.tree_opts, data_indices_to_be_used, rng);
+			
+			// record sample counts for later use
+			bootstrap_sample_counts.emplace_back(std::vector<index_type> ( data.num_data_points(),0));
+			for (auto &i: data_indices_to_be_used){
+				++(bootstrap_sample_counts.back()[i]);
+			}
 		}
 	}
 
