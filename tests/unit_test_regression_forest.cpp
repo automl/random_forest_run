@@ -53,23 +53,25 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
     data.read_response_file(filename);
 
 	rfr::trees::tree_options<num_type, response_type, index_type> tree_opts;
-	tree_opts.min_samples_to_split = 10;
-	tree_opts.min_samples_in_leaf = 5;
-	tree_opts.max_features = 10;
+	tree_opts.min_samples_to_split = 2;
+	tree_opts.min_samples_in_leaf = 1;
+	tree_opts.max_features = data.num_data_points()*3/4;
 
 	
 	rfr::forests::forest_options<num_type, response_type, index_type> forest_opts(tree_opts);
 
-	forest_opts.num_data_points_per_tree = 2*data.num_data_points();
-	forest_opts.num_trees = 10;
+	forest_opts.num_data_points_per_tree = data.num_data_points();
+	forest_opts.num_trees = 128;
 	forest_opts.do_bootstrapping = true;
-
+	forest_opts.compute_oob_error= true;
+	
 	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest(forest_opts);
 	
 	rng_type rng;
 
 	the_forest.fit(data, rng);
-	the_forest.print_info();
+	//the_forest.print_info();
+	std::cout<<"OOB Error: "<<the_forest.out_of_bag_error()<<std::endl;
 
 	std::tuple<response_type, num_type> tmp;
 	std::vector<response_type> data_point_five = data.retrieve_data_point(5);
@@ -137,6 +139,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	forest_opts.num_data_points_per_tree = data.num_data_points();
 	forest_opts.num_trees = 10;
 	forest_opts.do_bootstrapping = true;
+
 
 	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest(forest_opts);
 	

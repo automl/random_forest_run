@@ -17,7 +17,7 @@ struct forest_options{
 	index_type num_data_points_per_tree;
 
 	bool do_bootstrapping;
-	
+	bool compute_oob_error;
 	rfr::trees::tree_options<num_type,response_type,index_type> tree_opts;
 
 
@@ -43,6 +43,7 @@ struct forest_options{
 		num_data_points_per_tree = 0;
 
 		do_bootstrapping = true;
+		compute_oob_error = false;
 	}
 
 

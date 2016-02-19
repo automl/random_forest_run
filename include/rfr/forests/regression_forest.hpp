@@ -42,7 +42,7 @@ class regression_forest{
 	std::vector<std::vector<index_type> > dirty_leafs;
 	std::vector<std::vector<index_type> > bootstrap_sample_counts;
 	
-	num_type 
+	num_type oob_error;
 
   public:
 
@@ -84,7 +84,6 @@ class regression_forest{
 			throw std::runtime_error("The number of features used for a split is set to zero!");
 		
 		bootstrap_sample_counts.clear();
-		
 
 		for (auto &tree : the_trees){
 			// prepare the data(sub)set
@@ -100,10 +99,34 @@ class regression_forest{
 			tree.fit(data, forest_opts.tree_opts, data_indices_to_be_used, rng);
 			
 			// record sample counts for later use
-			bootstrap_sample_counts.emplace_back(std::vector<index_type> ( data.num_data_points(),0));
-			for (auto &i: data_indices_to_be_used){
-				++(bootstrap_sample_counts.back()[i]);
+			if (forest_opts.compute_oob_error){
+				bootstrap_sample_counts.emplace_back(std::vector<index_type> ( data.num_data_points(),0));
+				for (auto &i: data_indices_to_be_used){
+					++(bootstrap_sample_counts.back()[i]);
+				}
 			}
+		}
+		
+		oob_error = NAN;
+		
+		if (forest_opts.compute_oob_error){
+			
+			rfr::running_statistics<num_type> oob_error_stat;
+			
+			for (auto i=0u; i < data.num_data_points(); i++){
+
+				rfr::running_statistics<num_type> prediction_stat;
+
+				for (auto j=0u; j<the_trees.size(); j++){
+					// only consider data points that were not part of that bootstrap sample
+					if (bootstrap_sample_counts[j][i] == 0)
+						prediction_stat (the_trees[j].predict( data.retrieve_data_point(i).data()));
+				}
+				
+				// compute squared error of prediction
+				oob_error_stat(std::pow(prediction_stat.mean() - data.response(i), 2));
+			}
+			oob_error = std::sqrt(oob_error_stat.mean());
 		}
 	}
 
@@ -310,7 +333,7 @@ class regression_forest{
 		return(true);
 	}
 	
-
+	num_type out_of_bag_error(){return(oob_error);}
 
 	// writes serialized representation into string (used for pickling in python)
 	void save_to_binary_file(const std::string filename){

@@ -288,7 +288,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		for (auto i = 0u; i < configurations.size(); ++i){
 				features.emplace_back(configurations[i][configuration_index]);
 		}
-		for (auto i = 0; i < instances.size(); ++i){
+		for (auto i = 0u; i < instances.size(); ++i){
 				features.emplace_back(NAN);
 		}   
 		return features;
@@ -299,7 +299,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		for (auto i = 0u; i < configurations.size(); ++i){
 				features.emplace_back(configurations[i][configuration_index]);
 		}
-		for (auto i = 0; i < instances.size(); ++i){
+		for (auto i = 0u; i < instances.size(); ++i){
 				features.emplace_back(instances[i][instance_index]);
 		}   
 		return features;
