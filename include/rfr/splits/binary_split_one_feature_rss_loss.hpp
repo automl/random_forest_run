@@ -313,7 +313,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		// best_loss to the largest possible value, this split will not be chosen.
 		
 		if ( (N_right == 0) || (N_left == 0) )
-			best_loss = std::numeric_limits<num_type>::max();
+			best_loss = std::numeric_limits<num_type>::infinity();
 		else
 			best_loss = (S_y2_right - (S_y_right*S_y_right)/N_right)
 							+ (S_y2_left - (S_y_left*S_y_left)/N_left);

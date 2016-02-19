@@ -32,39 +32,36 @@ int main (int argc, char** argv){
     char *filename = (char*) malloc(1024*sizeof(char));
 
     strcpy(filename, argv[1]);
-    //strcat(filename, "toy_data_set_features.csv");
-    //strcat(filename, "diabetes_features.csv");
-    strcat(filename, "features13.csv");
+    strcat(filename, "/hectors_nn_features.csv");
     std::cout<<filename<<"\n";
     data.read_feature_file(filename);
 
     strcpy(filename, argv[1]);
-	//strcat(filename, "toy_data_set_responses.csv");
-	//strcat(filename, "diabetes_responses.csv");
-	strcat(filename, "responses13.csv");
+	strcat(filename, "/hectors_nn_responses.csv");
 	std::cout<<filename<<"\n";
     data.read_response_file(filename);
+    
+    data.set_type_of_feature(21,6);
+
+	std::cout<<data.num_data_points()<<" datapoints with "<<data.num_features()<<" features"<<std::endl;
 
 	rfr::trees::tree_options<num_type, response_type, index_type> tree_opts;
 	tree_opts.min_samples_to_split = 2;
 	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = data.num_features();
+	tree_opts.max_features = 14;
 
 	
 	rfr::forests::forest_options<num_type, response_type, index_type> forest_opts(tree_opts);
 
-	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 128;
-	forest_opts.do_bootstrapping = false;
+	forest_opts.num_data_points_per_tree = 567;
+	forest_opts.num_trees = 256;
+	forest_opts.do_bootstrapping = true;
 
 	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest(forest_opts);
 	
 	rng_type rng;
+	rng.seed(101);
 
 	the_forest.fit(data, rng);
-
-	std::pair<num_type, num_type> tmp;
-	std::vector<response_type> data_point_five = data.retrieve_data_point(5);
-	tmp = the_forest.predict_mean_std(data_point_five.data());
 	free(filename);
 }
