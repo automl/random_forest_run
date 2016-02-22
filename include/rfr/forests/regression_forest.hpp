@@ -323,6 +323,13 @@ class regression_forest{
 		}
 	}
 	
+	/* \brief undoing a pseudo update by removing the last point added
+	 * 
+	 * This function removes one point from the corresponding leaves that
+	 * were touched during a pseudo update.
+	 * 
+	 * \return bool whether the tree was altered
+	 */
 	bool pseudo_downdate(){
 		if (dirty_leafs.empty())
 			return(false);
