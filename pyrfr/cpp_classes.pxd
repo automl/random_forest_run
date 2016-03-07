@@ -65,6 +65,7 @@ cdef extern from "rfr/data_containers/mostly_continuous_data_with_instances_cont
 		void set_type_of_response (index_type, index_type) except +
 		vector[num_type] retrieve_data_point (index_type)
 		void check_consistency() except +
+		vector[num_type] get_instance_set ()
 
 
 
@@ -141,6 +142,7 @@ cdef extern from "rfr/forests/regression_forest.hpp" namespace "rfr::forests":
 		void load_from_binary_file(const string)
 		void fit(data_container_base[num_type, response_type, index_type] &data, rng_type &rng)
 		pair[num_type, num_type] predict_mean_var( num_type * )
+		pair[num_type, num_type] predict_mean_var_marginalized_over_set (num_type *, num_type*, index_type)
 		vector[ vector[num_type] ] all_leaf_values (num_type * )
 		forest_options[num_type, response_type, index_type] get_forest_options()
 		num_type covariance (num_type*, num_type*)

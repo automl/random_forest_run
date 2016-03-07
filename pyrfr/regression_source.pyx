@@ -185,7 +185,19 @@ cdef class mostly_continuous_data_with_instances_container(data_base):
 	def add_data_points(self,  np.ndarray[index_t, ndim = 2] config_instance_pairs, np.ndarray[response_t, ndim = 1] responses):
 		if (config_instance_pairs.shape[0] != responses.shape[0]):
 			raise ValueError("Number of configuration-instance-pairs and response values do not match!")
+		if (config_instance_pairs.shape[1] != 2):
+			raise ValueError("The config - instance pairs matrix has to be have two columns!")
 		
+		for i in range(responses.shape[0]):
+			self.add_data_point(config_instance_pairs[i][0], config_instance_pairs[i][1], responses[i])
+	
+	def num_instances(self):
+		tmpptr = <mostly_continuous_data_with_instances[num_t, response_t, index_t]*> self.thisptr
+		return(tmpptr.num_instances())
+
+	def get_instance_set(self):
+		tmpptr = <mostly_continuous_data_with_instances[num_t, response_t, index_t]*> self.thisptr
+		return(tmpptr.get_instance_set())
 
 """
 The actual forests:
@@ -263,7 +275,6 @@ cdef class regression_forest_base:
 		self.min_samples_to_split = fo.tree_opts.min_samples_to_split
 		self.min_samples_in_leaf = fo.tree_opts.min_samples_to_split
 		self.epsilon_purity = fo.tree_opts.epsilon_purity
-
 
 	cdef forest_options[num_t, response_t, index_t] build_forest_options(self, data_base data):
 				
@@ -366,7 +377,6 @@ cdef class binary_rss(regression_forest_base):
 		"""
 		return (self.forest_ptr.all_leaf_values(&feats[0]))
 
-
 	def save_latex_representation(self, pattern):
 		self.forest_ptr.save_latex_representation(pattern)
 
@@ -408,6 +418,16 @@ cdef class binary_rss(regression_forest_base):
 
 	def covariance (self, np.ndarray[num_t, ndim=1] f1, np.ndarray[num_t, ndim=1] f2):
 		return(self.forest_ptr.covariance(&f1[0], &f2[0]))
+
+	def predict_marginalized_over_instances(self, np.ndarray[num_t, ndim=1] feats, data_container):
+		if not isinstance(data_container, mostly_continuous_data_with_instances_container):
+			raise TypeError("Data container has to be contain instances!")
+		
+		cdef vector[num_t] instances
+		
+		instances = data_container.get_instance_set()
+		
+		return (self.forest_ptr.predict_mean_var_marginalized_over_set( &feats[0], &(instances.data()[0]), data_container.num_instances()))
 
 cdef class binary_rss_v2(regression_forest_base):
 	""" test class for benchmarks! ***DO NOT USE***"""
