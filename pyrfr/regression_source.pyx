@@ -351,9 +351,9 @@ cdef class binary_rss(regression_forest_base):
 		:param feats: feature vector
 		:type feats: 1d numpy array of doubles
 
-		:returns: a tuple containing the mean and the standard deviation prediction
+		:returns: a tuple containing the mean and the variance prediction
 		"""
-		return self.forest_ptr.predict_mean_std(&feats[0])
+		return self.forest_ptr.predict_mean_var(&feats[0])
 
 	def all_leaf_values(self, np.ndarray[num_t, ndim=1] feats):
 		"""
@@ -426,7 +426,7 @@ cdef class binary_rss_v2(regression_forest_base):
 		self.forest_ptr.fit(deref(data.thisptr), deref(self.rng_ptr))
 
 	def predict(self, np.ndarray[num_t,ndim=1] feats):
-		return self.forest_ptr.predict_mean_std(&feats[0])
+		return self.forest_ptr.predict_mean_var(&feats[0])
 
 	def save_latex_representation(self, pattern):
 		self.forest_ptr.save_latex_representation(pattern)
