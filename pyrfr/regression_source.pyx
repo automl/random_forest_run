@@ -108,6 +108,7 @@ cdef class numpy_data_container(data_base):
 		self.features = np.ascontiguousarray(feats)
 		self.responses= np.ascontiguousarray(resp)
 		self.types    = np.ascontiguousarray(types)
+			
 		
 		if (self.features.shape[0] != self.responses.shape[0]):
 			print(self.features.shape, self.responses.shape)
@@ -116,7 +117,12 @@ cdef class numpy_data_container(data_base):
 		if (self.features.shape[1] != self.types.shape[0]):
 			raise ValueError("Number of features and types are incompatible!")
 		
-		self.thisptr = new array_data_container[num_t,response_t, index_t] (&feats[0,0], &resp[0], &types[0], feats.shape[0], feats.shape[1])
+		
+		cdef np.ndarray[num_t, ndim=2] f = self.features
+		cdef np.ndarray[response_t, ndim=1] r = self.responses
+		cdef np.ndarray[index_t, ndim=1] t = self.types 
+		
+		self.thisptr = new array_data_container[num_t,response_t, index_t] (&f[0,0], &r[0], &t[0], f.shape[0], f.shape[1])
 
 
 	def add_data_point(self, np.ndarray[num_t,ndim=1] fs, response_t r):
@@ -354,6 +360,22 @@ cdef class binary_rss(regression_forest_base):
 		:returns: a tuple containing the mean and the standard deviation prediction
 		"""
 		return self.forest_ptr.predict_mean_std(&feats[0])
+	
+	def batch_predictions(self, np.ndarray[num_t, ndim=2] features):
+		""" predicting several inputs simultaniously
+		
+		:param features: several features in a matrix where each row is a valid feature vector
+		:type features: 2d numpy array of doubles
+		
+		:returns: tuple holding of the mean predictions and corresponding standard deviations
+		"""
+	
+		means = np.zeros(features.shape[0])
+		stds  = np.zeros(features.shape[0])
+		
+		for i in range(features.shape[0]):
+			means[i], stds[i] = self.forest_ptr.predict_mean_std(&features[i,0])
+		return (means, stds)
 
 	def all_leaf_values(self, np.ndarray[num_t, ndim=1] feats):
 		"""
@@ -365,7 +387,6 @@ cdef class binary_rss(regression_forest_base):
 		:returns: a nested list with the responses of the leafs x falls into from each tree.
 		"""
 		return (self.forest_ptr.all_leaf_values(&feats[0]))
-
 
 	def save_latex_representation(self, pattern):
 		self.forest_ptr.save_latex_representation(pattern)
@@ -408,6 +429,8 @@ cdef class binary_rss(regression_forest_base):
 
 	def covariance (self, np.ndarray[num_t, ndim=1] f1, np.ndarray[num_t, ndim=1] f2):
 		return(self.forest_ptr.covariance(&f1[0], &f2[0]))
+
+
 
 cdef class binary_rss_v2(regression_forest_base):
 	""" test class for benchmarks! ***DO NOT USE***"""
