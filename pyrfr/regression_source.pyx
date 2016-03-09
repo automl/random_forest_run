@@ -381,8 +381,8 @@ cdef class binary_rss(regression_forest_base):
 		:returns: tuple holding of the mean predictions and corresponding standard deviations
 		"""
 	
-		means = np.zeros(features.shape[0], dtype=num_t)
-		vrss  = np.zeros(features.shape[0], dtype=num_t)
+		means = np.zeros(features.shape[0], dtype=np.float)
+		vrs   = np.zeros(features.shape[0], dtype=np.float)
 		
 		for i in range(features.shape[0]):
 			means[i], vrs[i] = self.forest_ptr.predict_mean_var(&features[i,0])
@@ -442,9 +442,7 @@ cdef class binary_rss(regression_forest_base):
 	def covariance (self, np.ndarray[num_t, ndim=1] f1, np.ndarray[num_t, ndim=1] f2):
 		return(self.forest_ptr.covariance(&f1[0], &f2[0]))
 
-<<<<<<< HEAD
 
-=======
 	def predict_marginalized_over_instances(self, np.ndarray[num_t, ndim=1] feats, data_container):
 		if not isinstance(data_container, mostly_continuous_data_with_instances_container):
 			raise TypeError("Data container has to be contain instances!")
@@ -454,7 +452,6 @@ cdef class binary_rss(regression_forest_base):
 		instances = data_container.get_instance_set()
 		
 		return (self.forest_ptr.predict_mean_var_marginalized_over_set( &feats[0], &(instances.data()[0]), data_container.num_instances()))
->>>>>>> 7ee32e852e4a7c3602423386e754395770962c67
 
 cdef class binary_rss_v2(regression_forest_base):
 	""" test class for benchmarks! ***DO NOT USE***"""
