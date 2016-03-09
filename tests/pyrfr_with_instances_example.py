@@ -16,7 +16,6 @@ data_set_folder = '%(here)s/../test_data_sets/' % {"here":here}
 
 with open(os.path.join(data_set_folder, 'sat_saps_configurations.csv')) as fh:
 	reader = csv.reader(fh)
-
 	configurations = np.array(([l[5:] for l in list(reader)[1:]]), dtype=np.float)
 
 
@@ -74,7 +73,9 @@ data.import_configurations(configurations)
 data.import_instances(instances)
 
 
-for i in range(100):
+
+
+for i in range(100000):
 	i = np.random.randint(performance_matrix.shape[0])
 	j = np.random.randint(performance_matrix.shape[1])
 	data.add_data_point(i,j, performance_matrix[i,j])
@@ -83,7 +84,6 @@ for i in range(100):
 the_forest = pyrfr.regression.binary_rss()
 
 the_forest.num_trees = 16
-
 
 # the forest's parameters
 the_forest.seed=12					# reset to reseed the rng for the next fit
@@ -99,7 +99,7 @@ the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can
 the_forest.fit(data)
 
 
-
-print(the_forest.predict( np.array(data.retrieve_data_point(0))))
-print(data.retrieve_response(0))
+# the forest now support marginalizing over instances given by a corresponding data container
+# here is an example
+print(the_forest.predict_marginalized_over_instances( np.array(data.retrieve_data_point(5)), data))
 

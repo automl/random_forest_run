@@ -193,8 +193,8 @@ class regression_forest{
 			// construct the actual feature vector
 			rfr::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
 
-			num_type m , v; index_type n;
-			std::tie(m, v, n) = predict_mean_var(fv);
+			num_type m , v;
+			std::tie(m, v) = predict_mean_var(fv);
 
 			mean_stats(m);
 			var_stats(v);
