@@ -156,7 +156,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 				if (fv < 0)
 					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
 				// round it properly
-				fv = std::round(fv);
+				fv = round(fv);
 			}
 			categorical_ranges[index] = type;
 		}
@@ -174,7 +174,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 				if (fv < 0)
 					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
 				// round it properly
-				fv = std::round(fv);
+				fv = round(fv);
 			}
 			categorical_ranges[index + configurations.size()] = type;
 		}
@@ -209,10 +209,10 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		*  2. every (row) vector in feature_values
 		*/
 
-		if (config_instance_pairs.size() != num_data_points)
+		if (config_instance_pairs.size() != num_data_points())
 			throw std::runtime_error("config_instance_pairs has the wrong size!");
 
-		if (response_values.size() != num_data_points)
+		if (response_values.size() != num_data_points())
 			throw std::runtime_error("response_values has the wrong size!");
 
 

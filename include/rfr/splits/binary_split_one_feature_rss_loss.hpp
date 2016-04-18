@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
+#include <random>
 
 
 #include "cereal/cereal.hpp"

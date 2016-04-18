@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8 FATAL_ERROR) # used to be version 3.1, but I don't know if that is really necessary
+cmake_minimum_required (VERSION 3.1 FATAL_ERROR) # used to be version 3.1, but I don't know if that is really necessary
 project (RFR CXX)
 
 # add a version number
@@ -112,11 +112,11 @@ endif(PYTHONINTERP_FOUND)
 #set_tests_properties (UTClassificationForest PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
 
 
-
-
 IF(CMAKE_COMPILER_IS_GNUCXX)
   ADD_DEFINITIONS("-Wall -fPIC -pg")
   #ADD_DEFINITIONS("-fPIC")
- ELSE()
+ELSEIF(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+  ADD_DEFINITIONS("-Wall -fPIC -pg -std=c++11")
+ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()
