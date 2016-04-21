@@ -1,0 +1,10 @@
+recursive-include include *.hpp
+recursive-include include *.hpp
+recursive-include include *.h
+recursive-include include *.txt
+recursive-include include *.html
+recursive-include pyrfr *.pxd
+recursive-include pyrfr *.cpp
+recursive-include pyrfr *.pyx
+
+CMakeList.txt
