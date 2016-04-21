@@ -31,7 +31,7 @@ extensions = cythonize(
 
 setup(
 	name='pyrfr',
-	version='0.1.1',
+	version='0.2.0',
 	author='Stefan Falkner',
 	author_email='sfalkner@cs.uni-freiburg.de',
 	license='Use as you wish. No guarantees whatsoever.',
