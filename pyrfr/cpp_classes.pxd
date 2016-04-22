@@ -131,6 +131,7 @@ cdef extern from "rfr/forests/forest_options.hpp" namespace "rfr::forests":
 		index_type num_trees
 		index_type num_data_points_per_tree
 		bool do_bootstrapping
+		bool compute_oob_error
 		tree_options[num_type,response_type,index_type] tree_opts
 
 cdef extern from "rfr/forests/regression_forest.hpp" namespace "rfr::forests":
@@ -146,5 +147,6 @@ cdef extern from "rfr/forests/regression_forest.hpp" namespace "rfr::forests":
 		vector[ vector[num_type] ] all_leaf_values (num_type * )
 		forest_options[num_type, response_type, index_type] get_forest_options()
 		num_type covariance (num_type*, num_type*)
+		num_type out_of_bag_error()
 		string save_into_string()
 		void load_from_string( string)

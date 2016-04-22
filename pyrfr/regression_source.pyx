@@ -233,6 +233,13 @@ cdef class regression_forest_base:
 	replacement (Default: True).
 	"""
 
+	cdef public bool compute_oob_error
+	""" For an unbiased estimate of the generalization error, the forest
+	can compute the out-of-bag error on the fly if. There is an additional
+	overhead depending on the data set size and your bootstrapping settings.
+	This bool turns that feature on/off.
+	"""
+
 	#attributes for the individual trees.
 
 	cdef public index_t max_features
@@ -257,6 +264,7 @@ cdef class regression_forest_base:
 		self.num_trees=10
 		self.num_data_points_per_tree = 0
 		self.do_bootstrapping = True
+		self.compute_oob_error = False
 		self.max_features = 0
 		self.max_depth = 0
 		self.max_num_nodes = 0
@@ -274,6 +282,7 @@ cdef class regression_forest_base:
 		self.num_trees = fo.num_trees
 		self.num_data_points_per_tree = fo.num_data_points_per_tree
 		self.do_bootstrapping = fo.do_bootstrapping
+		self.compute_oob_error = fo.compute_oob_error
 				
 		self.max_features = fo.tree_opts.max_features
 		self.max_depth = fo.tree_opts.max_depth
@@ -298,6 +307,7 @@ cdef class regression_forest_base:
 		fo.num_trees=self.num_trees
 		fo.num_data_points_per_tree = self.num_data_points_per_tree if self.num_data_points_per_tree > 0 else data.num_data_points()
 		fo.do_bootstrapping = self.do_bootstrapping
+		fo.compute_oob_error = self.compute_oob_error
 		fo.tree_opts = to
 
 		#reseed the rng if needed.
@@ -306,7 +316,7 @@ cdef class regression_forest_base:
 			self.seed=0
 			
 		return(fo)
-
+	
 
 cdef class binary_rss(regression_forest_base):
 	"""
@@ -452,6 +462,10 @@ cdef class binary_rss(regression_forest_base):
 		instances = data_container.get_instance_set()
 		
 		return (self.forest_ptr.predict_mean_var_marginalized_over_set( &feats[0], &(instances.data()[0]), data_container.num_instances()))
+
+
+	def out_of_bag_error(self):
+		return(self.forest_ptr.out_of_bag_error())
 
 cdef class binary_rss_v2(regression_forest_base):
 	""" test class for benchmarks! ***DO NOT USE***"""
