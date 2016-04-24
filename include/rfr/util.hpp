@@ -11,9 +11,9 @@ inline void merge_two_vectors ( num_type* f1, num_type* f2, num_type* dest, inde
 	std::copy_n(f1,n, dest);
 			for (index_type j=0u; j <n; ++j){
 				// copy everything from the second vector that is not NaN
-				if (!isnan(f2[j]))
+				if (!std::isnan(f2[j]))
 					dest[j] = f2[j];
-				else if (isnan(dest[j]))
+				else if (std::isnan(dest[j]))
 					throw std::runtime_error("Merged feature vector still contains a NaN");
 			}
 }

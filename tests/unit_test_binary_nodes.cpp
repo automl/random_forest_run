@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE( binary_nodes_tests ){
 
 	// first an internal node
 	auto info0 = nodes[0].mean_variance_N();
-	BOOST_CHECK(isnan(std::get<0>(info0)));
-	BOOST_CHECK(isnan(std::get<1>(info0)));
+	BOOST_CHECK(std::isnan(std::get<0>(info0)));
+	BOOST_CHECK(std::isnan(std::get<1>(info0)));
 	BOOST_CHECK(std::get<2>(info0) == 0);
 
 	// now the two leaves:
