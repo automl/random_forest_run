@@ -10,10 +10,11 @@
 #include <tuple>
 #include <random>
 #include <algorithm>
-#include <functional>  // std::bind
+#include <functional>
+#include <memory>
 
 
-#include "cereal/cereal.hpp"
+#include <cereal/cereal.hpp>
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/portable_binary.hpp>
 #include <iostream>
@@ -30,6 +31,35 @@ namespace rfr{ namespace forests{
 typedef cereal::PortableBinaryInputArchive iarch_type;
 typedef cereal::PortableBinaryOutputArchive oarch_type;
 
+
+
+template <typename tree_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
+class regression_forest2{
+  private:
+	forest_options<num_type, response_type, index_type> forest_opts;
+	std::vector<tree_type> the_trees;
+	index_type num_features;
+	//std::vector<std::vector<index_type> > dirty_leafs;
+	//std::vector<std::vector<index_type> > bootstrap_sample_counts;
+	
+	num_type oob_error;
+
+  public:
+
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive)
+	{
+		//archive( forest_opts, the_trees, num_features, dirty_leafs, bootstrap_sample_counts, oob_error);
+		archive( forest_opts, the_trees, num_features);
+	}
+
+
+	regression_forest2(): forest_opts(), the_trees(){}
+
+	//regression_forest2(forest_options<num_type, response_type, index_type> forest_opts): forest_opts(forest_opts), num_features(42){}
+	regression_forest2(forest_options<num_type, response_type, index_type> forest_opts): forest_opts(forest_opts), the_trees(forest_opts.num_trees), num_features(42){}
+};
 
 
 template <typename tree_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
@@ -50,11 +80,12 @@ class regression_forest{
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( forest_opts, the_trees);
+		archive( forest_opts, the_trees, num_features, dirty_leafs, bootstrap_sample_counts, oob_error);
+		//archive( forest_opts, the_trees, num_features);
 	}
 
 
-	regression_forest(){}
+	regression_forest(): forest_opts(), the_trees(){}
 
 
 	regression_forest(forest_options<num_type, response_type, index_type> forest_opts): forest_opts(forest_opts), the_trees(forest_opts.num_trees){}
@@ -120,15 +151,13 @@ class regression_forest{
 				for (auto j=0u; j<the_trees.size(); j++){
 					// only consider data points that were not part of that bootstrap sample
 					if (bootstrap_sample_counts[j][i] == 0)
-						prediction_stat(the_trees[j].predict( data.retrieve_data_point(i).data()));
+						prediction_stat (the_trees[j].predict( data.retrieve_data_point(i).data()));
 				}
 				
 				// compute squared error of prediction
 				oob_error_stat(std::pow(prediction_stat.mean() - data.response(i), 2));
 			}
-			// if no point was out of bag, then don't update the oob_error -> will be NAN
-			if (oob_error_stat.number_of_points() > 0)
-				oob_error = std::sqrt(oob_error_stat.mean());
+			oob_error = std::sqrt(oob_error_stat.mean());
 		}
 	}
 
@@ -305,7 +334,6 @@ class regression_forest{
 	 * \param data a data container instance that will be inserted into the tree
 	 */
 	void pseudo_update (const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
-		
 		for (auto i=0u; i<data.num_data_points(); ++i){
 			auto p = data.retrieve_data_point(i);
 			dirty_leafs.emplace_back(std::vector<index_type> (the_trees.size(),0));

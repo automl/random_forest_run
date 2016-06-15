@@ -13,6 +13,7 @@
 
 
 #include "cereal/cereal.hpp"
+#include <cereal/types/bitset.hpp>
 #include <cereal/types/vector.hpp>
 
 #include "rfr/data_containers/data_container_base.hpp"
@@ -40,6 +41,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	
   public:
   
+	k_ary_random_tree(): the_nodes(0), num_leafs(0), actual_depth(0) {}
+	
     /* serialize function for saving forests */
   	template<class Archive>
   	void serialize(Archive & archive){
@@ -181,6 +184,18 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	virtual index_type number_of_leafs() {return(num_leafs);}
 	virtual index_type depth() {return(actual_depth);}
 	
+
+	/* \brief computes the partitioning of the input space induced by the tree */
+	std::vector<std::vector< std::vector<num_type> > > partition( std::vector<std::vector<num_type> > pcs){
+	
+	std::vector<std::vector< std::vector<num_type> > > the_partition;
+	the_partition.reserve(num_leafs);
+	
+	the_nodes[0].compute_partition_recursively( the_partition, pcs);
+	
+	return(the_partition);
+	}
+
 	
 	void print_info(){
 		

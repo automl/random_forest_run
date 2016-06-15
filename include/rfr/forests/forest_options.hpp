@@ -25,18 +25,13 @@ struct forest_options{
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( num_trees,num_data_points_per_tree, do_bootstrapping, compute_oob_error, tree_opts);
+		archive( num_trees,num_data_points_per_tree, do_bootstrapping, tree_opts);
 	}
 
 
-	/** (Re)set to default values with no limits on the size of the tree
+	/** (Re)set to default values for the forest.
 	 * 
-	 * If nothing is know about the data, this member can be used
-	 * to get a valid setting for the tree_options struct. But beware
-	 * this setting could lead to a huge tree depending on the amount of
-	 * data. There is no limit to the size, and nodes are split into pure
-	 * leafs. For each split, every feature is considered! This not only
-	 * slows the training down, but also makes this tree deterministic!
+	 * 
 	 */
 	void set_default_values(){
 		num_trees = 10;
@@ -44,6 +39,8 @@ struct forest_options{
 
 		do_bootstrapping = true;
 		compute_oob_error = false;
+		
+		tree_opts.set_default_values();
 	}
 
 

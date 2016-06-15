@@ -2,15 +2,17 @@
 #define RFR_BINARY_SPLIT_RSS_HPP
 
 #include <vector>
+#include <bitset>
 #include <array>
+#include <random>
 #include <algorithm>
 #include <string>
 #include <sstream>
-#include <random>
 
 
 #include "cereal/cereal.hpp"
-#include <cereal/types/vector.hpp>
+#include <cereal/types/bitset.hpp>
+#include <cereal/types/bitset.hpp>
 
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/splits/split_base.hpp"
@@ -19,21 +21,24 @@ namespace rfr{ namespace splits{
 
 
 
-template <typename rng_type, typename num_type = float, typename response_type=float, typename index_type = unsigned int>
+template <typename rng_type, typename num_type = float, typename response_type=float, typename index_type = unsigned int, unsigned int max_num_categories = 32>
 class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,rng_type, num_type, response_type, index_type> {
   private:
 	
 	index_type feature_index;	//!< split needs to know which feature it uses
+	num_type num_split_value;
+	std::bitset<max_num_categories> cat_split_set;
 	
-	//!< The split criterion contains its type (first element = 0 for numerical, >=1 for categoricals), and the split value in the second/ the categories that fall into the left child respectively
-	std::vector<num_type> split_criterion; //!< one could consider to use a dynamically sized array here to save some memory (vector stores size and capacity + it might allocate more memory than needed!)
   public:
+  	
+	binary_split_one_feature_rss_loss(): feature_index(0), num_split_value(NAN), cat_split_set() {}
+  	
   	
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( feature_index, split_criterion); 
+		archive( feature_index, num_split_value);//, cat_split_set); 
 	}
   	
   	
@@ -70,7 +75,6 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		
 		
 		// tmp vectors to hold the features of the current data-subset and the best so far
-
 		std::vector<num_type> best_features (responses.size());
 		num_type best_loss = std::numeric_limits<num_type>::infinity();
 
@@ -79,22 +83,22 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		for (index_type fi : features_to_try){ //! > uses C++11 range based loop
 
 			num_type loss;
-			std::vector<num_type> split_criterion_copy;
+			num_type num_split_copy;
+			std::bitset<max_num_categories> cat_split_copy;
+
+
 			std::vector<num_type> current_features = data.features(fi, indices);
 
 			index_type ft = data.get_type_of_feature(fi);
 			// feature_type zero means that it is a continous variable
 			if (ft == 0){
-				split_criterion_copy.assign(2, 0);
-
 				// find best split for the current feature_index
-				loss = best_split_continuous(current_features, responses, split_criterion_copy, sum, sum2, rng);
+				loss = best_split_continuous(current_features, responses, num_split_copy, sum, sum2, rng);
 			}
 			// a positive feature type encodes the number of possible values
 			if (ft > 0){
-				split_criterion_copy.assign(1,ft);
 				// find best split for the current feature_index
-				loss = best_split_categorical(current_features, ft, responses, split_criterion_copy, sum, sum2, rng);
+				loss = best_split_categorical(current_features, ft, responses, cat_split_copy, sum, sum2, rng);
 			}
 
 			// check if this split is the best so far
@@ -102,18 +106,20 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 				best_loss = loss;
 				best_features.swap(current_features);
 				feature_index = fi;
-				split_criterion.swap(split_criterion_copy);
+				
+				if (ft == 0){
+					num_split_value = num_split_copy;
+				}
+				else{
+					num_split_value = NAN;
+					cat_split_set = cat_split_copy;
+				}
+					
 			}
 		}
 
 		if (best_loss < std::numeric_limits<num_type>::infinity()){
 			
-			split_criterion.shrink_to_fit();
-
-			// make sure the classes are sorted for categorical values
-			if (split_criterion[0] != 0)
-					std::sort(++split_criterion.begin(), split_criterion.end());
-
 			// now we have to rearrange the indices based on which leaf they fall into
 
 			// the default values for the two split iterators
@@ -163,18 +169,11 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * 
 	 */
 	virtual index_type operator() (num_type &feature_value) {
-		auto it = split_criterion.begin();
-		
-		// handle categorical features
-		if (*it > (num_type) 0){
-			// check if the value is contained in the split 'set'
-			it++;
-			//it = std::find(it, split_criterion.end(), feature_vector[feature_index]);
-			//return( it != split_criterion.end());
-			return(!std::binary_search(it, split_criterion.end(), feature_value));
-		}
-		// simple case of a numerical feature
-		return(feature_value > split_criterion[1]);
+		// categorical feature
+		if (std::isnan(num_split_value))
+			return(!bool(cat_split_set[ int(feature_value)]));
+		// standard numerical feature
+		return(feature_value > num_split_value);
 	}
 
 
@@ -193,7 +192,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 */
 	virtual num_type best_split_continuous(	const std::vector<num_type> & features,
 									const std::vector<response_type> & responses,
-									std::vector<num_type> &split_criterion,
+									num_type &split_value,
 									num_type S_y_right, num_type S_y2_right,
 									rng_type &rng){
 
@@ -241,7 +240,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 			if (loss < best_loss){
 				std::uniform_real_distribution<num_type> dist(0.0,1.0);
 				best_loss = loss;
-				split_criterion[1] = psv + dist(rng)*(features[tmp_indices[tmp_i]] - psv);
+				split_value = psv + dist(rng)*(features[tmp_indices[tmp_i]] - psv);
 			}
 		}
 		return(best_loss);
@@ -262,7 +261,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	virtual num_type best_split_categorical(const std::vector<num_type> & features,
 									index_type num_categories,
 									const std::vector<response_type> & responses,
-									std::vector<num_type> &split_criterion,
+									std::bitset<max_num_categories> &split_set,
 									num_type S_y_right, num_type S_y2_right, rng_type &rng){
 		// auxiliary variables
 		std::vector<index_type> category_ranking(num_categories);
@@ -349,8 +348,9 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		}
 
 		// store the split set for the left leaf
+		split_set.reset();
 		for (auto it1 = category_ranking.begin(); it1 != it_best_split; it1++)
-			split_criterion.push_back(*it1);
+			split_set.set(*it1);
 
 		// add unobserved values randomly to the split_set
 		if (empty_categories_it != category_ranking.end()){
@@ -358,7 +358,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 			for (auto it1 = empty_categories_it; it1 != category_ranking.end(); it1++){
 				if (dist(rng))
-					split_criterion.push_back(*it1);
+					split_set.set(*it1);
 			}
 		}
 		return(best_loss);
@@ -366,36 +366,57 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 
 	virtual void print_info(){
-		if (split_criterion[0] == 0)
-			std::cout<<"split: f_"<<feature_index<<" <= "<<split_criterion[1]<<"\n";
-		else{
+		if(std::isnan(num_split_value)){
 			std::cout<<"split: f_"<<feature_index<<" in {";
-			for (size_t i = 1; i < split_criterion.size(); i++)
-				std::cout<<split_criterion[i]<<", ";
-			std::cout<<"\b\b}\n";
+			for (size_t i = 0; i < max_num_categories; i++)
+				if (cat_split_set[i]) std::cout<<i<<", ";
+			std::cout<<"\b\b}\n";			
 		}
+		else
+			std::cout<<"split: f_"<<feature_index<<" <= "<<num_split_value<<"\n";
 	}
+
 	/** \brief member function to create a string representing the split criterion
 	 * 
 	 * \return std::string a label that characterizes the split
 	 */	
 	virtual std::string latex_representation(){
 		std::stringstream str;
-		if (split_criterion[0] == 0){
-			str << "$f_{" << feature_index << "}<=" << split_criterion[1] << "$";
-		}
-		else{
-			str << "$f_{" << feature_index << "} \\in \\{"<< split_criterion[1];
-			for (size_t i = 2; i < split_criterion.size(); i++){
-				str<<","<<split_criterion[i];
+
+		if (std::isnan(num_split_value)){
+			auto i = 0u;
+			while (cat_split_set[i] == 0)
+				i++;
+			str << "$f_{" << feature_index << "} \\in \\{"<<i;
+			
+			for (i++; i < max_num_categories; i++){
+				if (cat_split_set[i])
+					str<<i<<" ";
 			}
 			str << "\\}$";
 		}
+		else
+			str << "$f_{" << feature_index << "}<=" << num_split_value << "$";
 		return(str.str());
 	}
 	
-	std::vector<num_type> get_split_criterion(){return(split_criterion);}
 	index_type get_feature_index() {return(feature_index);}
+	num_type get_num_split_value() {return(num_split_value);}
+	std::bitset<max_num_categories> get_cat_split_set() {return(cat_split_set);}
+
+	std::array<std::vector< std::vector<num_type> >, 2> compute_subspaces( std::vector< std::vector<num_type> > subspace){
+	
+		//std::array
+	
+		// if feature is numerical
+		if (std::isnan(num_split_value)){
+		
+		
+		}
+		else{
+			
+		}
+	}
 
 };
 

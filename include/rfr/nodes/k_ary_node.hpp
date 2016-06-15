@@ -48,8 +48,7 @@ class k_ary_node{
 
   	/* serialize function for saving forests */
   	template<class Archive>
-	void serialize(Archive & archive)
-	{
+	void serialize(Archive & archive) {
 		archive( parent_index, is_leaf, response_values, children, split); 
 	}
 
@@ -162,6 +161,25 @@ class k_ary_node{
 
 		return( std::tuple<num_type, num_type, index_type> (stats.mean(), stats.variance(), stats.number_of_points()));
 	}
+
+
+
+	void compute_partition_recursively(std::vector<std::vector< std::vector<num_type> > > &the_partition, std::vector<std::vector<num_type> > &subspace){
+		if (is_leaf){
+			the_partition.push_back(subspace);
+		}
+		else{
+			// find the k subspaces for the children
+			auto subspaces = split.compute_subspaces(subspace);
+			// remove content to keep memory consumption low
+			subspace.clear();
+			// go down the rabbit hole
+			for (auto i=0u; i<k; i++){
+				children[k].compute_partition_recursively(the_partition, subspaces[k]);
+			}
+		}
+	}
+
 
 
 

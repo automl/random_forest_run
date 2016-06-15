@@ -156,7 +156,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 				if (fv < 0)
 					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
 				// round it properly
-				fv = round(fv);
+				fv = std::round(fv);
 			}
 			categorical_ranges[index] = type;
 		}
@@ -174,7 +174,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 				if (fv < 0)
 					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
 				// round it properly
-				fv = round(fv);
+				fv = std::round(fv);
 			}
 			categorical_ranges[index + configurations.size()] = type;
 		}
@@ -209,10 +209,10 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		*  2. every (row) vector in feature_values
 		*/
 
-		if (config_instance_pairs.size() != num_data_points())
+		if (config_instance_pairs.size() != num_data_points)
 			throw std::runtime_error("config_instance_pairs has the wrong size!");
 
-		if (response_values.size() != num_data_points())
+		if (response_values.size() != num_data_points)
 			throw std::runtime_error("response_values has the wrong size!");
 
 
@@ -227,14 +227,14 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		for (auto f = 0u; f<num_features(); f++){
 			if (get_type_of_feature(f) == 0){
 				for (auto n = 0u; n < num_data_points(); n++){
-					if (std::isnan(feature(f,n)))
+					if (isnan(feature(f,n)))
 						throw std::runtime_error("Features contain a NaN!");
 				}
 			}
 			else{
 				index_type t = get_type_of_feature(f);
 				for (auto n = 0u; n < num_data_points(); n++){
-					if (std::isnan(feature(f,n)))
+					if (isnan(feature(f,n)))
 						throw std::runtime_error("Features contain a NaN!");
 
 					if ((feature(f,n) <0) || (feature(f,n) >= t))
@@ -245,7 +245,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		
 		index_type t = get_type_of_response();
 		for (auto r: response_values){
-			if (std::isnan(r))
+			if (isnan(r))
 				throw std::runtime_error("Responses contain a NaN!");
 		}
 		

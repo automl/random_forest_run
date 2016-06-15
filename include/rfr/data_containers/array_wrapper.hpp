@@ -39,7 +39,7 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 		for (auto i=0u; i<n_features; i++){
 			if (types[i] > 0){
 				for (auto j=0u; j < n_data_points; j++)
-					feature_array[j*n_features + i] = round(feature_array[j*n_features + i]);
+					feature_array[j*n_features + i] = std::round(feature_array[j*n_features + i]);
 			}
 		}
 	}
