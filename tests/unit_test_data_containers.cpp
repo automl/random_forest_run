@@ -1,9 +1,4 @@
-// compile with the following two options:
-// -lboost_unit_test_framework -DBOOST_TEST_DYN_LINK
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE rfr_test
 #include <boost/test/unit_test.hpp>
-
 
 #include <numeric>
 #include <cstring>

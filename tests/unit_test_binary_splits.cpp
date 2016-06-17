@@ -1,15 +1,8 @@
-// compile with the following two options:
-// -lboost_unit_test_framework -DBOOST_TEST_DYN_LINK
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE rfr_test
-
-
 #include <cstring>
 #include <numeric>
 #include <vector>
 #include <array>
 #include <random>
-
 
 #include <boost/test/unit_test.hpp>
 
@@ -19,11 +12,7 @@
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/portable_binary.hpp>
 
-
-
-#include <fstream>
 #include <sstream>
-
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
@@ -165,7 +154,6 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	BOOST_REQUIRE(split_val < 60);
 }
 
-
 // test serialization
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
 	char filename[1000];
@@ -198,18 +186,17 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
 	index_type index4 = split4.get_feature_index();
 	auto split_val = split4.get_num_split_value();
 	auto split_bits= split4.get_cat_split_set();
-
+	std::ostringstream oss;
 	{
-		std::ofstream ofs("binary_split_serialize_test.xml");
-		cereal::XMLOutputArchive oarchive(ofs);
+		cereal::XMLOutputArchive oarchive(oss);
 		oarchive(split4);
 	}
 	
 		
 	split_type split5;
 	{
-		std::ifstream ifs("test.xml");
-		cereal::XMLInputArchive iarchive(ifs);
+		std::istringstream iss(oss.str());
+		cereal::XMLInputArchive iarchive(iss);
 		iarchive(split5);
 	}
 	

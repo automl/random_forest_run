@@ -8,7 +8,7 @@ set (RFR_VERSION_MINOR 1)
 
 IF(NOT CMAKE_BUILD_TYPE)
  SET(CMAKE_BUILD_TYPE "DEBUG")
- #SET(CMAKE_BUILD_TYPE "RELEASE")
+ #SET(CMAKE_BUILD_TYPE "RELESE")
  #SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
@@ -24,8 +24,6 @@ enable_testing()
 include_directories ("${PROJECT_SOURCE_DIR}/include")
 include_directories ("${Boost_INCLUDE_DIR}")
 
-link_libraries(${Boost_LIBRARIES}) # Deprecated but so convenient!
-
 
 # the documentation
 if(DOXYGEN_FOUND)
@@ -36,75 +34,19 @@ if(DOXYGEN_FOUND)
 endif(DOXYGEN_FOUND)
 
 
-
-add_executable(profiling_example "${PROJECT_SOURCE_DIR}/tests/profiling_example.cpp")
-set_property(TARGET profiling_example PROPERTY CXX_STANDARD 11)
-set_property(TARGET profiling_example PROPERTY CXX_STANDARD_REQUIRED ON)
-
-
-# the unit tests
-add_executable(ut_data_containers "${PROJECT_SOURCE_DIR}/tests/unit_test_data_containers.cpp")
-set_property(TARGET ut_data_containers PROPERTY CXX_STANDARD 11)
-set_property(TARGET ut_data_containers PROPERTY CXX_STANDARD_REQUIRED ON)
-target_link_libraries(ut_data_containers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (UTDataContainers ut_data_containers "${PROJECT_SOURCE_DIR}/test_data_sets/")
-
-
-add_executable(ut_binary_splits "${PROJECT_SOURCE_DIR}/tests/unit_test_binary_splits.cpp")
-set_property(TARGET ut_binary_splits PROPERTY CXX_STANDARD 11)
-set_property(TARGET ut_binary_splits PROPERTY CXX_STANDARD_REQUIRED ON)
-target_link_libraries(ut_binary_splits ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (UTBinarySplits ut_binary_splits "${PROJECT_SOURCE_DIR}/test_data_sets/")
-
-
-add_executable(ut_binary_nodes "${PROJECT_SOURCE_DIR}/tests/unit_test_binary_nodes.cpp")
-set_property(TARGET ut_binary_nodes PROPERTY CXX_STANDARD 11)
-set_property(TARGET ut_binary_nodes PROPERTY CXX_STANDARD_REQUIRED ON)
-target_link_libraries(ut_binary_nodes ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (UTBinaryNodes ut_binary_nodes "${PROJECT_SOURCE_DIR}/test_data_sets/")
-
-
-add_executable(ut_binary_trees "${PROJECT_SOURCE_DIR}/tests/unit_test_binary_tree.cpp")
-set_property(TARGET ut_binary_trees PROPERTY CXX_STANDARD 11)
-set_property(TARGET ut_binary_trees PROPERTY CXX_STANDARD_REQUIRED ON)
-target_link_libraries(ut_binary_trees ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (UTBinaryTrees ut_binary_trees "${PROJECT_SOURCE_DIR}/test_data_sets/")
-
-
-add_executable(ut_regression_forest "${PROJECT_SOURCE_DIR}/tests/unit_test_regression_forest.cpp")
-set_property(TARGET ut_regression_forest PROPERTY CXX_STANDARD 11)
-set_property(TARGET ut_regression_forest PROPERTY CXX_STANDARD_REQUIRED ON)
-target_link_libraries(ut_regression_forest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (UTRegressionForest ut_regression_forest "${PROJECT_SOURCE_DIR}/test_data_sets/")
-
-
-add_executable(ut_utils "${PROJECT_SOURCE_DIR}/tests/unit_test_utils.cpp")
-set_property(TARGET ut_utils PROPERTY CXX_STANDARD 11)
-set_property(TARGET ut_utils PROPERTY CXX_STANDARD_REQUIRED ON)
-target_link_libraries(ut_utils ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (UTUtils ut_utils)
-
+# add all the unit tests in the tests directory
+add_subdirectory(tests)
 
 
 if(PYTHONINTERP_FOUND)
-	add_test(	NAME BuildPyRFR
-				COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/setup.py build_ext --force --inplace
-				WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+	add_test(NAME BuildPyRFR
+			COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/setup.py build_ext --force --inplace
+			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
 endif(PYTHONINTERP_FOUND)
 
 
-
-#add_executable(ut_classification_forest "${PROJECT_SOURCE_DIR}/tests/unit_test_classification_forest.cpp")
-#set_property(TARGET ut_classification_forest PROPERTY CXX_STANDARD 11)
-#set_property(TARGET ut_classification_forest PROPERTY CXX_STANDARD_REQUIRED ON)
-#target_link_libraries(ut_classification_forest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-
-#add_test (UTClassificationForest ut_classification_forest "${PROJECT_SOURCE_DIR}/test_data_sets/")
-#set_tests_properties (UTClassificationForest PROPERTIES PASS_REGULAR_EXPRESSION "No errors detected")
-
-
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  ADD_DEFINITIONS("-Wall -g")
+  ADD_DEFINITIONS("-Wall")
 ELSEIF(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
   ADD_DEFINITIONS("-Wall -fPIC -pg -std=c++11")
 ELSE()

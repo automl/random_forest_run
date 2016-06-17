@@ -1,14 +1,5 @@
-// compile with the following two options:
-// -lboost_unit_test_framework -DBOOST_TEST_DYN_LINK
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE rfr_test
-
-
 #include <cmath>
-
 #include <boost/test/unit_test.hpp>
-
-
 #include "rfr/util.hpp"
 
 BOOST_AUTO_TEST_CASE(merge_feature_vectors_test){

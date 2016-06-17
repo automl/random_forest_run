@@ -1,7 +1,3 @@
-// compile with the following two options:
-// -lboost_unit_test_framework -DBOOST_TEST_DYN_LINK
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE rfr_test
 #include <boost/test/unit_test.hpp>
 
 #include <random>
@@ -17,11 +13,8 @@
 #include "rfr/forests/regression_forest.hpp"
 #include "rfr/forests/forest_options.hpp"
 
-//#include <cereal/archives/json.hpp>
+#include <sstream>
 #include <cereal/archives/xml.hpp>
-#include <fstream>
-
-
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/binary.hpp>
 typedef cereal::PortableBinaryInputArchive iarch_type;
@@ -85,16 +78,12 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	std::vector<response_type> data_point_five = data.retrieve_data_point(5);
 	tmp = the_forest.predict_mean_std(data_point_five.data());
 
-	//the_forest.save_latex_representation("/tmp/rfr_trees1/tree_");
-	
+	std::ostringstream oss;
 	
 	{
-		std::ofstream ofs("regression_forest_test.xml");
-		cereal::XMLOutputArchive oarchive(ofs);
-		//cereal::JSONOutputArchive oarchive(ofs);
+		cereal::XMLOutputArchive oarchive(oss);
 		oarchive(the_forest);
 	}
-
 
 	
 	the_forest.save_to_binary_file("regression_forest_test.bin");
@@ -102,12 +91,10 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest2;
 
 	{
-		std::ifstream ifs("regression_forest_test.xml");
-		cereal::XMLInputArchive iarchive(ifs);
+		std::istringstream iss(oss.str());
+		cereal::XMLInputArchive iarchive(iss);
 		iarchive(the_forest2);
 	}	
-
-	//the_forest2.save_latex_representation("/tmp/rfr_trees2/tree_");
 	
 	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest3;
 	the_forest3.load_from_binary_file("regression_forest_test.bin");
