@@ -44,8 +44,6 @@ class k_ary_node{
 	
   public:
 
-	k_ary_node (): response_values(), children(), split(){}
-
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {

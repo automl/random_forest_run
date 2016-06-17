@@ -10,12 +10,19 @@
 #include <array>
 #include <random>
 
+
 #include <boost/test/unit_test.hpp>
 
+#include <cereal/cereal.hpp>
+#include <cereal/types/bitset.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/archives/binary.hpp>
+#include <cereal/archives/portable_binary.hpp>
+
+
 
 #include <fstream>
+#include <sstream>
 
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
@@ -28,7 +35,7 @@ typedef std::default_random_engine rng_type;
 
 typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type> data_container_type;
 
-typedef rfr::splits::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type> split_type;
+typedef rfr::splits::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type,256> split_type;
 
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	
@@ -73,7 +80,6 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
 		BOOST_REQUIRE(split1(tmp_feature_vector) == operator_test[i]);
 	}
-
 }
 
 
@@ -194,7 +200,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
 	auto split_bits= split4.get_cat_split_set();
 
 	{
-		std::ofstream ofs("test.xml");
+		std::ofstream ofs("binary_split_serialize_test.xml");
 		cereal::XMLOutputArchive oarchive(ofs);
 		oarchive(split4);
 	}
@@ -213,8 +219,8 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
 	
 }
 
-// test binary serialization
 
+// test binary serialization
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_binary_serialization){
 	char filename[1000];
 	
@@ -247,17 +253,17 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_binary_serialization){
 	auto split_val = split4.get_num_split_value();
 	auto split_bits= split4.get_cat_split_set();
 
+	std::ostringstream oss;
 	{
-		std::ofstream ofs("test.bin", std::ios::binary);
-		cereal::BinaryOutputArchive oarchive(ofs);
+		cereal::PortableBinaryOutputArchive oarchive(oss);
 		oarchive(split4);
 	}
 	
 		
 	split_type split5;
 	{
-		std::ifstream ifs("test.bin", std::ios::binary);
-		cereal::BinaryInputArchive iarchive(ifs);
+		std::istringstream iss(oss.str());
+		cereal::PortableBinaryInputArchive iarchive(iss);
 		iarchive(split5);
 	}
 	
@@ -266,4 +272,3 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_binary_serialization){
 	BOOST_REQUIRE(split_bits ==split5.get_cat_split_set());
 	
 }
-

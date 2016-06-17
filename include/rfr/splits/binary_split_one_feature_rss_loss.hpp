@@ -12,8 +12,9 @@
 
 #include "cereal/cereal.hpp"
 #include <cereal/types/bitset.hpp>
-#include <cereal/types/bitset.hpp>
-
+#include <cereal/types/memory.hpp>
+#include <memory>
+//#include <cereal/types/polymorphic.hpp>
 #include "rfr/data_containers/data_container_base.hpp"
 #include "rfr/splits/split_base.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"
@@ -21,7 +22,7 @@ namespace rfr{ namespace splits{
 
 
 
-template <typename rng_type, typename num_type = float, typename response_type=float, typename index_type = unsigned int, unsigned int max_num_categories = 32>
+template <typename rng_type, typename num_type = float, typename response_type=float, typename index_type = unsigned int, unsigned int max_num_categories = 128>
 class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,rng_type, num_type, response_type, index_type> {
   private:
 	
@@ -31,14 +32,10 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	
   public:
   	
-	binary_split_one_feature_rss_loss(): feature_index(0), num_split_value(NAN), cat_split_set() {}
-  	
-  	
   	/* serialize function for saving forests */
   	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		archive( feature_index, num_split_value);//, cat_split_set); 
+	void serialize(Archive & archive){
+		archive( feature_index, num_split_value, cat_split_set); 
 	}
   	
   	

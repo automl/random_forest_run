@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.1 FATAL_ERROR) # used to be version 3.1, but I don't know if that is really necessary
+cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
 project (RFR CXX)
 
 # add a version number
@@ -13,17 +13,12 @@ IF(NOT CMAKE_BUILD_TYPE)
  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
 
-enable_testing()
-
 # required libaries
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Doxygen)
 find_package(PythonInterp)
 
-SET(Boost_USE_STATIC_LIBS OFF)
-SET(Boost_USE_MULTITHREADED OFF)
-SET(Boost_USE_STATIC_RUNTIME OFF)
-
+enable_testing()
 
 # define all include directories within the project for different splits, data containers, node types etc...
 include_directories ("${PROJECT_SOURCE_DIR}/include")
@@ -32,15 +27,12 @@ include_directories ("${Boost_INCLUDE_DIR}")
 link_libraries(${Boost_LIBRARIES}) # Deprecated but so convenient!
 
 
-
-
 # the documentation
 if(DOXYGEN_FOUND)
 	configure_file(${PROJECT_SOURCE_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
 	add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
-
 endif(DOXYGEN_FOUND)
 
 
@@ -48,7 +40,6 @@ endif(DOXYGEN_FOUND)
 add_executable(profiling_example "${PROJECT_SOURCE_DIR}/tests/profiling_example.cpp")
 set_property(TARGET profiling_example PROPERTY CXX_STANDARD 11)
 set_property(TARGET profiling_example PROPERTY CXX_STANDARD_REQUIRED ON)
-
 
 
 # the unit tests
@@ -91,8 +82,8 @@ add_executable(ut_utils "${PROJECT_SOURCE_DIR}/tests/unit_test_utils.cpp")
 set_property(TARGET ut_utils PROPERTY CXX_STANDARD 11)
 set_property(TARGET ut_utils PROPERTY CXX_STANDARD_REQUIRED ON)
 target_link_libraries(ut_utils ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-
 add_test (UTUtils ut_utils)
+
 
 
 if(PYTHONINTERP_FOUND)
@@ -113,8 +104,7 @@ endif(PYTHONINTERP_FOUND)
 
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  ADD_DEFINITIONS("-Wall -fPIC -pg")
-  #ADD_DEFINITIONS("-fPIC")
+  ADD_DEFINITIONS("-Wall -g")
 ELSEIF(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
   ADD_DEFINITIONS("-Wall -fPIC -pg -std=c++11")
 ELSE()

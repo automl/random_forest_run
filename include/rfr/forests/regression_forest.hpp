@@ -81,7 +81,6 @@ class regression_forest{
 	void serialize(Archive & archive)
 	{
 		archive( forest_opts, the_trees, num_features, dirty_leafs, bootstrap_sample_counts, oob_error);
-		//archive( forest_opts, the_trees, num_features);
 	}
 
 

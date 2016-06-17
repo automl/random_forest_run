@@ -43,59 +43,7 @@ typedef rfr::nodes::temporary_node<num_type, index_type> tmp_node_type;
 typedef rfr::trees::k_ary_random_tree<2, split_type, rng_type, num_type, response_type, index_type> tree_type;
 
 
-BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
-    data_container_type data;
 
-    char *filename = (char*) malloc(1024*sizeof(char));
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    //strcat(filename, "toy_data_set_features.csv");
-    strcat(filename, "diabetes_features.csv");
-    std::cout<<filename<<"\n";
-    data.read_feature_file(filename);
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-	//strcat(filename, "toy_data_set_responses.csv");
-	strcat(filename, "diabetes_responses.csv");
-	std::cout<<filename<<"\n";
-    data.read_response_file(filename);
-
-	rfr::trees::tree_options<num_type, response_type, index_type> tree_opts;
-	tree_opts.min_samples_to_split = 2;
-	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = data.num_data_points()*3/4;
-
-	
-	rfr::forests::forest_options<num_type, response_type, index_type> forest_opts(tree_opts);
-
-	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 8;
-	forest_opts.do_bootstrapping = true;
-	forest_opts.compute_oob_error= true;
-	
-	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest(forest_opts);
-	rng_type rng;
-	the_forest.fit(data, rng);
-	
-	
-	{
-		std::ofstream ofs("test.xml");
-		cereal::XMLOutputArchive oarchive(ofs);
-		//cereal::JSONOutputArchive oarchive(ofs);
-		oarchive(the_forest);
-	}
-	
-	{
-		std::ofstream ofs("test.bin", std::ios::binary);
-		cereal::BinaryOutputArchive oarchive(ofs);
-		//cereal::JSONOutputArchive oarchive(ofs);
-		oarchive(the_forest);
-	}
-}
-
-
-
-/*
 BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
     data_container_type data;
 
@@ -141,26 +89,20 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	
 	
 	{
-		std::ofstream ofs("test.xml");
+		std::ofstream ofs("regression_forest_test.xml");
 		cereal::XMLOutputArchive oarchive(ofs);
 		//cereal::JSONOutputArchive oarchive(ofs);
 		oarchive(the_forest);
 	}
 
-	{
-		std::ofstream ofs("test.bin", std::ios::binary);
-		cereal::BinaryOutputArchive oarchive(ofs);
-		//cereal::JSONOutputArchive oarchive(ofs);
-		oarchive(the_forest);
-	}
+
 	
-	
-	//the_forest.save_to_binary_file("/tmp/rfr_binary1");
+	the_forest.save_to_binary_file("regression_forest_test.bin");
 	
 	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest2;
 
 	{
-		std::ifstream ifs("test.xml");
+		std::ifstream ifs("regression_forest_test.xml");
 		cereal::XMLInputArchive iarchive(ifs);
 		iarchive(the_forest2);
 	}	
@@ -168,15 +110,13 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	//the_forest2.save_latex_representation("/tmp/rfr_trees2/tree_");
 	
 	rfr::forests::regression_forest< tree_type, rng_type, num_type, response_type, index_type> the_forest3;
-	//the_forest3.load_from_binary_file("test.bin");
+	the_forest3.load_from_binary_file("regression_forest_test.bin");
 	
 	
     free(filename);
 }
 
-*/
 
-/*
 BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	
 	double unique_value = 42.424242;
@@ -260,4 +200,3 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	
     free(filename);
 }
-*/
