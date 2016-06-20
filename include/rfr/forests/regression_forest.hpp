@@ -323,6 +323,12 @@ class regression_forest{
 
 	forest_options<num_type, response_type, index_type> get_forest_options(){return(forest_opts);}
 
+	std::vector<std::vector< std::vector<num_type> > > partition_of_tree( index_type tree_index,
+														std::vector<std::vector<num_type> > pcs){
+		return(the_trees[tree_index].partition(pcs));
+	}
+
+
 
 	/* \brief updates the forest by adding all provided datapoints without a complete retraining
 	 * 
