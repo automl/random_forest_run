@@ -184,14 +184,34 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	virtual index_type number_of_leafs() {return(num_leafs);}
 	virtual index_type depth() {return(actual_depth);}
 	
+	/* \brief Function to recursively compute the partition induced by the tree
+	 *
+	 * Do not call this function from the outside! Needs become private at some point!
+	 */
+	void partition_recursor (	std::vector<std::vector< std::vector<num_type> > > &the_partition,
+							std::vector<std::vector<num_type> > &subspace, num_type node_index){
+		
+		if (the_nodes[node_index].is_a_leaf()){
+			the_partition.push_back(subspace);
+		}
+		else{
+			// compute subspaces
+			auto subs = the_nodes[node_index].compute_subspaces(subspace);
+			// recursively go trough the tree
+			for (auto i=0u; i<k; i++){
+				partition_recursor(the_partition, subs[i], the_nodes[node_index].get_child_index(i));
+			}
+		}
+	}
+
 
 	/* \brief computes the partitioning of the input space induced by the tree */
 	std::vector<std::vector< std::vector<num_type> > > partition( std::vector<std::vector<num_type> > pcs){
 	
-	std::vector<std::vector< std::vector<num_type> > > the_partition;
-	the_partition.reserve(num_leafs);
-	
-	the_nodes[0].compute_partition_recursively( the_partition, pcs);
+		std::vector<std::vector< std::vector<num_type> > > the_partition;
+		the_partition.reserve(num_leafs);
+		
+		partition_recursor(the_partition, pcs, 0);
 	
 	return(the_partition);
 	}

@@ -26,6 +26,24 @@ typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, in
 
 typedef rfr::splits::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type,256> split_type;
 
+
+template <class T>
+void print_vector (T v){
+	for (auto e : v)
+		std::cout<<e<<", ";
+	std::cout<<"\b\b\n";
+}
+
+
+void print_pcs (std::vector<std::vector<num_type> > pcs){
+	for (auto i: pcs){
+		print_vector(i);
+	}
+}
+
+
+
+
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	
 	char filename[1000];
@@ -69,6 +87,28 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
 		BOOST_REQUIRE(split1(tmp_feature_vector) == operator_test[i]);
 	}
+	
+	std::vector<std::vector<num_type> > pcs = { {-1000, 1000}, {0,1,2,3,4,5,6,7,8,9}};
+	
+	auto pcss = split1.compute_subspaces(pcs);
+	
+	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 0) != pcss[0][1].end());
+
+
+	BOOST_CHECK_EQUAL(pcss[0][0][0], pcs[0][0]);
+	BOOST_CHECK_EQUAL(pcss[0][0][1], split_val);
+	BOOST_CHECK_EQUAL(pcss[1][0][0], split_val);
+	BOOST_CHECK_EQUAL(pcss[1][0][1], pcs[0][1]);
+
+
+	// make sure that x2 has not been altered
+	BOOST_CHECK_EQUAL_COLLECTIONS( pcss[0][1].begin(), pcss[0][1].end(),
+									pcs[1].begin(), pcs[1].end());
+	
+	BOOST_CHECK_EQUAL_COLLECTIONS( pcss[1][1].begin(), pcss[1][1].end(),
+									pcs[1].begin(), pcs[1].end());
+	
+	
 }
 
 
@@ -115,6 +155,22 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 		num_type tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
 		BOOST_CHECK_MESSAGE(split2(tmp_feature_vector) == operator_test[i],split2(tmp_feature_vector) << "!=" <<  operator_test[i]<<" (index "<<i<<")\n");
 	}
+	
+	std::vector<std::vector<num_type> > pcs = { {-1000, 1000}, {0,1,2,3,4,5,6,7,8,9}};
+	
+	auto pcss = split2.compute_subspaces(pcs);
+	
+	BOOST_REQUIRE( pcss[0][0][0] == pcs[0][0]);BOOST_REQUIRE( pcss[0][0][1] == pcs[0][1]);
+	BOOST_REQUIRE( pcss[1][0][0] == pcs[0][0]);BOOST_REQUIRE( pcss[0][0][1] == pcs[0][1]);
+	
+	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 1) != pcss[0][1].end());
+	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 2) != pcss[0][1].end());
+	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 3) == pcss[0][1].end());
+	
+	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 1) == pcss[1][1].end());
+	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 2) == pcss[1][1].end());
+	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 3) != pcss[1][1].end());
+	
 }
 
 

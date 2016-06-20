@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
+#include <iterator>
 
 
 #include "cereal/cereal.hpp"
@@ -165,7 +166,8 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	virtual index_type operator() (num_type &feature_value) {
 		// categorical feature
 		if (std::isnan(num_split_value))
-			return(!bool(cat_split_set[ int(feature_value)]));
+			return(!
+			bool(cat_split_set[ int(feature_value)]));
 		// standard numerical feature
 		return(feature_value > num_split_value);
 	}
@@ -397,19 +399,33 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	index_type get_feature_index() {return(feature_index);}
 	num_type get_num_split_value() {return(num_split_value);}
 	std::bitset<max_num_categories> get_cat_split_set() {return(cat_split_set);}
+	
+	/* \brief takes a subspace and returns the 2 corresponding subspaces after the split is applied
+	 */
+	std::array<std::vector< std::vector<num_type> >, 2> compute_subspaces( std::vector< std::vector<num_type> > &subspace){
+	
+		std::array<std::vector<std::vector<num_type> >, 2> subspaces = {subspace, subspace};
 
-	std::array<std::vector< std::vector<num_type> >, 2> compute_subspaces( std::vector< std::vector<num_type> > subspace){
-	
-		//std::array
-	
 		// if feature is numerical
-		if (std::isnan(num_split_value)){
-		
-		
+		if (! std::isnan(num_split_value)){
+			// for the left child, the split value is the new upper bound
+			subspaces[0][feature_index][1] = num_split_value;
+			// for the right child the split value is the new lower bound
+			subspaces[1][feature_index][0] = num_split_value;
 		}
 		else{
+			std::cout<<"updating categorical parameter\n";
+			// every element in the split set should go to the left -> remove from right
+			auto it = std::partition (subspaces[0][feature_index].begin(), subspaces[0][feature_index].end(),
+										[this] (int i) {return((bool) this->cat_split_set[i]);});
+		
+			// replace the values in the 'right subspace'
+			subspaces[1][feature_index].assign(it, subspaces[0][feature_index].end());
 			
+			// delete all values in the 'left subspace'
+			subspaces[0][feature_index].resize(std::distance(subspaces[0][feature_index].begin(),it));
 		}
+		return(subspaces);
 	}
 
 };

@@ -73,5 +73,5 @@ class running_covariance{
 
 
 
-}//namespace rfr::forests
+}//namespace rfr
 #endif

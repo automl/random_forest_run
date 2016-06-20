@@ -145,6 +145,10 @@ class k_ary_node{
 	}
 
 
+	std::array<std::vector< std::vector<num_type> >, 2> compute_subspaces( std::vector< std::vector<num_type> > &subspace){
+		return(split.compute_subspaces(subspace));
+	}
+
 	std::tuple<num_type, num_type, index_type> mean_variance_N (){
 		if (! is_leaf)
 			return(std::tuple<num_type, num_type, index_type>(	std::numeric_limits<num_type>::quiet_NaN(),
@@ -161,33 +165,16 @@ class k_ary_node{
 	}
 
 
-
-	void compute_partition_recursively(std::vector<std::vector< std::vector<num_type> > > &the_partition, std::vector<std::vector<num_type> > &subspace){
-		if (is_leaf){
-			the_partition.push_back(subspace);
-		}
-		else{
-			// find the k subspaces for the children
-			auto subspaces = split.compute_subspaces(subspace);
-			// remove content to keep memory consumption low
-			subspace.clear();
-			// go down the rabbit hole
-			for (auto i=0u; i<k; i++){
-				children[k].compute_partition_recursively(the_partition, subspaces[k]);
-			}
-		}
-	}
-
-
-
-
-
 	/** \brief to test whether this node is a leaf */
 	bool is_a_leaf(){return(is_leaf);}
 	/** \brief get the index of the node's parent */
 	index_type parent() {return(parent_index);}
 	/** \brief get indices of all children*/
 	std::array<index_type, k> get_children() {return(children);}
+	
+	index_type get_child_index (index_type idx) {return(children[idx]);};
+	
+	
 	/** \brief get reference to the response values*/	
 	std::vector<response_type> const &responses (){ return( (std::vector<response_type> const &) response_values);}
 

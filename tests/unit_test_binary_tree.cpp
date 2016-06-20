@@ -8,6 +8,7 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/archives/xml.hpp>
 #include <fstream>
+#include <sstream>
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
@@ -30,6 +31,23 @@ typedef rfr::nodes::k_ary_node<2, split_type, rng_type, num_type, response_type,
 typedef rfr::nodes::temporary_node<num_type, index_type> tmp_node_type;
 
 typedef rfr::trees::k_ary_random_tree<2, split_type, rng_type, num_type, response_type, index_type> tree_type;
+
+
+template <class T>
+void print_vector (T v){
+	for (auto e : v)
+		std::cout<<e<<", ";
+	std::cout<<"\b\b\n";
+}
+
+
+void print_pcs (std::vector<std::vector<num_type> > pcs){
+	for (auto i: pcs){
+		print_vector(i);
+	}
+}
+
+
 
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and runs
@@ -66,24 +84,29 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	the_tree.save_latex_representation(filename);
     }
     
-    
-    
-    tree_type the_tree;
-	the_tree.fit(data, tree_opts, rng_engine);
+	tree_type the_tree1;
+	the_tree1.fit(data, tree_opts, rng_engine);
+	std::ostringstream oss;
     
 	{
-		std::ofstream ofs("test_binary_tree.xml");
-		cereal::XMLOutputArchive oarchive(ofs);
-		oarchive(the_tree);
+		cereal::XMLOutputArchive oarchive(oss);
+		oarchive(the_tree1);
 	}
     
         		
 	tree_type the_tree2;
 	{
-		std::ifstream ifs("test_binary_tree.xml");
-		cereal::XMLInputArchive iarchive(ifs);
+		std::istringstream iss(oss.str());
+		cereal::XMLInputArchive iarchive(iss);
 		iarchive(the_tree2);
 	}
+    
+    
+    std::vector<std::vector<num_type> > pcs = { {-1000, 1000}, {0,1,2,3,4,5,6,7,8,9}};
+	
+	
+	auto partition1 = the_tree1.partition(pcs);
+	auto partition2 = the_tree2.partition(pcs);
     
     
 }
