@@ -190,12 +190,12 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	 */
 	void partition_recursor (	std::vector<std::vector< std::vector<num_type> > > &the_partition,
 							std::vector<std::vector<num_type> > &subspace, num_type node_index){
-		
-		if (the_nodes[node_index].is_a_leaf()){
+
+		// add subspace for a leaf
+		if (the_nodes[node_index].is_a_leaf())
 			the_partition.push_back(subspace);
-		}
 		else{
-			// compute subspaces
+			// compute subspaces of children
 			auto subs = the_nodes[node_index].compute_subspaces(subspace);
 			// recursively go trough the tree
 			for (auto i=0u; i<k; i++){

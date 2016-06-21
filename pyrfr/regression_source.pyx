@@ -453,6 +453,10 @@ cdef class binary_rss(regression_forest_base):
 		return(self.forest_ptr.covariance(&f1[0], &f2[0]))
 
 
+	def induced_partitionings(self, pcs):
+		return([self.forest_ptr.partition_of_tree(i, pcs) for i in range(self.num_trees)])
+
+
 	def predict_marginalized_over_instances(self, np.ndarray[num_t, ndim=1] feats, data_container):
 		if not isinstance(data_container, mostly_continuous_data_with_instances_container):
 			raise TypeError("Data container has to be contain instances!")

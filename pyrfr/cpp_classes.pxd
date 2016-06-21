@@ -145,6 +145,7 @@ cdef extern from "rfr/forests/regression_forest.hpp" namespace "rfr::forests":
 		pair[num_type, num_type] predict_mean_var( num_type * )
 		pair[num_type, num_type] predict_mean_var_marginalized_over_set (num_type *, num_type*, index_type)
 		vector[ vector[num_type] ] all_leaf_values (num_type * )
+		vector[ vector[ vector[num_type] ] ] partition_of_tree (index_type, vector[vector[ num_type]])
 		forest_options[num_type, response_type, index_type] get_forest_options()
 		num_type covariance (num_type*, num_type*)
 		num_type out_of_bag_error()

@@ -104,9 +104,8 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
     
     std::vector<std::vector<num_type> > pcs = { {-1000, 1000}, {0,1,2,3,4,5,6,7,8,9}};
 	
-	
 	auto partition1 = the_tree1.partition(pcs);
 	auto partition2 = the_tree2.partition(pcs);
-    
-    
+
+	BOOST_REQUIRE(partition1 == partition2);
 }
