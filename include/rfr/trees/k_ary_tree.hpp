@@ -188,8 +188,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 		
 		auto n = the_nodes[node_index];	// short hand notation
 		
-		if (n.is_a_leaf)
-			return(the_nodes.mean());
+		if (n.is_a_leaf())
+			return(n.mean());
 		
 		// if the feature vector can be split, meaning the corresponding features are not NAN
 		// return the marginalized prediction of the corresponding child node
@@ -222,8 +222,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	 * 
 	 * This function only makes sense for axis aligned splits!
 	 * */
-	std::vector<std::vector<num_type> > all_split_values (std::vector<index_type> types){
-		std::vector<std::vector<num_type> > split_values(types.size());
+	std::vector<std::vector<num_type> > all_split_values (index_type* types){
+		std::vector<std::vector<num_type> > split_values;
 		
 		for (auto &n: the_nodes){
 			if (n.is_a_leaf()) continue;
@@ -231,13 +231,16 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 			const auto &s = n.get_split();
 			auto fi = s.get_feature_index();
 			
+			if (split_values.size() <= fi){
+				split_values.resize(fi+1);
+			}
 			
 			if((types[fi] > 0) && (split_values[fi].size() == 0)){
 				split_values[fi].resize(types[fi]);
 				std::iota(split_values[fi].begin(), split_values[fi].end(), 0);
 			}
 			else{
-				split_values[fi].emplace_back(s.num_split_value);
+				split_values[fi].emplace_back(s.get_num_split_value());
 			}
 		}
 		return(split_values);

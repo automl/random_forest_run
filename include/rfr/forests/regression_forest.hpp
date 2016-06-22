@@ -327,7 +327,27 @@ class regression_forest{
 														std::vector<std::vector<num_type> > pcs){
 		return(the_trees[tree_index].partition(pcs));
 	}
+	
+	/* \brief returns the predictions of every tree marginalized over the NAN values in the feature_vector
+	 * 
+	 * \param feature_vector non-specfied values (NaN) will be marginalized over according to the training data
+	 */
+	std::vector<num_type> marginalized_predictions(num_type *feature_vector){
+		std::vector<num_type> rv;
+		rv.reserve(the_trees.size());
+		for (auto &t : the_trees)
+			rv.emplace_back(t.marginalized_prediction(feature_vector));
+		return(rv);
+	}
 
+	std::vector<std::vector<std::vector<num_type> > > all_split_values(index_type *types){
+		std::vector<std::vector<std::vector<num_type> > > rv;
+		rv.reserve(the_trees.size());
+			
+		for (auto &t: the_trees)
+			rv.emplace_back(t.all_split_values(types));
+		return(rv);
+	}
 
 
 	/* \brief updates the forest by adding all provided datapoints without a complete retraining

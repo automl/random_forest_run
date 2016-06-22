@@ -396,8 +396,8 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		return(str.str());
 	}
 	
-	index_type get_feature_index() {return(feature_index);}
-	num_type get_num_split_value() {return(num_split_value);}
+	index_type get_feature_index() const {return(feature_index);}
+	num_type get_num_split_value() const {return(num_split_value);}
 	std::bitset<max_num_categories> get_cat_split_set() {return(cat_split_set);}
 	
 	/* \brief takes a subspace and returns the 2 corresponding subspaces after the split is applied

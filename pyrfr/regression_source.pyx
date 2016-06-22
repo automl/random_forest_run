@@ -452,10 +452,15 @@ cdef class binary_rss(regression_forest_base):
 	def covariance (self, np.ndarray[num_t, ndim=1] f1, np.ndarray[num_t, ndim=1] f2):
 		return(self.forest_ptr.covariance(&f1[0], &f2[0]))
 
-
 	def induced_partitionings(self, pcs):
 		return([self.forest_ptr.partition_of_tree(i, pcs) for i in range(self.num_trees)])
 
+	def marginalized_prediction(self, np.ndarray[num_t, ndim=1] feats):
+		return(self.forest_ptr.marginalized_predictions(&feats[0]))
+
+	def all_split_points(self, np.ndarray[index_t, ndim=1] types):
+		return(self.forest_ptr.all_split_values(&types[0]))
+		
 
 	def predict_marginalized_over_instances(self, np.ndarray[num_t, ndim=1] feats, data_container):
 		if not isinstance(data_container, mostly_continuous_data_with_instances_container):
