@@ -40,6 +40,7 @@ class k_ary_node{
 
 	// for internal_nodes
 	std::array<index_type, k> children;
+	std::array<num_type, k> split_fractions;
 	split_type split;
 	
   public:
@@ -47,7 +48,7 @@ class k_ary_node{
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {
-		archive( parent_index, is_leaf, response_values, children, split); 
+		archive( parent_index, is_leaf, response_values, children, split_fractions, split); 
 	}
 
   
@@ -80,6 +81,8 @@ class k_ary_node{
 			// create an empty node, and a tmp node for each child
 			for (index_type i = 0; i < k; i++){
 				tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
+				split_fractions[i] = ((num_type) std::distance(split_indices_it[i],split_indices_it[i+1])) / 
+									 ((num_type) std::distance(split_indices_it[0],split_indices_it[k]));
 				children[i] = num_nodes + i;
 			}
 		}
@@ -98,16 +101,19 @@ class k_ary_node{
 						const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
 		is_leaf = true;
 		parent_index = tmp_node.parent_index;
+		children.fill(0);
 		
 		response_values.resize(tmp_node.data_indices.size());
 		for (size_t i = 0; i < tmp_node.data_indices.size(); i++){
 			response_values[i] = data.response(tmp_node.data_indices[i]);
 		}
 		//to save some time
-		//std::sort(response_values.begin(), response_values.end());
+		std::sort(response_values.begin(), response_values.end());
 	}	
 
-	
+	/* \brief function to check if a feature vector can be splitted */
+	bool can_be_split(num_type *feature_vector){return(split.can_be_split(feature_vector));}
+
 	/** \brief returns the index of the child into which the provided sample falls
 	 * 
 	 * \param sample a feature vector of the appropriate size (not checked!)
@@ -169,12 +175,21 @@ class k_ary_node{
 	bool is_a_leaf(){return(is_leaf);}
 	/** \brief get the index of the node's parent */
 	index_type parent() {return(parent_index);}
+	
+	index_type num_samples () {return(response_values.size());}
+	
+	
 	/** \brief get indices of all children*/
 	std::array<index_type, k> get_children() {return(children);}
-	
 	index_type get_child_index (index_type idx) {return(children[idx]);};
-	
-	
+
+	std::array<num_type, k> get_split_fractions() {return(split_fractions);}
+	num_type get_split_fraction (index_type idx) {return(split_fractions[idx]);};
+
+
+	split_type get_split() {return(split);}
+
+
 	/** \brief get reference to the response values*/	
 	std::vector<response_type> const &responses (){ return( (std::vector<response_type> const &) response_values);}
 

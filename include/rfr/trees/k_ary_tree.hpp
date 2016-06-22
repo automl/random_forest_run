@@ -163,6 +163,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 		}
 		return(node_index);
 	}
+
+
 	
 	virtual std::vector<response_type> const &leaf_entries (num_type *feature_vector){
 		index_type i = find_leaf(feature_vector);
@@ -173,6 +175,75 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 		index_type node_index = find_leaf(feature_vector);
 		return(the_nodes[node_index].mean());
 	}
+
+
+
+	/* \brief function to recursively compute the marginalized predictions
+	 * 
+	 * At any split, this function either goes down one path or averages the
+	 * prediction of all children weighted by the fraction of the training data
+	 * going into them respectively.
+	 * */
+	num_type marginalized_prediction(num_type* feature_vector, index_type node_index){
+		
+		auto n = the_nodes[node_index];	// short hand notation
+		
+		if (n.is_a_leaf)
+			return(the_nodes.mean());
+		
+		// if the feature vector can be split, meaning the corresponding features are not NAN
+		// return the marginalized prediction of the corresponding child node
+		if (n.can_be_split(feature_vector)){
+			return marginalized_prediction( feature_vector, n.falls_into_child(feature_vector));
+		}
+		
+		// otherwise the marginalized prediction consists of the weighted sum of all child nodes
+		num_type prediction = 0;
+		
+		for (auto i = 0u; i<k; i++){
+			prediction += n.get_split_fraction(i) * marginalized_prediction(feature_vector, n.get_child_index(i));
+		}
+		return(prediction);
+	}
+
+
+	/* \brief preditcion for partial input vectors marginalized over unspecified values
+	 * 
+	 * To compute the fANOVA, the mean prediction over partial assingments is needed.
+	 * To accomplish that, feed this function a numerical vector where each element that
+	 * is NAN will be marginalized over.
+	 */
+	num_type marginalized_prediction(num_type *feature_vector){
+			return(marginalized_prediction(feature_vector, 0));
+	}
+
+
+	/* \brief finds all the split points for each dimension of the input space
+	 * 
+	 * This function only makes sense for axis aligned splits!
+	 * */
+	std::vector<std::vector<num_type> > all_split_values (std::vector<index_type> types){
+		std::vector<std::vector<num_type> > split_values(types.size());
+		
+		for (auto &n: the_nodes){
+			if (n.is_a_leaf()) continue;
+			
+			const auto &s = n.get_split();
+			auto fi = s.get_feature_index();
+			
+			
+			if((types[fi] > 0) && (split_values[fi].size() == 0)){
+				split_values[fi].resize(types[fi]);
+				std::iota(split_values[fi].begin(), split_values[fi].end(), 0);
+			}
+			else{
+				split_values[fi].emplace_back(s.num_split_value);
+			}
+		}
+		return(split_values);
+	}
+
+
 	
 	virtual std::tuple<num_type, num_type, index_type> predict_mean_var_N(num_type *feature_vector){
 		index_type node_index = find_leaf(feature_vector);
@@ -215,6 +286,37 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	
 	return(the_partition);
 	}
+
+	
+	index_type num_samples_in_subtree (index_type node_index){
+		index_type N = 0;
+		if (the_nodes[node_index].is_a_leaf())
+			N = the_nodes[node_index].num_samples();
+		else{
+			for(auto c: the_nodes[node_index].get_children())
+				N += num_samples_in_subtree(c);
+		}
+		return(N);
+	}
+
+	
+	bool check_split_fractions(num_type epsilon = 1e-6){
+		for ( auto i=0u; i<the_nodes.size(); i++){
+			if (the_nodes[i].is_a_leaf()) continue;
+			
+			index_type N = num_samples_in_subtree(i);
+			
+			for (auto j = 0u; j<k; j++){
+				index_type Nj = num_samples_in_subtree(the_nodes[i].get_child_index(j));
+				num_type fj = ((num_type) Nj) / ((num_type) N);
+				
+				if ((fj - the_nodes[i].get_split_fraction(j))/the_nodes[i].get_split_fraction(j) > epsilon)
+					return(false);
+			}
+		}
+		return(true);
+	}
+
 
 	
 	void print_info(){

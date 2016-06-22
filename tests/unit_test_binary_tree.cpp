@@ -80,12 +80,17 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	the_tree.fit(data, tree_opts, rng_engine);
 	
 	char filename[100];
-	sprintf(filename, "/tmp/tree_%i.tex", i);
-	the_tree.save_latex_representation(filename);
+		sprintf(filename, "/tmp/tree_%i.tex", i);
+		the_tree.save_latex_representation(filename);
     }
     
 	tree_type the_tree1;
 	the_tree1.fit(data, tree_opts, rng_engine);
+	
+	the_tree1.save_latex_representation("/tmp/test.tex");
+	
+	BOOST_REQUIRE(the_tree1.check_split_fractions(1e-6));
+	
 	std::ostringstream oss;
     
 	{

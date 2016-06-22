@@ -403,6 +403,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	/* \brief takes a subspace and returns the 2 corresponding subspaces after the split is applied
 	 */
 	std::array<std::vector< std::vector<num_type> >, 2> compute_subspaces( std::vector< std::vector<num_type> > &subspace){
+		
 	
 		std::array<std::vector<std::vector<num_type> >, 2> subspaces = {subspace, subspace};
 
@@ -428,6 +429,9 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		return(subspaces);
 	}
 
+	bool can_be_split(num_type *feature_vector){
+		return(!std::isnan(feature_vector[feature_index]));
+	}
 };
 
 
