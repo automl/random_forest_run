@@ -458,7 +458,7 @@ cdef class binary_rss(regression_forest_base):
 	def marginalized_prediction(self, np.ndarray[num_t, ndim=1] feats):
 		return(self.forest_ptr.marginalized_predictions(&feats[0]))
 
-	def all_split_points(self, np.ndarray[index_t, ndim=1] types):
+	def all_split_values(self, np.ndarray[index_t, ndim=1] types):
 		return(self.forest_ptr.all_split_values(&types[0]))
 		
 
