@@ -85,6 +85,7 @@ cdef class data_base:
 		return np.array([ self.thisptr.retrieve_data_point(i) for i in range(self.num_data_points())])
 
 	def export_responses(self):
+		""" returns the responses of all data points"""
 		return np.array([ self.thisptr.response(i) for i in range(self.num_data_points())])
 
 """
