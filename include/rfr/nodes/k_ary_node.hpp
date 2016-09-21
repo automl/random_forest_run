@@ -29,7 +29,7 @@ namespace rfr{ namespace nodes{
  * In this case, one can try to gain some speed by replacing variable length std::vectors by std::arrays.
  * 
  */
-template <int k, typename split_type, typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
+template <int k, typename split_type, typename rng_type, typename num_t = float, typename response_type = float, typename index_type = unsigned int>
 class k_ary_node{
   private:
 	index_type parent_index;
@@ -40,7 +40,7 @@ class k_ary_node{
 
 	// for internal_nodes
 	std::array<index_type, k> children;
-	std::array<num_type, k> split_fractions;
+	std::array<num_t, k> split_fractions;
 	split_type split;
 	
   public:
@@ -61,28 +61,28 @@ class k_ary_node{
 	* \param nodes reference to vector containing all processed nodes
 	* \param tmp_nodes reference to vector containing all temporary nodes that still have to be checked
 	*
-	* \return num_type the loss of the split
+	* \return num_t the loss of the split
 	*/ 
-	num_type make_internal_node(rfr::nodes::temporary_node<num_type, index_type> &tmp_node,
-							const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
+	num_t make_internal_node(rfr::nodes::temporary_node<num_t, index_type> &tmp_node,
+							const rfr::data_containers::data_container_base<num_t, response_type, index_type> &data,
 							std::vector<index_type> &features_to_try,
 							index_type num_nodes,
-							std::deque<rfr::nodes::temporary_node<num_type, index_type> > &tmp_nodes,
+							std::deque<rfr::nodes::temporary_node<num_t, index_type> > &tmp_nodes,
 							rng_type &rng){
 		is_leaf = false;
 		response_values.clear();
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<index_type>::iterator, k+1> split_indices_it;
-		num_type best_loss = split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it,rng);
+		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it,rng);
 	
 		//check if a split was found
 		// note: if the number of features to try is too small, there is a chance that the data cannot be split any further
-		if (best_loss <  std::numeric_limits<num_type>::infinity()){
+		if (best_loss <  std::numeric_limits<num_t>::infinity()){
 			// create an empty node, and a tmp node for each child
 			for (index_type i = 0; i < k; i++){
 				tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
-				split_fractions[i] = ((num_type) std::distance(split_indices_it[i],split_indices_it[i+1])) / 
-									 ((num_type) std::distance(split_indices_it[0],split_indices_it[k]));
+				split_fractions[i] = ((num_t) std::distance(split_indices_it[i],split_indices_it[i+1])) / 
+									 ((num_t) std::distance(split_indices_it[0],split_indices_it[k]));
 				children[i] = num_nodes + i;
 			}
 		}
@@ -97,8 +97,8 @@ class k_ary_node{
 	* \param tmp_node the internal representation for a temporary node.
 	*
 	*/
-	void make_leaf_node(rfr::nodes::temporary_node<num_type, index_type> &tmp_node,
-						const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
+	void make_leaf_node(rfr::nodes::temporary_node<num_t, index_type> &tmp_node,
+						const rfr::data_containers::data_container_base<num_t, response_type, index_type> &data){
 		is_leaf = true;
 		parent_index = tmp_node.parent_index;
 		children.fill(0);
@@ -112,7 +112,7 @@ class k_ary_node{
 	}	
 
 	/* \brief function to check if a feature vector can be splitted */
-	bool can_be_split(num_type *feature_vector){return(split.can_be_split(feature_vector));}
+	bool can_be_split(num_t *feature_vector){return(split.can_be_split(feature_vector));}
 
 	/** \brief returns the index of the child into which the provided sample falls
 	 * 
@@ -120,13 +120,13 @@ class k_ary_node{
 	 *
 	 * \return index_type index of the child
 	 */
-	index_type falls_into_child(num_type * sample){
+	index_type falls_into_child(num_t * sample){
 		if (is_leaf)
 			return(0);
 		return(children[split(sample)]);
 	}
 
-	void push_response_value ( num_type r){
+	void push_response_value ( num_t r){
 		response_values.push_back(r);
 	}
 	
@@ -137,37 +137,37 @@ class k_ary_node{
 
 	/** \brief calculate the mean of all response values in this leaf
 	 *
-	 * \return num_type the mean, or NaN if the node is not a leaf
+	 * \return num_t the mean, or NaN if the node is not a leaf
 	 */
-	num_type mean(){
+	num_t mean(){
 		if (! is_leaf)
-			return(std::numeric_limits<num_type>::quiet_NaN());
+			return(std::numeric_limits<num_t>::quiet_NaN());
 		
-		num_type m = 0;
+		num_t m = 0;
 		for (auto v : response_values)
 			m += v;
 
-		return(m/((num_type) response_values.size()));
+		return(m/((num_t) response_values.size()));
 	}
 
 
-	std::array<std::vector< std::vector<num_type> >, 2> compute_subspaces( std::vector< std::vector<num_type> > &subspace){
+	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace){
 		return(split.compute_subspaces(subspace));
 	}
 
-	std::tuple<num_type, num_type, index_type> mean_variance_N (){
+	std::tuple<num_t, num_t, index_type> mean_variance_N (){
 		if (! is_leaf)
-			return(std::tuple<num_type, num_type, index_type>(	std::numeric_limits<num_type>::quiet_NaN(),
-																std::numeric_limits<num_type>::quiet_NaN(),
+			return(std::tuple<num_t, num_t, index_type>(	std::numeric_limits<num_t>::quiet_NaN(),
+																std::numeric_limits<num_t>::quiet_NaN(),
 																0));
 		
 		
-		rfr::running_statistics<num_type> stats;
+		rfr::running_statistics<num_t> stats;
 
 		for (auto v : response_values)
 			stats(v);
 
-		return( std::tuple<num_type, num_type, index_type> (stats.mean(), stats.variance(), stats.number_of_points()));
+		return( std::tuple<num_t, num_t, index_type> (stats.mean(), stats.variance(), stats.number_of_points()));
 	}
 
 
@@ -183,8 +183,8 @@ class k_ary_node{
 	std::array<index_type, k> get_children() {return(children);}
 	index_type get_child_index (index_type idx) {return(children[idx]);};
 
-	std::array<num_type, k> get_split_fractions() {return(split_fractions);}
-	num_type get_split_fraction (index_type idx) {return(split_fractions[idx]);};
+	std::array<num_t, k> get_split_fractions() {return(split_fractions);}
+	num_t get_split_fraction (index_type idx) {return(split_fractions[idx]);};
 
 
 	split_type get_split() {return(split);}
@@ -217,7 +217,7 @@ class k_ary_node{
 		if (is_leaf){
 			str << "{i = " << my_index << ": ";
 
-			num_type s=0, ss=0;
+			num_t s=0, ss=0;
 			for (auto v: response_values){
 				s += v;
 				ss+= v*v;
