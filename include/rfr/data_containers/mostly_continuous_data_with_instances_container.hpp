@@ -6,7 +6,7 @@
 #include <map>
 #include <cmath>
 
-#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/data_containers/data_container.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"
 
 
@@ -17,15 +17,15 @@ namespace rfr{ namespace data_containers{
  * Similar to the mostly_continuous_data container, but with the capability
  * to handle instance features.
  */
-template<typename num_type = float, typename response_type = float, typename index_type = unsigned int>
-class mostly_continuous_data_with_instances : public rfr::data_containers::data_container_base<num_type, response_type, index_type>{
+template<typename num_t = float, typename response_type = float, typename index_type = unsigned int>
+class mostly_continuous_data_with_instances : public rfr::data_containers::base<num_t, response_type, index_type>{
   protected:
 
-	std::vector< std::vector<num_type> > configurations;//!< 2d vector to store the feature values of all configurations
-	std::vector< std::vector<num_type> > instances; 	//!< 2d vector to store the feature values of all instances
+	std::vector< std::vector<num_t> > configurations;//!< 2d vector to store the feature values of all configurations
+	std::vector< std::vector<num_t> > instances; 	//!< 2d vector to store the feature values of all instances
 
 	std::vector<std::pair<index_type, index_type> > config_instance_pairs;
-	std::vector<num_type> response_values;
+	std::vector<num_t> response_values;
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
 	index_type response_t;
   public:
@@ -38,11 +38,11 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features for configurations and instances
 	mostly_continuous_data_with_instances (index_type num_config_f, index_type num_instance_f):
-		configurations(num_config_f, std::vector<num_type>(0)),
-		instances(num_instance_f, std::vector<num_type>(0)),
+		configurations(num_config_f, std::vector<num_t>(0)),
+		instances(num_instance_f, std::vector<num_t>(0)),
 		response_t(0){}
 
-	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
+	virtual num_t feature  (index_type feature_index, index_type sample_index) const {
 		// find out if this is a config feature
 		if (feature_index < configurations.size()){
 			index_type i = config_instance_pairs[sample_index].first;
@@ -55,8 +55,8 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(instances[feature_index][i]);
 	}
 
-	virtual std::vector<num_type> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
-		std::vector<num_type> rv;
+	virtual std::vector<num_t> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
+		std::vector<num_t> rv;
 		rv.reserve(sample_indices.size());
 
 		if (feature_index < configurations.size()){
@@ -75,7 +75,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(response_values[sample_index]);
 	}
 
-	virtual void add_data_point (num_type*, index_type, response_type){
+	virtual void add_data_point (num_t*, index_type, response_type){
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 
@@ -101,7 +101,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(0);
 	}
 
-	index_type add_configuration(num_type* config_features, index_type num_elements){
+	index_type add_configuration(num_t* config_features, index_type num_elements){
 		if (num_elements != configurations.size())
 			throw std::runtime_error("Number of configuration features is not what it should be!");
 
@@ -110,7 +110,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(num_configurations()-1);
 	}
 
-	index_type add_instance(num_type* instance_features, index_type num_elements){
+	index_type add_instance(num_t* instance_features, index_type num_elements){
 		if (num_elements != instances.size())
 			throw std::runtime_error("Number of instance features is not what it should be!");
 		for (auto i = 0u; i< num_elements; i++)
@@ -118,8 +118,8 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		return(num_instances()-1);
 	}
 
-	virtual std::vector<num_type> retrieve_data_point (index_type index) const {
-		std::vector<num_type> vec;
+	virtual std::vector<num_t> retrieve_data_point (index_type index) const {
+		std::vector<num_t> vec;
 		vec.reserve(num_features());
 
 		for (auto i = 0u; i< num_features(); i++)
@@ -269,8 +269,8 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 	
 	/** \brief method to get instance as set_feature for predict_mean_var_of_mean_response_on_set method in regression forest
 	 */
-	virtual std::vector<num_type> get_instance_set(){
-		std::vector<num_type> set_feature;
+	virtual std::vector<num_t> get_instance_set(){
+		std::vector<num_t> set_feature;
 		set_feature.reserve( num_instances() * num_features());
 		for (auto instance_idx = 0u; instance_idx < num_instances(); ++instance_idx){
 				for (auto i = 0u; i <  configurations.size(); ++i){
@@ -282,8 +282,8 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		}
 		return set_feature;
 	}
-	virtual std::vector<num_type> get_configuration_set(num_type configuration_index){
-		std::vector<num_type> features;
+	virtual std::vector<num_t> get_configuration_set(num_t configuration_index){
+		std::vector<num_t> features;
 		features.reserve(num_features());
 		for (auto i = 0u; i < configurations.size(); ++i){
 				features.emplace_back(configurations[i][configuration_index]);
@@ -293,8 +293,8 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::data_
 		}   
 		return features;
 	}
-	virtual std::vector<num_type> get_features_by_configuration_and_instance(num_type configuration_index, num_type instance_index){
-		std::vector<num_type> features;
+	virtual std::vector<num_t> get_features_by_configuration_and_instance(num_t configuration_index, num_t instance_index){
+		std::vector<num_t> features;
 		features.reserve(num_features());
 		for (auto i = 0u; i < configurations.size(); ++i){
 				features.emplace_back(configurations[i][configuration_index]);

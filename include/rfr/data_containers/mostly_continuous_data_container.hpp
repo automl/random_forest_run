@@ -6,7 +6,7 @@
 #include<map>
 
 
-#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/data_containers/data_container.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"
 
 
@@ -18,11 +18,12 @@ namespace rfr{ namespace data_containers{
  *  In that case it would be wasteful to store the type of every feature separately.
  *  Instead, this data_container only stores the non-continuous ones in a hash-map.
  */
-template<typename num_type = float, typename response_type = float, typename index_type = unsigned int>
-class mostly_continuous_data : public rfr::data_containers::data_container_base<num_type, response_type, index_type>{
+template<typename num_t = float, typename response_type = float, typename index_type = unsigned int>
+class mostly_continuous_data : public rfr::data_containers::base<num_t, response_type, index_type>{
   protected:
-	std::vector< std::vector<num_type> > feature_values;//!< 2d vector to store the feature values
-	std::vector<num_type> response_values;              //!< the associated responses
+	std::vector< std::vector<num_t> > feature_values;//!< 2d vector to store the feature values
+	std::vector<response_type> response_values;              //!< the associated responses
+	std::vector<num_t> weights;            				 //!< the associated weights
 	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
 	index_type response_t;
   public:
@@ -34,16 +35,16 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features 
-	mostly_continuous_data (index_type num_f): feature_values(num_f, std::vector<num_type>(0)), response_t(0){}
+	mostly_continuous_data (index_type num_f): feature_values(num_f, std::vector<num_t>(0)), response_t(0){}
   
-	virtual num_type feature  (index_type feature_index, index_type sample_index) const {
+	virtual num_t feature  (index_type feature_index, index_type sample_index) const {
 		//return(feature_values.at(feature_index).at(sample_index));
 		return(feature_values[feature_index][sample_index]);
 	}
 
 
-	virtual std::vector<num_type> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
-		std::vector<num_type> rv;
+	virtual std::vector<num_t> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
+		std::vector<num_t> rv;
 		rv.reserve(sample_indices.size());
 		for (auto i : sample_indices)
 			rv.push_back(feature_values[feature_index][i]);
@@ -55,10 +56,13 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 		return(response_values[sample_index]);
 	}
 
-	virtual void add_data_point (num_type* feats, index_type num_elements, response_type response){
+	virtual void add_data_point (std::vector<num_t> features, response_type response, num_t weight = 1){
 
-		if (num_features() != num_elements)
-					throw std::runtime_error("Number of elements does not match.");
+		if (weight <= 0)
+			throw std::runtime_error("Weight of a datapoint has to be positive.");
+
+		if (num_features() != features.size())
+			throw std::runtime_error("Number of elements does not match.");
 
 		for (size_t i=0; i<num_elements; i++){
 			if (get_type_of_feature(i) > 0){
@@ -69,14 +73,15 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 			}
 		}
 
-		for (size_t i=0; i<num_elements; i++)
-				feature_values[i].push_back(feats[i]);
+		for (size_t i=0; i<features.size(); i++)
+				feature_values[i].push_back(features[i]);
 
 		response_values.push_back(response);
+		weights.push_back(weight);
 	}
 
-	virtual std::vector<num_type> retrieve_data_point (index_type index) const {
-		std::vector<num_type> vec(feature_values.size());
+	virtual std::vector<num_t> retrieve_data_point (index_type index) const {
+		std::vector<num_t> vec(feature_values.size());
 		for (index_type i = 0; i < num_features(); i++)
 			vec[i] = feature_values[i].at(index);
 		return(vec);
@@ -129,12 +134,12 @@ class mostly_continuous_data : public rfr::data_containers::data_container_base<
 
 	// some helper functions
 	int read_feature_file (const char* filename){
-		feature_values =  rfr::read_csv_file<num_type>(filename);
+		feature_values =  rfr::read_csv_file<num_t>(filename);
 		return(feature_values.size());
 	}
 
 	int read_response_file (const char* filename){
-		response_values = (read_csv_file<num_type>(filename))[0];
+		response_values = (read_csv_file<num_t>(filename))[0];
 		return(response_values.size());
 	}
 
