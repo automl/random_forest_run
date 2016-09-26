@@ -10,7 +10,20 @@
 
 namespace rfr{ namespace splits{
 
-template <const int k,  typename rng_type, typename num_t = float, typename response_type = float, typename index_type = unsigned int>
+
+
+template <typename index_t = unsigned int, typename num_t = float, typename response_t = float>
+struct data_info{
+	index_t index;
+	response_t response;
+	num_t feature;
+	num_t weight;
+};
+
+
+
+
+template <const int k,  typename rng_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
 class k_ary_split_base{
   public:
 	/** \brief member function to find the optimal split for a subset of the data and features
@@ -27,19 +40,19 @@ class k_ary_split_base{
 	 * 
 	 * \return float the loss of the found split
 	 */
-	virtual num_t find_best_split(const rfr::data_containers::data_container_base<num_t, response_type, index_type> &data,
-									const std::vector<index_type> &features_to_try,
-									std::vector<index_type> & indices,
-									std::array<typename std::vector<index_type>::iterator, k+1> &split_indices_it,
-									rng_type &rng) = 0;
+	virtual num_t find_best_split(const rfr::data_containers::data_container_base<num_t, response_t, index_t> &data,
+									const std::vector<index_t> &features_to_try,
+									std::vector<index_t> & indices,
+									std::array<typename std::vector<index_t>::iterator, k+1> &split_indices_it,
+									rng_t &rng) = 0;
 
 	/** \brief tells into which child a given feature vector falls
 	 * 
 	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
 	 * 
-	 * \return index_type index of the child into which this feature falls
+	 * \return index_t index of the child into which this feature falls
 	 */
-	virtual index_type operator() (num_t *feature_vector) = 0;
+	virtual index_t operator() (num_t *feature_vector) = 0;
 	
 	/** \brief some debug output that prints a informative representation to std::cout*/
 	virtual void print_info() = 0;

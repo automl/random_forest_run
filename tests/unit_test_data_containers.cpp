@@ -2,18 +2,18 @@
 
 #include <numeric>
 #include <cstring>
-
+#include <random>
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/data_containers/mostly_continuous_data_with_instances_container.hpp"
 
 typedef double num_t;
-typedef double response_type;
-typedef unsigned int index_type;
-typedef std::default_random_engine rng_type;
+typedef double response_t;
+typedef unsigned int index_t;
+typedef std::default_random_engine rng_t;
 
-typedef rfr::data_containers::mostly_continuous_data<num_t, response_type, index_type> data_container_type;
-typedef rfr::data_containers::mostly_continuous_data_with_instances<num_t, response_type, index_type> data_container_type2;
+typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t> data_container_type;
+typedef rfr::data_containers::mostly_continuous_data_with_instances<num_t, response_t, index_t> data_container_type2;
 
 
 BOOST_AUTO_TEST_CASE( data_container_tests ){
@@ -111,10 +111,10 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 
 	data.add_data_point(0u,0,0.1); // first argument cannot be "0" because than the compiler has trouble resolving the overloading!
 	data.add_data_point(0u,1,0.2); // b/c "0" is also a valid pointer to a double!
-	data.add_data_point(1,0,0.3);
-	data.add_data_point(1,1,0.4);
-	data.add_data_point(2,0,0.5);
-	data.add_data_point(2,1,0.6);
+	data.add_data_point(1,0,0.3,1.);
+	data.add_data_point(1,1,0.4,1.);
+	data.add_data_point(2,0,0.5,1.);
+	data.add_data_point(2,1,0.6,1.);
 
 	BOOST_CHECK (data.num_data_points() == 6);
 

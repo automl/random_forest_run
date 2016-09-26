@@ -17,17 +17,18 @@ namespace rfr{ namespace data_containers{
  * Similar to the mostly_continuous_data container, but with the capability
  * to handle instance features.
  */
-template<typename num_t = float, typename response_type = float, typename index_type = unsigned int>
-class mostly_continuous_data_with_instances : public rfr::data_containers::base<num_t, response_type, index_type>{
+template<typename num_t = float, typename response_t = float, typename index_t = unsigned int>
+class mostly_continuous_data_with_instances : public rfr::data_containers::base<num_t, response_t, index_t>{
   protected:
 
 	std::vector< std::vector<num_t> > configurations;//!< 2d vector to store the feature values of all configurations
 	std::vector< std::vector<num_t> > instances; 	//!< 2d vector to store the feature values of all instances
-
-	std::vector<std::pair<index_type, index_type> > config_instance_pairs;
+	
+	std::vector<std::pair<index_t, index_t> > config_instance_pairs;
 	std::vector<num_t> response_values;
-	std::map<index_type, index_type> categorical_ranges;//!< a map storing the few categorical indices and their range
-	index_type response_t;
+	std::vector<num_t> weights;
+	std::map<index_t, index_t> categorical_ranges;//!< a map storing the few categorical indices and their range
+	index_t response_t;
   public:
 
 	// empty constructor. Use this only if you read the data from a file!
@@ -37,25 +38,25 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features for configurations and instances
-	mostly_continuous_data_with_instances (index_type num_config_f, index_type num_instance_f):
+	mostly_continuous_data_with_instances (index_t num_config_f, index_t num_instance_f):
 		configurations(num_config_f, std::vector<num_t>(0)),
 		instances(num_instance_f, std::vector<num_t>(0)),
-		response_t(0){}
+		response_values(), weights(), response_t(0){}
 
-	virtual num_t feature  (index_type feature_index, index_type sample_index) const {
+	virtual num_t feature  (index_t feature_index, index_t sample_index) const {
 		// find out if this is a config feature
 		if (feature_index < configurations.size()){
-			index_type i = config_instance_pairs[sample_index].first;
+			index_t i = config_instance_pairs[sample_index].first;
 			return(configurations[feature_index][i]);
 		}
 
 		// otherwise it should be a instance feature
-		index_type i = config_instance_pairs[sample_index].second;
+		index_t i = config_instance_pairs[sample_index].second;
 		feature_index -= configurations.size();
 		return(instances[feature_index][i]);
 	}
 
-	virtual std::vector<num_t> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
+	virtual std::vector<num_t> features (index_t feature_index, std::vector<index_t> &sample_indices) const {
 		std::vector<num_t> rv;
 		rv.reserve(sample_indices.size());
 
@@ -71,37 +72,37 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		return(rv);
 	}
 
-	virtual response_type response (index_type sample_index) const{
-		return(response_values[sample_index]);
-	}
+	virtual response_t response (index_t sample_index) const{ return(response_values[sample_index]); }
 
-	virtual void add_data_point (num_t*, index_type, response_type){
+	virtual void add_data_point (std::vector<num_t>, response_t, num_t){
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 
-	void add_data_point( index_type config_index, index_type instance_index, response_type r){
+	void add_data_point( index_t config_index, index_t instance_index, response_t r, num_t weight = 1){
 		if (config_index >= num_configurations() )
 			throw std::runtime_error("Configuration index too large.");
 		if (instance_index >= num_instances() )
-			
 			throw std::runtime_error("Instance index too large.");
-		config_instance_pairs.emplace_back(std::pair<index_type, index_type> (config_index, instance_index));
+		config_instance_pairs.emplace_back(std::pair<index_t, index_t> (config_index, instance_index));
 		response_values.emplace_back(r);
+		weights.emplace_back(weight);
 	}
 
-	index_type num_configurations(){
+	virtual num_t weight(index_t sample_index) const{ return(weights[sample_index]);}
+
+	index_t num_configurations(){
 		if (configurations.size() > 0)
 			return(configurations[0].size());
 		return(0);
 	}
 
-	index_type num_instances(){
+	index_t num_instances(){
 		if (instances.size() > 0)
 			return(instances[0].size());
 		return(0);
 	}
 
-	index_type add_configuration(num_t* config_features, index_type num_elements){
+	index_t add_configuration(num_t* config_features, index_t num_elements){
 		if (num_elements != configurations.size())
 			throw std::runtime_error("Number of configuration features is not what it should be!");
 
@@ -110,7 +111,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		return(num_configurations()-1);
 	}
 
-	index_type add_instance(num_t* instance_features, index_type num_elements){
+	index_t add_instance(num_t* instance_features, index_t num_elements){
 		if (num_elements != instances.size())
 			throw std::runtime_error("Number of instance features is not what it should be!");
 		for (auto i = 0u; i< num_elements; i++)
@@ -118,7 +119,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		return(num_instances()-1);
 	}
 
-	virtual std::vector<num_t> retrieve_data_point (index_type index) const {
+	virtual std::vector<num_t> retrieve_data_point (index_t index) const {
 		std::vector<num_t> vec;
 		vec.reserve(num_features());
 
@@ -140,14 +141,14 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 	 * \return int type of the feature: 0 - numerical value (float or int); n>0 - categorical value with n different values {1,2,...,n}
 	 *
 	 */
-	virtual index_type get_type_of_feature (index_type feature_index) const{
+	virtual index_t get_type_of_feature (index_t feature_index) const{
 		auto it = categorical_ranges.find(feature_index);
 		if ( it == categorical_ranges.end())
 			return(0);
 		return(it->second);
 	}
 
-	void set_type_of_configuration_feature(index_type index, index_type type){
+	void set_type_of_configuration_feature(index_t index, index_t type){
 		if (type > 0){
 			// check consistency for categorical features
 			for (auto &fv: configurations[index]){
@@ -165,7 +166,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		}
 	}
 
-	void set_type_of_instance_feature(index_type index, index_type type){
+	void set_type_of_instance_feature(index_t index, index_t type){
 		if (type > 0){
 			// check consistency for categorical features
 			for (auto &fv: instances[index]){
@@ -183,7 +184,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		}
 	}
 
-	virtual void set_type_of_feature(index_type index, index_type type){
+	virtual void set_type_of_feature(index_t index, index_t type){
 		if (index >= num_features())
 			throw std::runtime_error("Unknown index specified.");
 		if (! (type >= 0))
@@ -198,9 +199,9 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 
 	}
 
-	virtual index_type num_features() const {return(configurations.size() + instances.size());}
+	virtual index_t num_features() const {return(configurations.size() + instances.size());}
 
-	virtual index_type num_data_points() const {return(config_instance_pairs.size());}
+	virtual index_t num_data_points() const {return(config_instance_pairs.size());}
 
 	void check_consistency(){
 
@@ -232,7 +233,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 				}
 			}
 			else{
-				index_type t = get_type_of_feature(f);
+				index_t t = get_type_of_feature(f);
 				for (auto n = 0u; n < num_data_points(); n++){
 					if (isnan(feature(f,n)))
 						throw std::runtime_error("Features contain a NaN!");
@@ -243,7 +244,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 			}
 		}
 		
-		index_type t = get_type_of_response();
+		index_t t = get_type_of_response();
 		for (auto r: response_values){
 			if (isnan(r))
 				throw std::runtime_error("Responses contain a NaN!");
@@ -251,11 +252,9 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		
 	}
 
-	virtual index_type get_type_of_response () const{
-		return(response_t);
-	}
+	virtual index_t get_type_of_response () const{ return(response_t);}
 
-	virtual void set_type_of_response (index_type resp_t){
+	virtual void set_type_of_response (index_t resp_t){
 		if (resp_t > 0){
 			for (auto &rv: response_values){
 				if (!(rv < resp_t))

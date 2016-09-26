@@ -6,18 +6,18 @@
 namespace rfr{ namespace nodes{
 
 
-template <typename num_t = float, typename index_type = unsigned int>
+template <typename num_t = float, typename index_t = unsigned int>
 struct temporary_node{
-	index_type node_index;
-	index_type parent_index;
-	std::vector<index_type> data_indices;
-	index_type node_level;
+	index_t node_index;
+	index_t parent_index;
+	std::vector<index_t> data_indices;
+	index_t node_level;
 
-	temporary_node (index_type node_id,
-					index_type parent_id,
-					index_type node_lvl,
-					typename std::vector<index_type>::iterator start,
-					typename std::vector<index_type>::iterator end):
+	temporary_node (index_t node_id,
+					index_t parent_id,
+					index_t node_lvl,
+					typename std::vector<index_t>::iterator start,
+					typename std::vector<index_t>::iterator end):
 		node_index(node_id), parent_index(parent_id), node_level(node_lvl)
 	{
 		data_indices.assign(start, end);
