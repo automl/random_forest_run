@@ -233,7 +233,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 			//! >assumes that the features for categoricals have been properly rounded so casting them to ints results in the right value!
 			int cat = it->feature;
 			// collect all the data to compute the loss
-			cat_stats[cat].push(it->response);
+			cat_stats[cat].push(it->response, it->weight);
 		}
 
 		// take care b/c certain categories might not be encountered (maybe there was a split on the same variable further up the tree...)
@@ -241,11 +241,12 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		// std::partition rearranges the data using a boolean predicate into all that evaluate to true in front of all evaluating to false.
 		// it even returns an iterator pointing to the first element where the predicate is false, how convenient :)
 		auto empty_cat_stats_it = std::partition(cat_stats.begin(), cat_stats.end(),
-						[](auto &stat){return(stat.number_of_points() > 0);});
+						[](auto &stat){return(stat.sum_of_weights() > 0);});
 		
 		// sort the categories by their individual mean. only consider the ones with actual specimen here
 		std::sort(	cat_stats.begin(), empty_cat_stats_it,
 					[](auto &stat_a, auto &stat_b){return ( stat_a.mean() < stat_b.mean() );});		// C++11 lambda function, how exciting :)
+
 
 		
 

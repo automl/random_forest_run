@@ -81,10 +81,10 @@ class running_statistics{
 
 	running_statistics operator+ ( const running_statistics &other) const{
 
-		num_t n1(N), n2(other.N), nt(N_total);
-
 		// total number of points is trivial
 		luint N_total = N + other.N;
+		num_t n1(N), n2(other.N), nt(N_total);
+
 		// the total mean is also pretty easy to figure out
 		num_t avg_total = avg * (n1/nt) + other.avg * (n2/nt);
 		// the total sdm looks a bit tricky, but is straight forward to derive
@@ -130,138 +130,107 @@ class running_statistics{
 template<typename num_t>
 class weighted_running_statistics{
   private:
-	typedef long unsigned int luint;
-	luint N;
 	num_t avg, sdm;
 	running_statistics<num_t> weight_stat;
 
   public:
-	weighted_running_statistics(): N(0), avg(0), sdm(0), weight_stat() {}
-	weighted_running_statistics( luint n, num_t m, num_t s, running_statistics w_stat):
-		N(n), avg(m), sdm(v), weight_stat(w_stat) {}
+	weighted_running_statistics(): avg(0), sdm(0), weight_stat() {}
+	weighted_running_statistics( num_t m, num_t s, running_statistics<num_t> w_stat):
+		avg(m), sdm(s), weight_stat(w_stat) {}
 	
-	void push (num_t x, weight_t weight){
-		if (weight > 0){
-			++N;
-			// helper
-			num_t delta = x - avg;
-			// update the weights' sum
-			sum_weights += weight;
-			// adjust mean
-			avg += delta * weight / sum_weights;
-			// adjust variance
-			sdm += weight*delta*(x-avg);
-		}
+	void push (num_t x, num_t weight){
+		if (weight <= 0)
+			throw std::runtime_error("Weights have to be strictly positive.");
+
+		// helper
+		num_t delta = x - avg;
+		// update the weights' sum
+		weight_stat.push(weight);
+		// adjust mean
+		avg += delta * weight / weight_stat.sum();
+		// adjust variance
+		sdm += weight*delta*(x-avg);
 	}
 
-	void pop (num_t x, weight_t weight){
-		if (weight > 0){
-			if (weight > weight_stat.sum())
-				throw std::runtime_error("Cannot remove item, weight too large");
+	void pop (num_t x, num_t weight){
+		if (weight <= 0)
+			throw std::runtime_error("Weights have to be strictly positive.");
 
-			if (N >=2)
-				throw std::runtime_error("Cannot remove item, statistics doesn't contain more than three elements.");
-			--N;
-			// helper
-			num_t delta = (x - avg);
-			// update the weights' sum
-			sum_weights -= weight;
-			// adjust mean
-			avg -= delta * weight / sum_weights;
-			// adjust variance
-			sdm -= weight*delta*(x-avg);
+		if (weight > weight_stat.sum())
+			throw std::runtime_error("Cannot remove item, weight too large.");
 
-			if (sdm < 0)
-				throw std::runtime_error("Squared Distance from the mean is now negative; Abort!")
-		}
+		// helper
+		num_t delta = (x - avg);
+		// update the weights' sum
+		weight_stat.pop(weight);
+		// adjust mean
+		avg -= delta * weight / weight_stat.sum();
+		// adjust variance
+		sdm -= weight*delta*(x-avg);
+
+		if (sdm < 0)
+			throw std::runtime_error("Squared Distance from the mean is now negative; Abort!");
 	}
 
-	num_t	divide_sdm_by(num_t fraction) const { return(N>1 ? std::max<num_t>(0.,sdm/fraction) : NAN);}
+	num_t	squared_deviations_from_the_mean () 			const {return(divide_sdm_by(1,0));}
 
-	luint	number_of_points()				const 	{return(N);}
-	num_t 	mean() 							const	{return(N>0?avg:NAN);}
-	num_t 	variance_population()			const	{return(divide_sdm_by(weight_stat.sum()));}
-	num_t	variance_unbiased_frequency()	const	{return(divide_sdm_by(weight_stat.sum()));}
-	num_t	variance_unbiased_importance()	const	{return(divide_sdm_by(weight_stat.sum() - (weight_stat.sum_of_squares() / weight_stat.sum())));}
+	num_t	divide_sdm_by(num_t fraction, num_t min_weight) const { return(weight_stat.sum()>min_weight ? std::max<num_t>(0.,sdm/fraction) : NAN);}
 
-
-
-
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-// ==========================================================================================
-
+	num_t 	mean() 							const	{return(weight_stat.sum()>0?avg:NAN);}
+	num_t	sum_of_weights()				const	{return(weight_stat.sum());}
+	num_t 	variance_population()			const	{return(divide_sdm_by(weight_stat.sum(),0.));}
+	// source: https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
+	num_t	variance_unbiased_frequency()	const	{return(divide_sdm_by(weight_stat.sum()-1,1.));}
+	num_t	variance_unbiased_importance()	const	{return(divide_sdm_by(weight_stat.sum() - (weight_stat.sum_of_squares() / weight_stat.sum())), 0);}
 
 
 	weighted_running_statistics operator+ ( const weighted_running_statistics &other) const{
 
-		// total number of points is trivial
-		unsigned long int N_total = N + other.number_of_points();
+		// total weight statistic is trivial
+		running_statistics<num_t> total_weight_stat = weight_stat + other.weight_stat;
 
-		num_t n1(N), n2(other.number_of_points()), nt(N_total);
-
+		num_t sw1(weight_stat.sum()), sw2(other.weight_stat.sum()), swt(total_weight_stat.sum());
 		// the total mean is also pretty easy to figure out
-		num_t avg_total = avg * (n1/nt) + other.mean() * (n2/nt);
+		num_t avg_total = avg * (sw1/swt) + other.avg * (sw2/swt);
+		// the total squared deviations from the mean look a bit messy, but are straight forwardly derived
+		num_t sdm_total = sdm + other.sdm + 
+							sw1*std::pow(avg-avg_total,2) + sw2*std::pow(other.avg-avg_total,2);
 
-
-		return(	weighted_running_statistics(
-					N_total,
-					avg_total,
-					// the total variance looks a bit tricky, but is straight forward to derive
-					(n1/nt) * var + ((n2-1)/nt)* other.variance() + (n1/nt)*avg + (n2/nt)*other.mean() - avg_total,
-					sum_weights + other.sum_of_weights()
-				)
-		);
+		return(	weighted_running_statistics( avg_total, sdm_total, total_weight_stat));
 	}
 
 	weighted_running_statistics operator- ( const weighted_running_statistics &other) const{
-		unsigned long int N2 = other.number_of_points();
-		if (N2 >= N-1)
-			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
-		if (other.sum_of_weights() >= sum_weights)
+		if (other.weight_stat.sum() >= weight_stat.sum())
 			throw std::runtime_error("Second statistics must not have a greater sum of weights!");
 
-		// new number of points is trivial
-		unsigned long int N1 = N - N2;
-		// the total mean is also pretty easy to figure out
-		num_t avg_total = (N* avg - N2 * other.mean())/ (num_t) N1;
+		// total weight statistic is trivial
+		running_statistics<num_t> weight_stat_total = weight_stat - other.weight_stat;
 
-		return	(weighted_running_statistics(
-					N1,
-					avg_total,
-					// the total variance looks a bit tricky, but is straight forward to derive
-					((N * var + (N2-1)* other.variance() + N*avg - N2*other.mean())/(num_t) N1) - avg_total,
-					sum_weights - other.sum_of_weights()
-				)
-		);
+		num_t sw1(weight_stat.sum()), sw2(other.weight_stat.sum()), swt(weight_stat_total.sum());
+
+		// the total mean is also pretty easy to figure out
+		num_t avg_total = avg * (sw1/swt) - other.avg * (sw2/swt);
+
+		// the total squared deviations from the mean look a bit messy, but are straight forwardly derived
+		num_t sdm_total = sdm - other.sdm -
+							swt*std::pow(avg-avg_total,2) - sw2*std::pow(other.avg-avg,2);
+
+		return	(weighted_running_statistics(avg_total, sdm_total, weight_stat_total));
 	}
 
 
 	bool numerically_equal (weighted_running_statistics other, num_t rel_error){
 
-		if (N != other.number_of_points()) return(false);
-
 		// inline lambda expression for the relative error
 		auto relerror = [] (num_t a, num_t b) {return(std::abs(a-b)/(a+b));};
 
 		// all the numerical values are allowed to be slightly off
-		if ( relerror(avg, other.mean()) > rel_error) return(false);
-		if ( relerror(var(), other.var) > rel_error) return(false);
-		if ( relerror(sum_weights, other.sum_of_weights()) > rel_error) return(false);
+		if ( relerror(avg, other.avg) > rel_error) return(false);
+		if ( relerror(sdm, other.sdm) > rel_error) return(false);
 
-		return(true);
+		// finally compare the weight statistics
+		return( weight_stat.numerically_equal(other.weight_stat, rel_error));
 	}
 };
 
