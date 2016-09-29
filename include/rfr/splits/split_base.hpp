@@ -4,7 +4,7 @@
 #include <vector>
 #include <array>
 #include <string>
-#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/data_containers/data_container.hpp"
 
 
 
@@ -12,8 +12,8 @@ namespace rfr{ namespace splits{
 
 
 
-template <typename index_t = unsigned int, typename num_t = float, typename response_t = float>
-struct data_info{
+template <typename num_t = float, typename response_t = float, typename index_t = unsigned int>
+struct data_info_t{
 	index_t index;
 	response_t response;
 	num_t feature;
@@ -23,7 +23,7 @@ struct data_info{
 
 
 
-template <const int k,  typename rng_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
+template <const int k, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t=std::default_random_engine>
 class k_ary_split_base{
   public:
 	/** \brief member function to find the optimal split for a subset of the data and features
@@ -40,10 +40,12 @@ class k_ary_split_base{
 	 * 
 	 * \return float the loss of the found split
 	 */
-	virtual num_t find_best_split(const rfr::data_containers::data_container_base<num_t, response_t, index_t> &data,
+
+	virtual num_t find_best_split(const rfr::data_containers::base<num_t, response_t, index_t> &data,
 									const std::vector<index_t> &features_to_try,
-									std::vector<index_t> & indices,
-									std::array<typename std::vector<index_t>::iterator, k+1> &split_indices_it,
+									typename std::vector<data_info_t<num_t, response_t, index_t> >::iterator infos_begin,
+									typename std::vector<data_info_t<num_t, response_t, index_t> >::iterator infos_end,
+									std::array<typename std::vector<data_info_t<num_t, response_t, index_t> >::iterator, k+1> &info_split_its,
 									rng_t &rng) = 0;
 
 	/** \brief tells into which child a given feature vector falls

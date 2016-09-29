@@ -28,7 +28,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 	std::vector<num_t> response_values;
 	std::vector<num_t> weights;
 	std::map<index_t, index_t> categorical_ranges;//!< a map storing the few categorical indices and their range
-	index_t response_t;
+	index_t response_type;
   public:
 
 	// empty constructor. Use this only if you read the data from a file!
@@ -41,7 +41,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 	mostly_continuous_data_with_instances (index_t num_config_f, index_t num_instance_f):
 		configurations(num_config_f, std::vector<num_t>(0)),
 		instances(num_instance_f, std::vector<num_t>(0)),
-		response_values(), weights(), response_t(0){}
+		response_values(), weights(), response_type(0){}
 
 	virtual num_t feature  (index_t feature_index, index_t sample_index) const {
 		// find out if this is a config feature
@@ -252,7 +252,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		
 	}
 
-	virtual index_t get_type_of_response () const{ return(response_t);}
+	virtual index_t get_type_of_response () const{ return(response_type);}
 
 	virtual void set_type_of_response (index_t resp_t){
 		if (resp_t > 0){
@@ -262,7 +262,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 				if (rv < 0)
 					throw std::runtime_error("Response values contain a negative value, can't make that a categorical value.");
 			}
-			response_t = resp_t;
+			response_type = resp_t;
 		}
 	}
 	
