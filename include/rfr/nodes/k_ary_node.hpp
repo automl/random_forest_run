@@ -8,10 +8,11 @@
 #include <sstream>
 #include <algorithm>
 
-#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/data_containers/data_container.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/util.hpp"
+#include "rfr/splits/split_base.hpp"
 
 #include "cereal/cereal.hpp"
 #include <cereal/types/vector.hpp>
@@ -32,11 +33,13 @@ namespace rfr{ namespace nodes{
 template <int k, typename split_type, typename rng_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
 class k_ary_node{
   private:
+	typedef rfr::splits::data_info_t<num_t, response_t, index_t> info_t;
 	index_t parent_index;
-	bool is_leaf;
 
 	// for leaf nodes
 	std::vector<response_t> response_values;
+	std::vector<num_t> response_weights;
+	rfr::util::weighted_running_statistics<num_t> response_stat;   //TODO: needs to be serialized!
 
 	// for internal_nodes
 	std::array<index_t, k> children;
@@ -48,7 +51,7 @@ class k_ary_node{
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {
-		archive( parent_index, is_leaf, response_values, children, split_fractions, split); 
+		archive( parent_index, response_values, response_weights, children, split_fractions, split); 
 	}
 
   
@@ -64,16 +67,15 @@ class k_ary_node{
 	* \return num_t the loss of the split
 	*/ 
 	num_t make_internal_node(rfr::nodes::temporary_node<num_t, index_t> &tmp_node,
-							const rfr::data_containers::data_container_base<num_t, response_t, index_t> &data,
+							const rfr::data_containers::base<num_t, response_t, index_t> &data,
 							std::vector<index_t> &features_to_try,
 							index_t num_nodes,
-							std::deque<rfr::nodes::temporary_node<num_t, index_t> > &tmp_nodes,
+							std::deque<rfr::nodes::temporary_node<num_t, response_t, index_t> > &tmp_nodes,
 							rng_t &rng){
-		is_leaf = false;
 		response_values.clear();
 		parent_index = tmp_node.parent_index;
-		std::array<typename std::vector<index_t>::iterator, k+1> split_indices_it;
-		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.data_indices, split_indices_it,rng);
+		std::array<typename std::vector<info_t>::iterator, k+1> split_indices_it;
+		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.start, tmp_node.end, split_indices_it,rng);
 	
 		//check if a split was found
 		// note: if the number of features to try is too small, there is a chance that the data cannot be split any further
@@ -93,22 +95,20 @@ class k_ary_node{
 	
 	/** \brief  turns this node into a leaf node based on a temporary node.
 	*
-	*
 	* \param tmp_node the internal representation for a temporary node.
-	*
+	* \param data a data container instance
 	*/
 	void make_leaf_node(rfr::nodes::temporary_node<num_t, index_t> &tmp_node,
-						const rfr::data_containers::data_container_base<num_t, response_t, index_t> &data){
-		is_leaf = true;
+						const rfr::data_containers::base<num_t, response_t, index_t> &data){
 		parent_index = tmp_node.parent_index;
 		children.fill(0);
 		
-		response_values.resize(tmp_node.data_indices.size());
-		for (size_t i = 0; i < tmp_node.data_indices.size(); i++){
-			response_values[i] = data.response(tmp_node.data_indices[i]);
+		response_values.reserve(std::distance(tmp_node.start, tmp_node.end));
+		response_weights.reserve(std::distance(tmp_node.start, tmp_node.end));
+
+		for (auto it = tmp_node.start; it != tmp_node.data_indices.size(); it++){
+			push_response_value((*it).response, (*it).weights);
 		}
-		//to save some time
-		std::sort(response_values.begin(), response_values.end());
 	}	
 
 	/* \brief function to check if a feature vector can be splitted */
@@ -121,63 +121,52 @@ class k_ary_node{
 	 * \return index_t index of the child
 	 */
 	index_t falls_into_child(num_t * sample){
-		if (is_leaf)
-			return(0);
+		if (is_a_leaf()) return(0);
 		return(children[split(sample)]);
 	}
 
-	void push_response_value ( num_t r){
-		response_values.push_back(r);
-	}
-	
-	void pop_repsonse_value (){
-		response_values.pop_back();
-	}
-	
 
-	/** \brief calculate the mean of all response values in this leaf
+	/** \brief adds an observation to the leaf node
 	 *
-	 * \return num_t the mean, or NaN if the node is not a leaf
+	 * This function can be used for pseudo updates of a tree by
+	 * simply adding observations into the corresponding leaf
 	 */
-	num_t mean(){
-		if (! is_leaf)
-			return(std::numeric_limits<num_t>::quiet_NaN());
-		
-		num_t m = 0;
-		for (auto v : response_values)
-			m += v;
-
-		return(m/((num_t) response_values.size()));
+	void push_response_value ( num_t r, num_t w){
+		response_values.push_back(r);
+		response_weights.push_back(w);
+		response_stat.push(r,w);
 	}
 
+	/** \brief removes the last added observation from the leaf node
+	 *
+	 * This function can be used for pseudo updates of a tree by
+	 * simply adding observations into the corresponding leaf
+	 */
+	void pop_repsonse_value (){
+		response_stat.pop( response_values.back(), response_weights.back());
+		response_values.pop_back();
+		response_weights.pop_back();
+	}
 
+	/**
+	 * \brief helper function for the fANOVA
+	 *
+	 * 	See description of rfr::splits::binary_split_one_feature_rss_loss.
+	 */
 	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace){
 		return(split.compute_subspaces(subspace));
 	}
 
-	std::tuple<num_t, num_t, index_t> mean_variance_N (){
-		if (! is_leaf)
-			return(std::tuple<num_t, num_t, index_t>(	std::numeric_limits<num_t>::quiet_NaN(),
-																std::numeric_limits<num_t>::quiet_NaN(),
-																0));
-		
-		
-		rfr::running_statistics<num_t> stats;
-
-		for (auto v : response_values)
-			stats(v);
-
-		return( std::tuple<num_t, num_t, index_t> (stats.mean(), stats.variance(), stats.number_of_points()));
-	}
-
+	/* \brief returns a running_statistics instance for computations of mean, variance, etc...
+	 *
+	 * See description of rfr::util::weighted_running_statistics for more information
+	 */
+	rfr::util::weighted_running_statistics<num_t> const & leaf_statistic(){ return (response_stat);}
 
 	/** \brief to test whether this node is a leaf */
-	bool is_a_leaf(){return(is_leaf);}
+	bool is_a_leaf(){return(children[0] == 0);}
 	/** \brief get the index of the node's parent */
 	index_t parent() {return(parent_index);}
-	
-	index_t num_samples () {return(response_values.size());}
-	
 	
 	/** \brief get indices of all children*/
 	std::array<index_t, k> get_children() {return(children);}
@@ -186,17 +175,14 @@ class k_ary_node{
 	std::array<num_t, k> get_split_fractions() {return(split_fractions);}
 	num_t get_split_fraction (index_t idx) {return(split_fractions[idx]);};
 
-
 	split_type get_split() {return(split);}
-
 
 	/** \brief get reference to the response values*/	
 	std::vector<response_t> const &responses (){ return( (std::vector<response_t> const &) response_values);}
 
-
-	/** \brief prints out some basic information abouth the node*/
+	/** \brief prints out some basic information about the node*/
 	void print_info(){
-		if (is_leaf){
+		if (is_a_leaf()){
 			std::cout<<"status: leaf\nresponse values: ";
 			rfr::print_vector(response_values);
 		}
@@ -209,12 +195,11 @@ class k_ary_node{
 		}
 	}
 
-
 	/** \brief generates a label for the node to be used in the LaTeX visualization*/
 	std::string latex_representation( int my_index){
 		std::stringstream str;
 			
-		if (is_leaf){
+		if (is_a_leaf()){
 			str << "{i = " << my_index << ": ";
 
 			num_t s=0, ss=0;

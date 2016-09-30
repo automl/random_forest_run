@@ -7,7 +7,7 @@
 #include "cereal/cereal.hpp"
 
 
-#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/data_containers/data_container.hpp"
 
 namespace rfr{ namespace trees{
 
@@ -60,13 +60,13 @@ struct tree_options{
     /** Constructor that adjusts the number of features considered at each split proportional to the square root of the number of features.
      * 
      */    
-    tree_options (rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
+    tree_options (rfr::data_containers::base<num_type, response_type, index_type> &data){
 	set_default_values();
 	max_features =  static_cast<int>(std::sqrt(data.num_features()) + 0.5);
     }
     
     
-    void adjust_limits_to_data (const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data){
+    void adjust_limits_to_data (const rfr::data_containers::base<num_type, response_type, index_type> &data){
 		max_features = std::min(max_features, data.num_features());
     }
     

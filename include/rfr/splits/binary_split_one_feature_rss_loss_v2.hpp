@@ -337,6 +337,9 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	std::bitset<max_num_categories> get_cat_split_set() {return(cat_split_set);}
 	
 	/* \brief takes a subspace and returns the 2 corresponding subspaces after the split is applied
+	 *
+	 * This is an essential function for the fANOVA. Every split
+	 * constraints one of the parameters in each of the children.
 	 */
 	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace){
 		
@@ -351,7 +354,6 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 			subspaces[1][feature_index][0] = num_split_value;
 		}
 		else{
-			std::cout<<"updating categorical parameter\n";
 			// every element in the split set should go to the left -> remove from right
 			auto it = std::partition (subspaces[0][feature_index].begin(), subspaces[0][feature_index].end(),
 										[this] (int i) {return((bool) this->cat_split_set[i]);});

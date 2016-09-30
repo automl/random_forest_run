@@ -16,7 +16,7 @@
 #include <cereal/types/bitset.hpp>
 #include <cereal/types/vector.hpp>
 
-#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/data_containers/data_container.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
 #include "rfr/trees/tree_base.hpp"
@@ -63,7 +63,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<rng_type, num_type, respo
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
 	 */
-	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
+	virtual void fit(const rfr::data_containers::base<num_type, response_type, index_type> &data,
 			 rfr::trees::tree_options<num_type, response_type, index_type> tree_opts,
 			 std::vector<index_type> &data_indices,
 			 rng_type &rng){

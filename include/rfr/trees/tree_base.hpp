@@ -4,13 +4,13 @@
 #include <vector>
 
 #include "rfr/trees/tree_options.hpp"
-#include "rfr/data_containers/data_container_base.hpp"
+#include "rfr/data_containers/data_container.hpp"
 
 
 
 namespace rfr{ namespace trees{
 
-template <typename rng_type, typename num_type = float, typename response_type = float, typename index_type = unsigned int>
+template <typename rng_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
 class tree_base{
   public:
 	/** \brief member function to fit the tree to the whole data
@@ -25,11 +25,11 @@ class tree_base{
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param rng a (pseudo) random number generator
 	 */
-	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
-			 rfr::trees::tree_options<num_type, response_type, index_type> tree_opts,
+	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
+			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
 			 rng_type &rng){
 
-		std::vector<index_type> data_indices(data.num_data_points());
+		std::vector<index_t> data_indices(data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
 		fit(data, tree_opts, data_indices,rng);
 	}
@@ -44,9 +44,9 @@ class tree_base{
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
 	 */
-	virtual void fit(const rfr::data_containers::data_container_base<num_type, response_type, index_type> &data,
-			 rfr::trees::tree_options<num_type, response_type, index_type> tree_opts,
-			 std::vector<index_type> &data_indices,
+	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
+			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
+			 std::vector<index_t> &data_indices,
 			 rng_type &rng) = 0;
 
 
@@ -55,9 +55,9 @@ class tree_base{
 	 * 
 	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
 	 * 
-	 * \return num_type the prediction of the response value (usually the mean of all responses in the corresponding leaf)
+	 * \return num_t the prediction of the response value (usually the mean of all responses in the corresponding leaf)
 	 */
-	virtual response_type predict (num_type *feature_vector) = 0;
+	virtual response_t predict (num_t *feature_vector) = 0;
 	
 	
 	
@@ -65,9 +65,9 @@ class tree_base{
 	 * 
 	 * \param feature_vector an array containing a valid (in terms of size and values!) feature vector
 	 * 
-	 * \return std::vector<response_type> all response values in that leaf
+	 * \return std::vector<response_t> all response values in that leaf
 	 */
-	virtual std::vector<response_type> const &leaf_entries (num_type *feature_vector) = 0;
+	virtual std::vector<response_t> const &leaf_entries (num_t *feature_vector) = 0;
 	
 	
 	
@@ -75,14 +75,14 @@ class tree_base{
 	 * 
 	 * \param data a filled data container. For the prediction the (possibly empty) response values are ignored.
 	 * 
-	 * \return std::vector<num_type> the predictions for all points in a vector.
+	 * \return std::vector<num_t> the predictions for all points in a vector.
 	 */	
-	//virtual std::vector<response_type> predict (const rfr::data_container_base<num_type, index_type> &data) = 0;
+	//virtual std::vector<response_t> predict (const rfr::base<num_t, index_t> &data) = 0;
 		
 	
-	virtual index_type number_of_nodes() = 0;
-	virtual index_type number_of_leafs() = 0;
-	virtual index_type depth() = 0;
+	virtual index_t number_of_nodes() = 0;
+	virtual index_t number_of_leafs() = 0;
+	virtual index_t depth() = 0;
 	
 	/** \brief creates a LaTeX document visualizing the tree*/
 	virtual void save_latex_representation(const char* filename) = 0;
