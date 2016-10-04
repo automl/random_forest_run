@@ -177,16 +177,26 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 
 		// now we can increase the splitting value to move data points from the right to the left child
-		// this way we do not consider a split with everything in the right child
+		// this way we do not consider a split with everything in the left or right child
 		auto it = infos_begin;
-		while (it != infos_end){
+		while (it != infos_end-1){
 			num_t psv = (*it).feature + 1e-6; // potential split value add small delta for numerical inaccuracy
 			// combine data points that are very close
 			do {
 				left_stat.push((*it).response, (*it).weight);
-				right_stat.pop((*it).response, (*it).weight);
+                try{// substraction of statistics can lead to negative squared distances from the mean, especially if the right
+                    // child contains samples with the same response value. This happens all the time if a categorical feature is
+                    // not specified as such.
+                    right_stat.pop((*it).response, (*it).weight);
+                }
+                catch (const std::runtime_error& e){
+                    // Just recompute the statistic from scratch, which should always work!
+                    right_stat = rfr::util::weighted_running_statistics<num_t> ();
+                    for (auto tmp_it = it+1; tmp_it != infos_end; tmp_it++)
+                        right_stat.push((*tmp_it).response, (*tmp_it).weight);
+                }
 				++it;
-			} while ((it != infos_end) && ((*it).feature <= psv));
+			} while ((it != infos_end-1) && ((*it).feature <= psv));
 			
 			// stop if all data points are now in the left child as this is not a meaningful split
 			if (right_stat.sum_of_weights() == 0) {break;}

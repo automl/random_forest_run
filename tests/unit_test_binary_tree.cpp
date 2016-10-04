@@ -19,18 +19,18 @@
 
 
 typedef double num_type;
-typedef double response_type;
-typedef unsigned int index_type;
-typedef std::default_random_engine rng_type;
+typedef double response_t;
+typedef unsigned int index_t;
+typedef std::default_random_engine rng_t;
 
-typedef rfr::data_containers::mostly_continuous_data<num_type, response_type, index_type> data_container_type;
+typedef rfr::data_containers::mostly_continuous_data<num_type, response_t, index_t> data_container_type;
 
-typedef rfr::splits::binary_split_one_feature_rss_loss<rng_type, num_type, response_type, index_type> split_type;
-typedef rfr::nodes::k_ary_node<2, split_type, rng_type, num_type, response_type, index_type> node_type;
+typedef rfr::splits::binary_split_one_feature_rss_loss<num_type, response_t, index_t, rng_t> split_type;
+typedef rfr::nodes::k_ary_node<2, split_type, num_type, response_t, index_t, rng_t> node_type;
 
-typedef rfr::nodes::temporary_node<num_type, index_type> tmp_node_type;
+typedef rfr::nodes::temporary_node<num_type, index_t> tmp_node_type;
 
-typedef rfr::trees::k_ary_random_tree<2, split_type, rng_type, num_type, response_type, index_type> tree_type;
+typedef rfr::trees::k_ary_random_tree<2, split_type, num_type, response_t, index_t, rng_t> tree_type;
 
 
 template <class T>
@@ -67,13 +67,13 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
     data.set_type_of_feature(1, 4);
     
-    rfr::trees::tree_options<num_type, response_type, index_type> tree_opts;
+    rfr::trees::tree_options<num_type, response_t, index_t> tree_opts;
 	
 	
     tree_opts.max_features = 1;
     tree_opts.max_depth = 3;
 	
-    rng_type rng_engine;
+    rng_t rng_engine;
 
     for (auto i = 0; i <4; i++){
 	tree_type the_tree;

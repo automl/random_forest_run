@@ -37,7 +37,8 @@ typedef rfr::trees::k_ary_random_tree<2, split_type, rng_type, num_type, respons
 
 
 
-BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
+BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){}
+/*
     data_container_type data;
 
     char *filename = (char*) malloc(1024*sizeof(char));
@@ -102,6 +103,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	
     free(filename);
 }
+
 
 
 BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
@@ -187,3 +189,6 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	
     free(filename);
 }
+
+
+*/

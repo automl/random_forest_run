@@ -150,11 +150,11 @@ class regression_forest{
 				for (auto j=0u; j<the_trees.size(); j++){
 					// only consider data points that were not part of that bootstrap sample
 					if (bootstrap_sample_counts[j][i] == 0)
-						prediction_stat (the_trees[j].predict( data.retrieve_data_point(i).data()));
+						prediction_stat.push(the_trees[j].predict( data.retrieve_data_point(i).data()));
 				}
 				
 				// compute squared error of prediction
-				oob_error_stat(std::pow(prediction_stat.mean() - data.response(i), 2));
+				oob_error_stat.push(std::pow(prediction_stat.mean() - data.response(i), 2));
 			}
 			oob_error = std::sqrt(oob_error_stat.mean());
 		}

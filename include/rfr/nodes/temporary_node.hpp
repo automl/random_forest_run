@@ -20,16 +20,16 @@ struct temporary_node{
 	temporary_node (index_t node_id, index_t parent_id,	index_t node_lvl,
 					typename std::vector<info_t>::iterator s,
 					typename std::vector<info_t>::iterator e):
-						node_index(node_id), parent_index(parent_id), start(s), end(s), node_level(node_lvl)
+						node_index(node_id), parent_index(parent_id), start(s), end(e), node_level(node_lvl)
 						{}
 	
-	void print_info(){
+	void print_info() const{
 		std::cout<<"node_index = "<<node_index <<"\n";
 		std::cout<<"parent_index = "<<parent_index <<"\n";
 		std::cout<<"node_level = "<< node_level<<"\n";
 		std::cout<<"data_indices: ";
-        for (auto &it = start; it!=end; it++)
-            std::cout<<(*it)->index;
+        for (auto it = start; it!=end; it++)
+            std::cout<<(*it).index<<" ";
         std::cout<<std::endl;
 	}
 };

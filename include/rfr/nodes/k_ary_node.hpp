@@ -7,6 +7,7 @@
 #include <tuple>
 #include <sstream>
 #include <algorithm>
+#include <random>
 
 #include "rfr/data_containers/data_container.hpp"
 #include "rfr/data_containers/data_container_utils.hpp"
@@ -30,7 +31,7 @@ namespace rfr{ namespace nodes{
  * In this case, one can try to gain some speed by replacing variable length std::vectors by std::arrays.
  * 
  */
-template <int k, typename split_type, typename rng_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
+template <int k, typename split_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
 class k_ary_node{
   private:
 	typedef rfr::splits::data_info_t<num_t, response_t, index_t> info_t;
@@ -61,27 +62,32 @@ class k_ary_node{
 	* \param tmp_node a temporary_node struct containing all the important information. It is not changed in this function.
 	* \param data a refernce to the data object that is used
 	* \param features_to_try vector of allowed features to be used for this split
-	* \param nodes reference to vector containing all processed nodes
-	* \param tmp_nodes reference to vector containing all temporary nodes that still have to be checked
+	* \param num_nodes number of already created nodes
+	* \param tmp_nodes a deque instance containing all temporary nodes that still have to be checked
+    * \param rng a RNG instance
 	*
 	* \return num_t the loss of the split
 	*/ 
-	num_t make_internal_node(rfr::nodes::temporary_node<num_t, index_t> &tmp_node,
-							const rfr::data_containers::base<num_t, response_t, index_t> &data,
-							std::vector<index_t> &features_to_try,
-							index_t num_nodes,
-							std::deque<rfr::nodes::temporary_node<num_t, response_t, index_t> > &tmp_nodes,
-							rng_t &rng){
+	num_t make_internal_node(const rfr::nodes::temporary_node<num_t, response_t, index_t> &tmp_node,
+                             const rfr::data_containers::base<num_t, response_t, index_t> &data,
+							 std::vector<index_t> &features_to_try,
+							 index_t num_nodes,
+							 std::deque<rfr::nodes::temporary_node<num_t, response_t, index_t> > &tmp_nodes,
+							 rng_t &rng){
 		response_values.clear();
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<info_t>::iterator, k+1> split_indices_it;
+        std::cout<<"huh?!"<<std::endl;
 		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.start, tmp_node.end, split_indices_it,rng);
 	
+        std::cout<<"huh?!"<<std::endl;
 		//check if a split was found
 		// note: if the number of features to try is too small, there is a chance that the data cannot be split any further
 		if (best_loss <  std::numeric_limits<num_t>::infinity()){
-			// create an empty node, and a tmp node for each child
+            std::cout<<"bla"<<std::endl;
+			// create a tmp node for each child
 			for (index_t i = 0; i < k; i++){
+                std::cout<<"blubs"<<std::endl;
 				tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
 				split_fractions[i] = ((num_t) std::distance(split_indices_it[i],split_indices_it[i+1])) / 
 									 ((num_t) std::distance(split_indices_it[0],split_indices_it[k]));
@@ -98,16 +104,18 @@ class k_ary_node{
 	* \param tmp_node the internal representation for a temporary node.
 	* \param data a data container instance
 	*/
-	void make_leaf_node(rfr::nodes::temporary_node<num_t, index_t> &tmp_node,
+	void make_leaf_node(const rfr::nodes::temporary_node<num_t, response_t, index_t> &tmp_node,
 						const rfr::data_containers::base<num_t, response_t, index_t> &data){
 		parent_index = tmp_node.parent_index;
 		children.fill(0);
 		
+        tmp_node.print_info();
+        
 		response_values.reserve(std::distance(tmp_node.start, tmp_node.end));
 		response_weights.reserve(std::distance(tmp_node.start, tmp_node.end));
-
-		for (auto it = tmp_node.start; it != tmp_node.data_indices.size(); it++){
-			push_response_value((*it).response, (*it).weights);
+        
+		for (auto it = tmp_node.start; it != tmp_node.end; ++it){
+			push_response_value((*it).response, (*it).weight);
 		}
 	}	
 
@@ -131,7 +139,7 @@ class k_ary_node{
 	 * This function can be used for pseudo updates of a tree by
 	 * simply adding observations into the corresponding leaf
 	 */
-	void push_response_value ( num_t r, num_t w){
+	void push_response_value ( response_t r, num_t w){
 		response_values.push_back(r);
 		response_weights.push_back(w);
 		response_stat.push(r,w);

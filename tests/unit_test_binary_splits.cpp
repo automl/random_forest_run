@@ -341,9 +341,9 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_binary_serialization){
 		iarchive(split5);
 	}
 	
-	BOOST_REQUIRE(index4     == split5.get_feature_index());
-	BOOST_REQUIRE(split_val  == split5.get_num_split_value());
-	BOOST_REQUIRE(split_bits == split5.get_cat_split_set());
+	BOOST_REQUIRE_EQUAL(index4,    split5.get_feature_index());
+	BOOST_REQUIRE_EQUAL(split_val, split5.get_num_split_value());
+	BOOST_REQUIRE_EQUAL(split_bits,split5.get_cat_split_set());
 	
 }
 

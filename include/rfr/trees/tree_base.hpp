@@ -10,7 +10,7 @@
 
 namespace rfr{ namespace trees{
 
-template <typename rng_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
+template <typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_type=std::default_random_engine>
 class tree_base{
   public:
 	/** \brief member function to fit the tree to the whole data
@@ -29,9 +29,8 @@ class tree_base{
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
 			 rng_type &rng){
 
-		std::vector<index_t> data_indices(data.num_data_points());
-		std::iota(data_indices.begin(), data_indices.end(), 0);
-		fit(data, tree_opts, data_indices,rng);
+		std::vector<num_t> sample_weights(data.num_data_points(), 1.);
+		fit(data, tree_opts, sample_weights,rng);
 	}
 
 	/** \brief fits a (possibly randomized) decision tree to a subset of the data
@@ -42,11 +41,11 @@ class tree_base{
 	 * 
 	 * \param data the container holding the training data
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
-	 * \param data_indices vector containing the indices of all allowed datapoints to be used (to implement subsampling, no checks are done here!)
+	 * \param sample_weights vector containing the weights of all datapoints, can be used for subsampling (no checks are done here!)
 	 */
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
-			 std::vector<index_t> &data_indices,
+			 std::vector<num_t> &sample_weights,
 			 rng_type &rng) = 0;
 
 
