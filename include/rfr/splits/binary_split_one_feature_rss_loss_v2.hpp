@@ -134,12 +134,12 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * 
 	 * \return int whether the feature_vector falls into the left (false) or right (true) child
 	 */
-	virtual index_t operator() (num_t *feature_vector) { return(operator()(feature_vector[feature_index]));}
+	virtual index_t operator() (const std::vector<num_t> &feature_vector) const { return(operator()(feature_vector[feature_index]));}
 	
 	/** \brief overloaded operator for just the respective feature value instead of the complete vector
 	 * 
 	 */
-	virtual index_t operator() (const num_t &feature_value) {
+	virtual index_t operator() (const num_t &feature_value) const {
 		// categorical feature
 		if (std::isnan(num_split_value))
 			return(! bool(cat_split_set[ int(feature_value)]));
@@ -307,7 +307,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	}
 
 
-	virtual void print_info(){
+	virtual void print_info() const {
 		if(std::isnan(num_split_value)){
 			std::cout<<"split: f_"<<feature_index<<" in {";
 			for (size_t i = 0; i < max_num_categories; i++)
@@ -322,7 +322,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * 
 	 * \return std::string a label that characterizes the split
 	 */	
-	virtual std::string latex_representation(){
+	virtual std::string latex_representation() const {
 		std::stringstream str;
 
 		if (std::isnan(num_split_value)){
@@ -344,14 +344,14 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	
 	index_t get_feature_index() const {return(feature_index);}
 	num_t get_num_split_value() const {return(num_split_value);}
-	std::bitset<max_num_categories> get_cat_split_set() {return(cat_split_set);}
+	std::bitset<max_num_categories> get_cat_split_set() const {return(cat_split_set);}
 	
 	/* \brief takes a subspace and returns the 2 corresponding subspaces after the split is applied
 	 *
 	 * This is an essential function for the fANOVA. Every split
 	 * constraints one of the parameters in each of the children.
 	 */
-	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace){
+	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace) const {
 		
 	
 		std::array<std::vector<std::vector<num_t> >, 2> subspaces = {subspace, subspace};
@@ -377,7 +377,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		return(subspaces);
 	}
 
-	bool can_be_split(num_t *feature_vector){
+	bool can_be_split(std::vector<num_t> &feature_vector) const {
 		return(!std::isnan(feature_vector[feature_index]));
 	}
 };

@@ -32,18 +32,26 @@ typedef rfr::nodes::k_ary_node<2, split_type, num_t, response_t, index_t, rng_ty
 typedef rfr::nodes::temporary_node<num_t, response_t, index_t> tmp_node_type;
 
 
+data_container_type load_toy_data(){
+	data_container_type data;
+	
+    std::string feature_file, response_file;
+    
+    feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_features.csv";
+    response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_responses.csv";
+
+    data.import_csv_files(feature_file, response_file);
+	
+	data.set_type_of_feature(1,10);
+    return(data);
+}
+
+
+
+
 BOOST_AUTO_TEST_CASE( binary_nodes_make_leaf ){
 
-	data_container_type data;
-    char filename [1024];
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_features.csv");
-    data.read_feature_file(filename);
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_responses.csv");
-    data.read_response_file(filename);
+	auto data = load_toy_data();
 
 	std::vector<info_t > data_info(data.num_data_points());
 	BOOST_REQUIRE_EQUAL(data.num_data_points(), 100);
@@ -60,6 +68,8 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_leaf ){
     
 	tmp_node_type tmp_node1(0, 0, 0, data_info.begin(), data_info.end());
     
+    BOOST_REQUIRE_CLOSE(tmp_node1.total_weight(), 100, 1e-4);
+    
 	node_type root_node1;
 	
 	root_node1.make_leaf_node(tmp_node1, data);
@@ -68,24 +78,12 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_leaf ){
     auto infor = root_node1.leaf_statistic();
     BOOST_REQUIRE(root_node1.is_a_leaf());
     BOOST_REQUIRE_EQUAL(infor.sum_of_weights(), 100);
-	
-    
-    
 }
 
 BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
 
-	data_container_type data;
-    char filename [1024];
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_features.csv");
-    data.read_feature_file(filename);
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_responses.csv");
-    data.read_response_file(filename);
-
+	auto data = load_toy_data();
+  	data.set_type_of_feature(1,0);  
 	std::vector<info_t > data_info(data.num_data_points());
 	BOOST_REQUIRE_EQUAL(data.num_data_points(), 100);
     
@@ -110,6 +108,8 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
 	tmp_node_type tmp_node2(0, 0, 0, data_info.begin(), data_info.end());
 	tmp_nodes.push_back(tmp_node2);
 	
+    BOOST_REQUIRE_CLOSE(tmp_nodes.front().total_weight(), 100, 1e-4);
+    
 	std::vector<index_t> features_to_try({0,1});	
 
     
@@ -119,11 +119,13 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
 	
 	nodes.emplace_back();
     BOOST_REQUIRE_EQUAL(nodes.size(), 2);
+    BOOST_REQUIRE_CLOSE(tmp_nodes.front().total_weight(), 60, 1e-4);
 	nodes[1].make_leaf_node(tmp_nodes[0], data);
 	tmp_nodes.pop_front();
 	
 	nodes.emplace_back();
     BOOST_REQUIRE_EQUAL(nodes.size(), 3);
+    BOOST_REQUIRE_CLOSE(tmp_nodes.front().total_weight(), 40, 1e-4);
 	nodes[2].make_leaf_node(tmp_nodes[0], data);
 	tmp_nodes.pop_front();
 	

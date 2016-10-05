@@ -77,22 +77,26 @@ class k_ary_node{
 		response_values.clear();
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<info_t>::iterator, k+1> split_indices_it;
-        std::cout<<"huh?!"<<std::endl;
-		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.start, tmp_node.end, split_indices_it,rng);
+		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.begin, tmp_node.end, split_indices_it,rng);
 	
-        std::cout<<"huh?!"<<std::endl;
 		//check if a split was found
 		// note: if the number of features to try is too small, there is a chance that the data cannot be split any further
 		if (best_loss <  std::numeric_limits<num_t>::infinity()){
-            std::cout<<"bla"<<std::endl;
 			// create a tmp node for each child
+            num_t total_weight = 0;
 			for (index_t i = 0; i < k; i++){
-                std::cout<<"blubs"<<std::endl;
 				tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
-				split_fractions[i] = ((num_t) std::distance(split_indices_it[i],split_indices_it[i+1])) / 
-									 ((num_t) std::distance(split_indices_it[0],split_indices_it[k]));
+                split_fractions[i]=tmp_nodes.back().total_weight();
+                std::cout<<"+ "<<split_fractions[i];
+                total_weight += split_fractions[i];
 				children[i] = num_nodes + i;
 			}
+			std::cout<<" ?= "<<total_weight<<std::endl;
+			for (auto &sf: split_fractions){
+                sf /= total_weight;
+                std::cout<<sf;
+            }
+            std::cout<<std::endl;
 		}
 		else
 			make_leaf_node(tmp_node, data);
@@ -111,16 +115,16 @@ class k_ary_node{
 		
         tmp_node.print_info();
         
-		response_values.reserve(std::distance(tmp_node.start, tmp_node.end));
-		response_weights.reserve(std::distance(tmp_node.start, tmp_node.end));
+		response_values.reserve(std::distance(tmp_node.begin, tmp_node.end));
+		response_weights.reserve(std::distance(tmp_node.begin, tmp_node.end));
         
-		for (auto it = tmp_node.start; it != tmp_node.end; ++it){
+		for (auto it = tmp_node.begin; it != tmp_node.end; ++it){
 			push_response_value((*it).response, (*it).weight);
 		}
 	}	
 
 	/* \brief function to check if a feature vector can be splitted */
-	bool can_be_split(num_t *feature_vector){return(split.can_be_split(feature_vector));}
+	bool can_be_split(std::vector<num_t> &feature_vector){return(split.can_be_split(feature_vector));}
 
 	/** \brief returns the index of the child into which the provided sample falls
 	 * 
@@ -128,9 +132,9 @@ class k_ary_node{
 	 *
 	 * \return index_t index of the child
 	 */
-	index_t falls_into_child(num_t * sample){
+	index_t falls_into_child(const std::vector<num_t> &feature_vector) const {
 		if (is_a_leaf()) return(0);
-		return(children[split(sample)]);
+		return(children[split(feature_vector)]);
 	}
 
 
@@ -161,7 +165,7 @@ class k_ary_node{
 	 *
 	 * 	See description of rfr::splits::binary_split_one_feature_rss_loss.
 	 */
-	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace){
+	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace) const {
 		return(split.compute_subspaces(subspace));
 	}
 
@@ -169,27 +173,27 @@ class k_ary_node{
 	 *
 	 * See description of rfr::util::weighted_running_statistics for more information
 	 */
-	rfr::util::weighted_running_statistics<num_t> const & leaf_statistic(){ return (response_stat);}
+	rfr::util::weighted_running_statistics<num_t> const & leaf_statistic()  const { return (response_stat);}
 
 	/** \brief to test whether this node is a leaf */
-	bool is_a_leaf(){return(children[0] == 0);}
+	bool is_a_leaf() const {return(children[0] == 0);}
 	/** \brief get the index of the node's parent */
-	index_t parent() {return(parent_index);}
+	index_t parent() const {return(parent_index);}
 	
 	/** \brief get indices of all children*/
-	std::array<index_t, k> get_children() {return(children);}
-	index_t get_child_index (index_t idx) {return(children[idx]);};
+	std::array<index_t, k> get_children() const {return(children);}
+	index_t get_child_index (index_t idx) const {return(children[idx]);};
 
-	std::array<num_t, k> get_split_fractions() {return(split_fractions);}
-	num_t get_split_fraction (index_t idx) {return(split_fractions[idx]);};
+	std::array<num_t, k> get_split_fractions() const {return(split_fractions);}
+	num_t get_split_fraction (index_t idx) const {return(split_fractions[idx]);};
 
-	split_type get_split() {return(split);}
+	split_type get_split() const {return(split);}
 
 	/** \brief get reference to the response values*/	
-	std::vector<response_t> const &responses (){ return( (std::vector<response_t> const &) response_values);}
+	std::vector<response_t> const &responses () const { return( (std::vector<response_t> const &) response_values);}
 
 	/** \brief prints out some basic information about the node*/
-	void print_info(){
+	void print_info() const {
 		if (is_a_leaf()){
 			std::cout<<"status: leaf\nresponse values: ";
 			rfr::print_vector(response_values);
@@ -204,7 +208,7 @@ class k_ary_node{
 	}
 
 	/** \brief generates a label for the node to be used in the LaTeX visualization*/
-	std::string latex_representation( int my_index){
+	std::string latex_representation( int my_index) const {
 		std::stringstream str;
 			
 		if (is_a_leaf()){

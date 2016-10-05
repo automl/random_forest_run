@@ -130,18 +130,18 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 	virtual index_t num_features() const {return(feature_values.size());}
-	virtual index_t num_data_points() const {return(feature_values[0].size());}
+	virtual index_t num_data_points() const {return(response_values.size());}
 
 
 	// some helper functions
-	int read_feature_file (const char* filename){
-		feature_values =  rfr::read_csv_file<num_t>(filename);
+	int import_csv_files (const std::string &feature_file, const std::string &response_file, std::string weight_file=""){
+		feature_values =  rfr::read_csv_file<num_t>(feature_file);
+        response_values = (read_csv_file<response_t>(response_file))[0];
+        if (weight_file.size()>0)
+            weights = (read_csv_file<num_t>(weight_file))[0];
+        else
+            weights = std::vector<num_t> (response_values.size(), 1);
 		return(feature_values.size());
-	}
-
-	int read_response_file (const char* filename){
-		response_values = (read_csv_file<num_t>(filename))[0];
-		return(response_values.size());
 	}
 
 	bool check_consistency(){
@@ -151,11 +151,13 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 		*  2. every (row) vector in feature_values
 		*/
 
-		index_t num_data_points = response_values.size();
 		for (auto it = feature_values.begin(); it != feature_values.end(); it ++){
-			if (num_data_points != it->size())
+			if (num_data_points() != it->size())
 				return(false);
 		}
+		
+		if (weights.size() != num_data_points()) return(false);
+		
 		return(true);
 	}
 

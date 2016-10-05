@@ -16,19 +16,26 @@ typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t>
 typedef rfr::data_containers::mostly_continuous_data_with_instances<num_t, response_t, index_t> data_container_type2;
 
 
-BOOST_AUTO_TEST_CASE( data_container_tests ){
+data_container_type load_diabetes_data(){
 	data_container_type data;
+	
+    std::string feature_file, response_file;
+    
+    feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_features.csv";
+    response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_responses.csv";
 
-	char *filename = (char*) malloc(1024*sizeof(char));
+    data.import_csv_files(feature_file, response_file);
+    return(data);
+}
 
 
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-	strcat(filename, "diabetes_features.csv");
-	data.read_feature_file(filename);
 
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-	strcat(filename, "diabetes_responses.csv");
-	data.read_response_file(filename);
+
+BOOST_AUTO_TEST_CASE( data_container_tests ){
+
+    
+    auto data = load_diabetes_data();
+
 
 	// reference directly from scikit learn (from where the dataset was retrieved)
 	std::vector<num_t> responses_reference {	151.,75.,141.,206.,135.,97.,138.,63.,110.,310.,101.,69.,179.,185.,118.,171.,166.,144.,97.,168.,68.,49.,68.,245.,184.,202.,137.,85.,131.,283.,129.,59.,341.,87.,65.,102.,265.,276.,252.,90.,100.,55.,61.,92.,259.,53.,190.,142.,75.,142.,155.,225.,59.,104.,182.,128.,52.,37.,170.,170.,61.,144.,52.,128.,71.,163.,150.,97.,160.,178.,48.,270.,202.,111.,85.,42.,170.,200.,252.,113.,143.,51.,52.,210.,65.,141.,55.,134.,42.,111.,98.,164.,48.,96.,90.,162.,150.,279.,92.,83.,128.,102.,302.,198.,95.,53.,134.,144.,232.,81.,104.,59.,246.,297.,258.,229.,275.,281.,179.,200.,200.,173.,180.,84.,121.,161.,99.,109.,115.,268.,274.,158.,107.,83.,103.,272.,85.,280.,336.,281.,118.,317.,235.,60.,174.,259.,178.,128.,96.,126.,288.,88.,292.,71.,197.,186.,25.,84.,96.,195.,53.,217.,172.,131.,214.,59.,70.,220.,268.,152.,47.,74.,295.,101.,151.,127.,237.,225.,81.,151.,107.,64.,138.,185.,265.,101.,137.,143.,141.,79.,292.,178.,91.,116.,86.,122.,72.,129.,142.,90.,158.,39.,196.,222.,277.,99.,196.,202.,155.,77.,191.,70.,73.,49.,65.,263.,248.,296.,214.,185.,78.,93.,252.,150.,77.,208.,77.,108.,160.,53.,220.,154.,259.,90.,246.,124.,67.,72.,257.,262.,275.,177.,71.,47.,187.,125.,78.,51.,258.,215.,303.,243.,91.,150.,310.,153.,346.,63.,89.,50.,39.,103.,308.,116.,145.,74.,45.,115.,264.,87.,202.,127.,182.,241.,66.,94.,283.,64.,102.,200.,265.,94.,230.,181.,156.,233.,60.,219.,80.,68.,332.,248.,84.,200.,55.,85.,89.,31.,129.,83.,275.,65.,198.,236.,253.,124.,44.,172.,114.,142.,109.,180.,144.,163.,147.,97.,220.,190.,109.,191.,122.,230.,242.,248.,249.,192.,131.,237.,78.,135.,244.,199.,270.,164.,72.,96.,306.,91.,214.,95.,216.,263.,178.,113.,200.,139.,139.,88.,148.,88.,243.,71.,77.,109.,272.,60.,54.,221.,90.,311.,281.,182.,321.,58.,262.,206.,233.,242.,123.,167.,63.,197.,71.,168.,140.,217.,121.,235.,245.,40.,52.,104.,132.,88.,69.,219.,72.,201.,110.,51.,277.,63.,118.,69.,273.,258.,43.,198.,242.,232.,175.,93.,168.,275.,293.,281.,72.,140.,189.,181.,209.,136.,261.,113.,	131.,174.,257.,55.,84.,42.,146.,212.,233.,91.,111.,152.,120.,67.,310.,94.,183.,66.,173.,72.,49.,64.,48.,178.,104.,132.,220.,57.};
@@ -75,8 +82,6 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 	// check that setting and retrieving the feature type works
 	BOOST_CHECK( data.get_type_of_feature(0) == 0 );
 	BOOST_CHECK_THROW( data.set_type_of_feature(1,10), std::runtime_error);
-
-    free(filename);
 }
 
 

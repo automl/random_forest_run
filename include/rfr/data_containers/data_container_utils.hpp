@@ -20,7 +20,7 @@ namespace rfr{
  *
  */
 template <typename num_type>
-std::vector< std::vector<num_type> > read_csv_file( const char* filename){
+std::vector< std::vector<num_type> > read_csv_file( std::string filename){
 
 	std::vector< std::vector<num_type> > csv_values;
 

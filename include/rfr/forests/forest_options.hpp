@@ -25,7 +25,7 @@ struct forest_options{
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( num_trees,num_data_points_per_tree, do_bootstrapping, tree_opts);
+		archive( num_trees,num_data_points_per_tree, do_bootstrapping, compute_oob_error, tree_opts);
 	}
 
 

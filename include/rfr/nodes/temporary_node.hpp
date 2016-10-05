@@ -14,21 +14,30 @@ struct temporary_node{
 	
 	index_t node_index;
 	index_t parent_index;
-	typename std::vector<info_t>::iterator start, end; 
+	typename std::vector<info_t>::iterator begin, end; 
 	index_t node_level;
 
 	temporary_node (index_t node_id, index_t parent_id,	index_t node_lvl,
-					typename std::vector<info_t>::iterator s,
+					typename std::vector<info_t>::iterator b,
 					typename std::vector<info_t>::iterator e):
-						node_index(node_id), parent_index(parent_id), start(s), end(e), node_level(node_lvl)
+						node_index(node_id), parent_index(parent_id), begin(b), end(e), node_level(node_lvl)
 						{}
+	
+	
+	num_t total_weight (){
+        num_t tw = 0.;
+        for (auto it = begin; it != end; ++it){
+            tw += (*it).weight;
+        }
+        return(tw);
+    }
 	
 	void print_info() const{
 		std::cout<<"node_index = "<<node_index <<"\n";
 		std::cout<<"parent_index = "<<parent_index <<"\n";
 		std::cout<<"node_level = "<< node_level<<"\n";
 		std::cout<<"data_indices: ";
-        for (auto it = start; it!=end; it++)
+        for (auto it = begin; it!=end; it++)
             std::cout<<(*it).index<<" ";
         std::cout<<std::endl;
 	}

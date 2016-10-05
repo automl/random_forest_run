@@ -41,25 +41,29 @@ void print_pcs (std::vector<std::vector<num_t> > pcs){
 }
 
 
+data_container_type load_toy_data(){
+	data_container_type data;
+	
+    std::string feature_file, response_file;
+    
+    feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_features.csv";
+    response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_responses.csv";
+
+    data.import_csv_files(feature_file, response_file);
+	
+	data.set_type_of_feature(1,10);
+    return(data);
+}
+
+
+
 
 
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	
-	char filename[1000];
+	auto data = load_toy_data();
 	
-	// read the test dataset
-	data_container_type data;
-	
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-	strcat(filename, "toy_data_set_features.csv");
-	data.read_feature_file(filename);
-
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-	strcat(filename, "toy_data_set_responses.csv");
-	data.read_response_file(filename);
-	
-
-	std::vector<info_t > data_info(data.num_data_points());
+    std::vector<info_t > data_info(data.num_data_points());
 	
 	for (auto i=0u; i<data.num_data_points(); ++i){
 		data_info[i].index=i;
@@ -89,7 +93,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	std::vector<index_t> operator_test = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	
 	for (size_t i=0; i<operator_test.size(); i++){
-		num_t tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
+		std::vector<num_t> tmp_feature_vector ({data.feature(0,i), data.feature(1,i)});
 		BOOST_REQUIRE(split1(tmp_feature_vector) == operator_test[i]);
 	}
 	
@@ -119,21 +123,10 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	
-	char filename[1000];
+	auto data = load_toy_data();
 	
-	// read the test dataset
-	data_container_type data;
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_features.csv");
-    data.read_feature_file(filename);
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_responses.csv");
-    data.read_response_file(filename);
-	
-	data.set_type_of_feature(1,10);
-
-	std::vector<info_t > data_info(data.num_data_points());
+    
+    std::vector<info_t > data_info(data.num_data_points());
 	
 	for (auto i=0u; i<data.num_data_points(); ++i){
 		data_info[i].index=i;
@@ -150,6 +143,13 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	split_type split2;
 	num_t loss = split2.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
 
+    num_t total_weight = 0;
+    for (auto it = infos_split_it[0]; it!=infos_split_it[1]; ++it)
+        total_weight += (*it).weight;
+    for (auto it = infos_split_it[1]; it!=infos_split_it[2]; ++it)
+        total_weight += (*it).weight;
+    BOOST_REQUIRE_CLOSE(total_weight, data.num_data_points(), 1e-4);    
+    
 	// actual best split and loss independently computed in python
 	BOOST_REQUIRE_CLOSE(loss, 88.57142857, 1e-4);
 	auto split_set = split2.get_cat_split_set();
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	std::vector<index_t> operator_test = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	
 	for (size_t i=0; i<operator_test.size(); i++){
-		num_t tmp_feature_vector[] = {data.feature(0,i), data.feature(1,i)};
+		std::vector<num_t> tmp_feature_vector ({data.feature(0,i), data.feature(1,i)});
 		BOOST_CHECK_MESSAGE(split2(tmp_feature_vector) == operator_test[i],split2(tmp_feature_vector) << "!=" <<  operator_test[i]<<" (index "<<i<<")\n");
 	}
 	
@@ -188,27 +188,14 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 
 // check if it finds the best split out of the two above
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
-	
-	char filename[1000];
-	
-	// read the test dataset
-	data_container_type data;
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_features.csv");
-    data.read_feature_file(filename);
 
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_responses.csv");
-    data.read_response_file(filename);
-	
-	data.set_type_of_feature(1,10);
-	std::vector<info_t > data_info(data.num_data_points());
-	
+	auto data = load_toy_data();
+
+    std::vector<info_t > data_info(data.num_data_points());    
 	for (auto i=0u; i<data.num_data_points(); ++i){
 		data_info[i].index=i;
 		data_info[i].response = data.response(i);
 		data_info[i].weight = 1;
-
 	}
 
 	std::array<std::vector<info_t>::iterator, 3> infos_split_it;
@@ -218,9 +205,17 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 
 	split_type split3;
 	num_t loss = split3.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
-
-
 	BOOST_REQUIRE_CLOSE(loss, 23.33333333, 1e-4);
+    
+    num_t total_weight = 0;
+    for (auto it = infos_split_it[0]; it!=infos_split_it[1]; ++it)
+        total_weight += (*it).weight;
+    for (auto it = infos_split_it[1]; it!=infos_split_it[2]; ++it)
+        total_weight += (*it).weight;
+    BOOST_REQUIRE_CLOSE(total_weight, data.num_data_points(), 1e-4);
+    
+    
+
 	
 	num_t split_val = split3.get_num_split_value();
 
@@ -228,23 +223,13 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	BOOST_REQUIRE(split_val < 60);
 }
 
+
+
 // test serialization
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
-	char filename[1000];
-	
-	// read the test dataset
-	data_container_type data;
-	
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_features.csv");
-    data.read_feature_file(filename);
 
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_responses.csv");
-    data.read_response_file(filename);
-	
-	data.set_type_of_feature(1,10);
-
+    auto data = load_toy_data();
+    
 	std::vector<info_t > data_info(data.num_data_points());
 	
 	for (auto i=0u; i<data.num_data_points(); ++i){
@@ -262,7 +247,14 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
 
 	split_type split4;
 	num_t loss = split4.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
-	
+
+    num_t total_weight = 0;
+    for (auto it = infos_split_it[0]; it!=infos_split_it[1]; ++it)
+        total_weight += (*it).weight;
+    for (auto it = infos_split_it[1]; it!=infos_split_it[2]; ++it)
+        total_weight += (*it).weight;
+    BOOST_REQUIRE_CLOSE(total_weight, data.num_data_points(), 1e-4);
+    
 	index_t index4 = split4.get_feature_index();
 	auto split_val = split4.get_num_split_value();
 	auto split_bits= split4.get_cat_split_set();
@@ -289,20 +281,8 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
 
 // test binary serialization
 BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_binary_serialization){
-	char filename[1000];
 	
-	// read the test dataset
-	data_container_type data;
-	
-	strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_features.csv");
-    data.read_feature_file(filename);
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_responses.csv");
-    data.read_response_file(filename);
-	
-	data.set_type_of_feature(1,10);
+	auto data = load_toy_data();
 
 	std::vector<info_t > data_info(data.num_data_points());
 	
@@ -322,6 +302,13 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_binary_serialization){
 	split_type split4;
 	num_t loss = split4.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
 
+    num_t total_weight = 0;
+    for (auto it = infos_split_it[0]; it!=infos_split_it[1]; ++it)
+        total_weight += (*it).weight;
+    for (auto it = infos_split_it[1]; it!=infos_split_it[2]; ++it)
+        total_weight += (*it).weight;
+    BOOST_REQUIRE_CLOSE(total_weight, data.num_data_points(), 1e-4);
+    
 	
 	index_t index4 = split4.get_feature_index();
 	auto split_val = split4.get_num_split_value();

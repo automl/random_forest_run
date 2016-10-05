@@ -56,7 +56,7 @@ class tree_base{
 	 * 
 	 * \return num_t the prediction of the response value (usually the mean of all responses in the corresponding leaf)
 	 */
-	virtual response_t predict (num_t *feature_vector) = 0;
+	virtual response_t predict (const std::vector<num_t> &feature_vector) const = 0;
 	
 	
 	
@@ -66,7 +66,7 @@ class tree_base{
 	 * 
 	 * \return std::vector<response_t> all response values in that leaf
 	 */
-	virtual std::vector<response_t> const &leaf_entries (num_t *feature_vector) = 0;
+	virtual std::vector<response_t> const &leaf_entries (std::vector<num_t> &feature_vector) const = 0;
 	
 	
 	
@@ -79,12 +79,12 @@ class tree_base{
 	//virtual std::vector<response_t> predict (const rfr::base<num_t, index_t> &data) = 0;
 		
 	
-	virtual index_t number_of_nodes() = 0;
-	virtual index_t number_of_leafs() = 0;
-	virtual index_t depth() = 0;
+	virtual index_t number_of_nodes() const = 0;
+	virtual index_t number_of_leafs() const = 0;
+	virtual index_t depth() const = 0;
 	
 	/** \brief creates a LaTeX document visualizing the tree*/
-	virtual void save_latex_representation(const char* filename) = 0;
+	virtual void save_latex_representation(const char* filename) const = 0;
 	
 };
 

@@ -18,6 +18,9 @@ struct data_info_t{
 	response_t response;
 	num_t feature;
 	num_t weight;
+    
+    data_info_t (): index(0), response(0), feature(NAN), weight(NAN) {}
+    data_info_t (index_t i, response_t r, num_t f, num_t w): index(i), response(r), feature(f), weight(w) {}
 };
 
 
@@ -54,13 +57,13 @@ class k_ary_split_base{
 	 * 
 	 * \return index_t index of the child into which this feature falls
 	 */
-	virtual index_t operator() (num_t *feature_vector) = 0;
+	virtual index_t operator() (const std::vector<num_t> &feature_vector) const  = 0;
 	
 	/** \brief some debug output that prints a informative representation to std::cout*/
-	virtual void print_info() = 0;
+	virtual void print_info() const = 0;
 	
 	/** \brief hopefully all trees can create a LaTeX document as a visualization, this contributes the text of the split.*/
-	virtual std::string latex_representation () = 0;
+	virtual std::string latex_representation() const = 0;
 };
 
 

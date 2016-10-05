@@ -28,41 +28,12 @@
 
 namespace rfr{ namespace forests{
 
-typedef cereal::PortableBinaryInputArchive iarch_type;
-typedef cereal::PortableBinaryOutputArchive oarch_type;
+typedef cereal::PortableBinaryInputArchive iarch_t;
+typedef cereal::PortableBinaryOutputArchive oarch_t;
 
 
 
-template <typename tree_type, typename rng_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
-class regression_forest2{
-  private:
-	forest_options<num_t, response_t, index_t> forest_opts;
-	std::vector<tree_type> the_trees;
-	index_t num_features;
-	//std::vector<std::vector<index_t> > dirty_leafs;
-	//std::vector<std::vector<index_t> > bootstrap_sample_counts;
-	
-	num_t oob_error;
-
-  public:
-
-  	/* serialize function for saving forests */
-  	template<class Archive>
-	void serialize(Archive & archive)
-	{
-		//archive( forest_opts, the_trees, num_features, dirty_leafs, bootstrap_sample_counts, oob_error);
-		archive( forest_opts, the_trees, num_features);
-	}
-
-
-	regression_forest2(): forest_opts(), the_trees(){}
-
-	//regression_forest2(forest_options<num_t, response_t, index_t> forest_opts): forest_opts(forest_opts), num_features(42){}
-	regression_forest2(forest_options<num_t, response_t, index_t> forest_opts): forest_opts(forest_opts), the_trees(forest_opts.num_trees), num_features(42){}
-};
-
-
-template <typename tree_type, typename rng_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int>
+template <typename tree_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_type=std::default_random_engine>
 class regression_forest{
   private:
 	forest_options<num_t, response_t, index_t> forest_opts;
@@ -70,7 +41,7 @@ class regression_forest{
 	index_t num_features;
 
 	std::vector<std::vector<index_t> > dirty_leafs;
-	std::vector<std::vector<index_t> > bootstrap_sample_counts;
+	std::vector<std::vector<num_t> > bootstrap_sample_weights;
 	
 	num_t oob_error;
 
@@ -80,7 +51,7 @@ class regression_forest{
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( forest_opts, the_trees, num_features, dirty_leafs, bootstrap_sample_counts, oob_error);
+		archive( forest_opts, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error);
 	}
 
 
@@ -113,26 +84,29 @@ class regression_forest{
 		if (forest_opts.tree_opts.max_features == 0)
 			throw std::runtime_error("The number of features used for a split is set to zero!");
 		
-		bootstrap_sample_counts.clear();
+		bootstrap_sample_weights.clear();
 
 		for (auto &tree : the_trees){
+            std::vector<num_t> bssw (data.num_data_points(), 0);
 			// prepare the data(sub)set
 			if (forest_opts.do_bootstrapping){
-				std::uniform_int_distribution<index_t> dist (0,data.num_data_points()-1);
-				auto dice = std::bind(dist, rng);
-				std::generate_n(data_indices_to_be_used.begin(), data_indices_to_be_used.size(), dice);
+                std::uniform_int_distribution<index_t> dist (0,data.num_data_points()-1);
+                auto die = std::bind(dist, rng);
+                for (auto i=0u; i < forest_opts.num_data_points_per_tree; ++i)
+                    ++bssw[die()];
 			}
 			else{
 				std::shuffle(data_indices.begin(), data_indices.end(), rng);
-				data_indices_to_be_used.assign(data_indices.begin(), data_indices.begin()+ forest_opts.num_data_points_per_tree);
+                for (auto i=0u; i < forest_opts.num_data_points_per_tree; ++i)
+                    ++bssw[data_indices[i]];
 			}
-			tree.fit(data, forest_opts.tree_opts, data_indices_to_be_used, rng);
+			tree.fit(data, forest_opts.tree_opts, bssw, rng);
 			
 			// record sample counts for later use
 			if (forest_opts.compute_oob_error){
-				bootstrap_sample_counts.emplace_back(std::vector<index_t> ( data.num_data_points(),0));
+				bootstrap_sample_weights.emplace_back(std::vector<num_t> ( data.num_data_points(),0));
 				for (auto &i: data_indices_to_be_used){
-					++(bootstrap_sample_counts.back()[i]);
+					++(bootstrap_sample_weights.back()[i]);
 				}
 			}
 		}
@@ -149,8 +123,8 @@ class regression_forest{
 
 				for (auto j=0u; j<the_trees.size(); j++){
 					// only consider data points that were not part of that bootstrap sample
-					if (bootstrap_sample_counts[j][i] == 0)
-						prediction_stat.push(the_trees[j].predict( data.retrieve_data_point(i).data()));
+					if (bootstrap_sample_weights[j][i] == 0)
+						prediction_stat.push(the_trees[j].predict( data.retrieve_data_point(i)));
 				}
 				
 				// compute squared error of prediction
@@ -163,14 +137,26 @@ class regression_forest{
 
 	/* \brief combines the prediction of all trees in the forest
 	 *
-	 * Every random tree makes an individual prediction. From that, the mean and the standard
-	 * deviation of those predictions is calculated. (See Frank's PhD thesis section 11.?)
+	 * Every random tree makes an individual prediction which are averaged for the forest's prediction.
 	 *
 	 * \param feature_vector a valid (size and values) array containing features
 	 *
-	 * \return std::pair<num_t, num_t> mean and total variance (= mean of variances + variance of means )
+	 * \return response_t the predicted value
 	 */
-	std::pair<num_t, num_t> predict_mean_var( num_t * feature_vector){
+
+    response_t predict( const std::vector<num_t> &feature_vector) const{
+
+		// collect the predictions of individual trees
+		rfr::util::running_statistics<num_t> mean_stats;
+		for (auto &tree: the_trees)
+			mean_stats.push(tree.predict(feature_vector));
+		
+		return(mean_stats.mean());
+	}
+    
+    
+    /*
+    std::pair<num_t, num_t> predict_mean_var( num_t * feature_vector){
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> mean_stats, var_stats;
@@ -185,7 +171,7 @@ class regression_forest{
 		
 		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance() + var_stats.mean()) ));
 	}
-
+	*/
 
 	/* \brief combines the prediction of all trees in the forest
 	 *
@@ -196,12 +182,14 @@ class regression_forest{
 	 *
 	 * \return std::pair<num_t, num_t> mean and sqrt(total variance = mean of variances + variance of means )
 	 */
+    
+    /*
 	std::pair<num_t, num_t> predict_mean_std( num_t * feature_vector){
 		auto p = predict_mean_var(feature_vector);
 		p.second = sqrt(p.second);
 		return(p);
 	}
-
+    */
 
 	/* \brief predict the mean and the variance deviation for a configuration marginalized over a given set of partial configurations
 	 * 
@@ -213,6 +201,8 @@ class regression_forest{
 	 * 
 	 * \return std::pair<num_t, num_t> mean and variance prediction of a feature vector averaged over 
 	 */
+    
+    /*
 	std::pair<num_t, num_t> predict_mean_var_marginalized_over_set (num_t *features, num_t* set_features, index_t set_size){
 		
 		num_t fv[num_features];
@@ -231,7 +221,7 @@ class regression_forest{
 		}
 		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance() + var_stats.mean()) ));
 	}
-
+    */
 
 	/* \brief predict the mean and the variance of the mean prediction across a set of partial features
 	 * 
@@ -245,6 +235,7 @@ class regression_forest{
 	 * 
 	 * \return std::tuple<num_t, num_t, num_t> mean and variance of empirical mean prediction of a feature vector averaged over. The last one is the estimated variance of a sample drawn from partial assignment.
 	 */
+    /*
 	std::tuple<num_t, num_t, num_t> predict_mean_var_of_mean_response_on_set (num_t *features, num_t* set_features, index_t set_size){
 
 			num_t fv[num_features];
@@ -272,7 +263,7 @@ class regression_forest{
 			
 			return(std::make_tuple(mean_stats.mean(), std::max<num_t>(0, mean_stats.variance()) + std::max<num_t>(0, var_stats.mean()/set_size), std::max<num_t>(0,sample_mean_stats.variance() + sample_var_stats.mean())));
 	}
-
+    */
 
 	/* \brief estimates the covariance of two feature vectors
 	 * 
@@ -286,6 +277,8 @@ class regression_forest{
 	 * \param f1 a valid feature vector (no sanity checks are performed!)
 	 * \param f2 a second feature vector (no sanity checks are performed!)
 	 */
+    
+    /*
 	num_t covariance (num_t* f1, num_t* f2){
 		rfr::util::running_statistics<num_t> cov_stats;
 		rfr::util::running_covariance<num_t> run_cov_of_means;
@@ -308,7 +301,10 @@ class regression_forest{
 		}
 		return(cov_stats.mean() + run_cov_of_means.covariance());
 	}
+	*/
 
+    
+    /*
 
 	std::vector< std::vector<num_t> > all_leaf_values (num_t * feature_vector){
 		std::vector< std::vector<num_t> > rv;
@@ -319,7 +315,7 @@ class regression_forest{
 		}
 		return(rv);
 	}
-
+    */
 
 	forest_options<num_t, response_t, index_t> get_forest_options(){return(forest_opts);}
 
@@ -400,7 +396,7 @@ class regression_forest{
 	// writes serialized representation into string (used for pickling in python)
 	void save_to_binary_file(const std::string filename){
 		std::ofstream ofs(filename, std::ios::binary);
-		oarch_type oarch(ofs);
+		oarch_t oarch(ofs);
 		serialize(oarch);
 	}
 
@@ -408,14 +404,14 @@ class regression_forest{
 	void load_from_binary_file(const std::string filename){
 		std::ifstream ifs(filename, std::ios::binary);
 		std::cout<<"opening file "<<filename<<std::endl;
-		iarch_type iarch(ifs);
+		iarch_t iarch(ifs);
 		serialize(iarch);
 	}
 
 	// serialize into a string; used for Python's pickle.dump
 	std::string save_into_string(){
 		std::stringstream oss;
-		oarch_type oarch(oss);
+		oarch_t oarch(oss);
 		serialize(oarch);
 		return(oss.str());
 	}
@@ -424,7 +420,7 @@ class regression_forest{
 	void load_from_string( std::string str){
 		std::stringstream iss;
 		iss.str(str);
-		iarch_type iarch(iss);
+		iarch_t iarch(iss);
 		serialize(iarch);
 	}
 

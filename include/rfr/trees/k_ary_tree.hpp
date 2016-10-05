@@ -73,18 +73,18 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		tree_opts.adjust_limits_to_data(data);
 		
 		// storage for all the temporary nodes
-		std::deque<rfr::nodes::temporary_node<num_t, index_t> > tmp_nodes;
+		std::deque<rfr::nodes::temporary_node<num_t, response_t, index_t> > tmp_nodes;
 		
 		std::vector<index_t> feature_indices(data.num_features());
 		std::iota(feature_indices.begin(), feature_indices.end(), 0);
 		
         
-        std::vector<info_t > data_infos(data.num_data_points());
+        std::vector<info_t > data_infos;
+        data_infos.reserve(data.num_data_points());
+        
         for (auto i=0u; i<data.num_data_points(); ++i){
             if (sample_weights[i] > 0){
-                data_infos[i].index=i;
-                data_infos[i].response = data.response(i);
-                data_infos[i].weight = data.weight(i) * sample_weights[i];
+                data_infos.emplace_back(i, data.response(i), NAN, data.weight(i) * sample_weights[i]);
             }
         }
         
@@ -107,9 +107,9 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 			bool is_not_pure = false;
 			// check if the node is pure!
 			{
-				num_t ref = (*((tmp_nodes.front()).begin)).response;
+				num_t ref = (*(tmp_nodes.front().begin)).response;
 				
-				for(auto it = ++((tmp_nodes.front()).begin); it!= tmp_nodes.front().end; it++){
+				for(auto it = std::next(tmp_nodes.front().begin); it!= tmp_nodes.front().end; it++){
 							if (std::abs((*it).response- ref) > tree_opts.epsilon_purity){
 									is_not_pure = true;
 									break;
@@ -141,7 +141,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 					std::advance(tmp_it, -k);
 				
 					for (; tmp_it != tmp_nodes.end(); tmp_it++){
-						if ( (*tmp_it).data_indices.size() < tree_opts.min_samples_in_leaf){
+						if ( std::distance((*tmp_it).begin, (*tmp_it).end)< tree_opts.min_samples_in_leaf){
 							illegal_split = true;
 							break;
 						}
@@ -169,7 +169,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		the_nodes.shrink_to_fit();
 	}
 
-	virtual index_t find_leaf(num_t *feature_vector){
+	virtual index_t find_leaf(const std::vector<num_t> &feature_vector) const {
 		index_t node_index = 0;
 		while (! the_nodes[node_index].is_a_leaf()){
 			node_index = the_nodes[node_index].falls_into_child(feature_vector);
@@ -179,35 +179,50 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 
 
 	
-	virtual std::vector<response_t> const &leaf_entries (num_t *feature_vector){
+	virtual std::vector<response_t> const &leaf_entries (std::vector<num_t> &feature_vector) const {
 		index_t i = find_leaf(feature_vector);
 		return(the_nodes[i].responses());
 	}
 	
-	virtual response_t predict (num_t *feature_vector){
-		index_t node_index = find_leaf(feature_vector);
-		return(the_nodes[node_index].mean());
-	}
 
+	rfr::util::weighted_running_statistics<num_t> const & leaf_statistic(const std::vector<num_t> &feature_vector) const {
+        index_t i = find_leaf(feature_vector);
+        return(the_nodes[i].leaf_statistic());
+    }
 
+    
+    virtual response_t predict (const std::vector<num_t> &feature_vector) const {
+        return(leaf_statistic(feature_vector).mean());
+    }
+    
+    
 
 	/* \brief function to recursively compute the marginalized predictions
 	 * 
+	 * To compute the fANOVA, the mean prediction over partial assingments is needed.
+	 * To accomplish that, feed this function a numerical vector where each element that
+	 * is NAN will be marginalized over.
+     * 
 	 * At any split, this function either goes down one path or averages the
 	 * prediction of all children weighted by the fraction of the training data
 	 * going into them respectively.
+     * 
+     * \param feature_vector the features vector with NAN for dimensions over which is marginalized
+     * \param node_index index of root of the computation, default 0 means 'start at the root'
+     * 
+     * \returns the mean prediction marginalized over the desired inputs according to the training data
 	 * */
-	num_t marginalized_prediction(num_t* feature_vector, index_t node_index){
+	num_t marginalized_mean_prediction(std::vector<num_t> &feature_vector, index_t node_index=0) const{
 		
 		auto n = the_nodes[node_index];	// short hand notation
 		
 		if (n.is_a_leaf())
-			return(n.mean());
+			return(n.leaf_statistic().mean());
 		
 		// if the feature vector can be split, meaning the corresponding features are not NAN
 		// return the marginalized prediction of the corresponding child node
 		if (n.can_be_split(feature_vector)){
-			return marginalized_prediction( feature_vector, n.falls_into_child(feature_vector));
+			return marginalized_mean_prediction( feature_vector, n.falls_into_child(feature_vector));
 		}
 		
 		// otherwise the marginalized prediction consists of the weighted sum of all child nodes
@@ -220,23 +235,12 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	}
 
 
-	/* \brief preditcion for partial input vectors marginalized over unspecified values
-	 * 
-	 * To compute the fANOVA, the mean prediction over partial assingments is needed.
-	 * To accomplish that, feed this function a numerical vector where each element that
-	 * is NAN will be marginalized over.
-	 */
-	num_t marginalized_prediction(num_t *feature_vector){
-			return(marginalized_prediction(feature_vector, 0));
-	}
-
-
 	/* \brief finds all the split points for each dimension of the input space
 	 * 
 	 * This function only makes sense for axis aligned splits!
 	 * */
-	std::vector<std::vector<num_t> > all_split_values (index_t* types){
-		std::vector<std::vector<num_t> > split_values;
+	std::vector<std::vector<num_t> > all_split_values (std::vector<index_t> &types) const {
+		std::vector<std::vector<num_t> > split_values(types.size());
 		
 		for (auto &n: the_nodes){
 			if (n.is_a_leaf()) continue;
@@ -244,10 +248,6 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 			const auto &s = n.get_split();
 			auto fi = s.get_feature_index();
 
-			// as the tree does not know the number of features, the vector
-			// might be too small and has to be adjusted
-			if (split_values.size() <= fi)
-				split_values.resize(fi+1);
 			// if a split on a categorical occurs, just add all its possible values
 			if((types[fi] > 0) && (split_values[fi].size() == 0)){
 				split_values[fi].resize(types[fi]);
@@ -262,25 +262,17 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 			std::sort(v.begin(), v.end());
 		return(split_values);
 	}
-
-
 	
-	virtual std::tuple<num_t, num_t, index_t> predict_mean_var_N(num_t *feature_vector){
-		index_t node_index = find_leaf(feature_vector);
-		return(the_nodes[node_index].mean_variance_N());
-	}
-	
-	
-	virtual index_t number_of_nodes() {return(the_nodes.size());}
-	virtual index_t number_of_leafs() {return(num_leafs);}
-	virtual index_t depth() {return(actual_depth);}
+	virtual index_t number_of_nodes() const {return(the_nodes.size());}
+	virtual index_t number_of_leafs() const {return(num_leafs);}
+	virtual index_t depth()           const {return(actual_depth);}
 	
 	/* \brief Function to recursively compute the partition induced by the tree
 	 *
 	 * Do not call this function from the outside! Needs become private at some point!
 	 */
 	void partition_recursor (	std::vector<std::vector< std::vector<num_t> > > &the_partition,
-							std::vector<std::vector<num_t> > &subspace, num_t node_index){
+							std::vector<std::vector<num_t> > &subspace, num_t node_index) const {
 
 		// add subspace for a leaf
 		if (the_nodes[node_index].is_a_leaf())
@@ -297,7 +289,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 
 
 	/* \brief computes the partitioning of the input space induced by the tree */
-	std::vector<std::vector< std::vector<num_t> > > partition( std::vector<std::vector<num_t> > pcs){
+	std::vector<std::vector< std::vector<num_t> > > partition( std::vector<std::vector<num_t> > pcs) const {
 	
 		std::vector<std::vector< std::vector<num_t> > > the_partition;
 		the_partition.reserve(num_leafs);
@@ -308,30 +300,36 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	}
 
 	
-	index_t num_samples_in_subtree (index_t node_index){
-		index_t N = 0;
+	num_t total_weight_in_subtree (index_t node_index) const {
+		num_t w = 0;
 		if (the_nodes[node_index].is_a_leaf())
-			N = the_nodes[node_index].num_samples();
+			w = the_nodes[node_index].leaf_statistic().sum_of_weights();
 		else{
 			for(auto c: the_nodes[node_index].get_children())
-				N += num_samples_in_subtree(c);
+				w += total_weight_in_subtree(c);
 		}
-		return(N);
+		return(w);
 	}
 
 	
-	bool check_split_fractions(num_t epsilon = 1e-6){
+	bool check_split_fractions(num_t epsilon = 1e-6) const {
 		for ( auto i=0u; i<the_nodes.size(); i++){
 			if (the_nodes[i].is_a_leaf()) continue;
 			
-			index_t N = num_samples_in_subtree(i);
+			num_t W = total_weight_in_subtree(i);
 			
 			for (auto j = 0u; j<k; j++){
-				index_t Nj = num_samples_in_subtree(the_nodes[i].get_child_index(j));
-				num_t fj = ((num_t) Nj) / ((num_t) N);
+				num_t Wj = total_weight_in_subtree(the_nodes[i].get_child_index(j));
+				num_t fj =  Wj / W;
 				
-				if ((fj - the_nodes[i].get_split_fraction(j))/the_nodes[i].get_split_fraction(j) > epsilon)
+				if ((fj - the_nodes[i].get_split_fraction(j))/the_nodes[i].get_split_fraction(j) > epsilon){
+                    std::cout<<"node index: "<<i<<std::endl;
+                    std::cout<<"total_weight_in_subtree() =  "<<W<<std::endl;
+                    std::cout<<"total_weight_in_subtree("<<j<<") =  "<<Wj<<std::endl;
+                    std::cout<<"get_split_fratcion("<<j<<") =  "<<the_nodes[i].get_split_fraction(j)<<std::endl;
+                    std::cout<<"recomputed split fraction =  "<<fj<<std::endl;
 					return(false);
+                }
 			}
 		}
 		return(true);
@@ -339,7 +337,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 
 
 	
-	void print_info(){
+	void print_info() const {
 		
 		std::cout<<"number of nodes ="<<number_of_nodes()<<"\n";
 		std::cout<<"number of leafes="<<number_of_leafs()<<"\n";
@@ -356,7 +354,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	* 
 	* \param filename Name of the file that will be used. Note that any existing file will be silently overwritten!
 	*/
-	virtual void save_latex_representation(const char* filename){
+	virtual void save_latex_representation(const char* filename) const {
 		std::fstream str;
 		    
 		str.open(filename, std::fstream::out);

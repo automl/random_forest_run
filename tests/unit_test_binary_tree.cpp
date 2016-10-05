@@ -48,21 +48,29 @@ void print_pcs (std::vector<std::vector<num_type> > pcs){
 }
 
 
+data_container_type load_toy_data(){
+	data_container_type data;
+	
+    std::string feature_file, response_file;
+    
+    feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_features.csv";
+    response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_responses.csv";
+
+    data.import_csv_files(feature_file, response_file);
+	
+	data.set_type_of_feature(1,10);
+    
+    BOOST_REQUIRE_EQUAL(data.num_data_points(), 100);
+    
+    return(data);
+}
+
 
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and runs
 BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
-    data_container_type data;
-    char filename [1024];
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_features.csv");
-    data.read_feature_file(filename);
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    strcat(filename, "toy_data_set_responses.csv");
-    data.read_response_file(filename);
+	auto data = load_toy_data();
 
 
     data.set_type_of_feature(1, 4);
@@ -75,7 +83,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	
     rng_t rng_engine;
 
-    for (auto i = 0; i <4; i++){
+    for (auto i = 0; i <1; i++){
 	tree_type the_tree;
 	the_tree.fit(data, tree_opts, rng_engine);
 	
