@@ -6,9 +6,6 @@
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss_v2.hpp"
-#include "rfr/nodes/temporary_node.hpp"
-#include "rfr/nodes/k_ary_node.hpp"
-#include "rfr/trees/tree_options.hpp"
 #include "rfr/trees/k_ary_tree.hpp"
 #include "rfr/forests/regression_forest.hpp"
 

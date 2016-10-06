@@ -10,16 +10,14 @@ namespace rfr{ namespace nodes{
 template <typename num_t = float, typename response_t = float, typename index_t = unsigned int>
 struct temporary_node{
 
-	typedef rfr::splits::data_info_t<num_t, response_t, index_t> info_t;
-	
-	index_t node_index;
+    index_t node_index;
 	index_t parent_index;
-	typename std::vector<info_t>::iterator begin, end; 
+	typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t> >::iterator begin, end; 
 	index_t node_level;
 
 	temporary_node (index_t node_id, index_t parent_id,	index_t node_lvl,
-					typename std::vector<info_t>::iterator b,
-					typename std::vector<info_t>::iterator e):
+					typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator b,
+					typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator e):
 						node_index(node_id), parent_index(parent_id), begin(b), end(e), node_level(node_lvl)
 						{}
 	

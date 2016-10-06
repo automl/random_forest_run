@@ -29,14 +29,13 @@ template <	typename num_t = float,
 class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2, num_t, response_t, index_t, rng_t> {
   private:
 	
-	typedef data_info_t<num_t, response_t, index_t> info_t;
-
 	index_t feature_index;	//!< split needs to know which feature it uses
 	num_t num_split_value;	//!< value of a numerical split
 	std::bitset<max_num_categories> cat_split_set;	//!< set of values for a categorical split
 
   public:
   	
+
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive){
@@ -62,9 +61,9 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 */
 	 virtual num_t find_best_split(	const rfr::data_containers::base<num_t, response_t, index_t> &data,
 									const std::vector<index_t> &features_to_try,
-									typename std::vector<info_t>::iterator infos_begin,
-									typename std::vector<info_t>::iterator infos_end,
-									std::array<typename std::vector<info_t>::iterator, 3> &info_split_its,
+									typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator infos_begin,
+									typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator infos_end,
+									std::array<typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator, 3> &info_split_its,
 									rng_t &rng){
 
 				
@@ -120,7 +119,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 			info_split_its[2] = infos_end;
 
 			info_split_its[1] = std::partition (infos_begin, infos_end,
-				[this,&data] (info_t &arg){
+				[this,&data] (rfr::splits::data_info_t<num_t, response_t, index_t> &arg){
 					return !(this->operator()(data.feature(this->feature_index, arg.index)));
 				});
 		}
@@ -161,15 +160,15 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * \return float the loss of this split
 	 */
 	virtual num_t best_split_continuous(
-					typename std::vector<info_t>::iterator infos_begin,
-					typename std::vector<info_t>::iterator infos_end,
+					typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator infos_begin,
+					typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator infos_end,
 					num_t &split_value,
 					rfr::util::weighted_running_statistics<num_t> right_stat,
 					rng_t &rng){
 
 		// first, sort the info vector by the feature
 		std::sort(infos_begin, infos_end,
-			[] (info_t &a, info_t &b) {return (a.feature < b.feature) ;});
+			[] (rfr::splits::data_info_t<num_t, response_t, index_t> &a, rfr::splits::data_info_t<num_t, response_t, index_t> &b) {return (a.feature < b.feature) ;});
 
 		// first some temporary variables
 		rfr::util::weighted_running_statistics<num_t> left_stat;
@@ -228,8 +227,8 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * \return float the loss of this split
 	 */
 	virtual num_t best_split_categorical(
-									typename std::vector<info_t>::iterator infos_begin,
-									typename std::vector<info_t>::iterator infos_end,
+									typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator infos_begin,
+									typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t>>::iterator infos_end,
 									index_t num_categories,
 									std::bitset<max_num_categories> &split_set,
 									rfr::util::weighted_running_statistics<num_t> right_stat,

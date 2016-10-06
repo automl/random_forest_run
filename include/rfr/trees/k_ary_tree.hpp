@@ -229,7 +229,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		num_t prediction = 0;
 		
 		for (auto i = 0u; i<k; i++){
-			prediction += n.get_split_fraction(i) * marginalized_prediction(feature_vector, n.get_child_index(i));
+			prediction += n.get_split_fraction(i) * marginalized_mean_prediction(feature_vector, n.get_child_index(i));
 		}
 		return(prediction);
 	}

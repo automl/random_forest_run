@@ -34,7 +34,6 @@ namespace rfr{ namespace nodes{
 template <int k, typename split_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
 class k_ary_node{
   private:
-	typedef rfr::splits::data_info_t<num_t, response_t, index_t> info_t;
 	index_t parent_index;
 
 	// for leaf nodes
@@ -76,7 +75,7 @@ class k_ary_node{
 							 rng_t &rng){
 		response_values.clear();
 		parent_index = tmp_node.parent_index;
-		std::array<typename std::vector<info_t>::iterator, k+1> split_indices_it;
+		std::array<typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t> >::iterator, k+1> split_indices_it;
 		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.begin, tmp_node.end, split_indices_it,rng);
 	
 		//check if a split was found
