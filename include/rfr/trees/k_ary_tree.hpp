@@ -212,7 +212,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
      * 
      * \returns the mean prediction marginalized over the desired inputs according to the training data
 	 * */
-	num_t marginalized_mean_prediction(std::vector<num_t> &feature_vector, index_t node_index=0) const{
+	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector, index_t node_index=0) const{
 		
 		auto n = the_nodes[node_index];	// short hand notation
 		

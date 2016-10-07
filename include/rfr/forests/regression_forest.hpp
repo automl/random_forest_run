@@ -328,11 +328,11 @@ class regression_forest{
 	 * 
 	 * \param feature_vector non-specfied values (NaN) will be marginalized over according to the training data
 	 */
-	std::vector<num_t> marginalized_predictions(num_t *feature_vector){
+	std::vector<num_t> marginalized_mean_predictions(const std::vector<num_t> &feature_vector) const {
 		std::vector<num_t> rv;
 		rv.reserve(the_trees.size());
 		for (auto &t : the_trees)
-			rv.emplace_back(t.marginalized_prediction(feature_vector));
+			rv.emplace_back(t.marginalized_mean_prediction(feature_vector));
 		return(rv);
 	}
 

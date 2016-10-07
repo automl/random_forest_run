@@ -14,6 +14,8 @@ typedef double num_t;
 typedef double response_t;
 typedef unsigned int index_t;
 typedef std::default_random_engine rng_t;
+typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128> binary_rss_split_t;
+typedef rfr::trees::k_ary_random_tree<2, binary_rss_split_t, num_t, response_t, index_t, rng_t> binary_rss_tree_t;
 %}
 
 %feature("autodoc",1);
@@ -58,18 +60,26 @@ typedef std::default_random_engine rng_t;
 %ignore rfr::splits::binary_split_one_feature_rss_loss::best_split_categorical;
 %include "rfr/splits/binary_split_one_feature_rss_loss_v2.hpp"
 %template(binary_rss_split) rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>;
+typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128> binary_rss_split_t;
+
 
 // NODES
 // not necessary at this point
 
 // TREES
 %include "rfr/trees/tree_options.hpp"
-%template(tree_opts) rfr::trees::tree_options<double, double, unsigned int>;
+%template(tree_opts) rfr::trees::tree_options<num_t, response_t, index_t>;
+%ignore rfr::trees::tree_base::fit;
+%include "rfr/trees/tree_base.hpp"
+%template(base_tree)       rfr::trees::tree_base<num_t, response_t, index_t, rng_t>;
 %include "rfr/trees/k_ary_tree.hpp"
-%template(binary_rss_tree) rfr::trees::k_ary_random_tree<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t>;
+%template(base_k_ary_tree) rfr::trees::k_ary_random_tree<2, binary_rss_split_t, num_t, response_t, index_t, rng_t>;
+%template(binary_rss_tree) rfr::trees::k_ary_random_tree<2, binary_rss_split_t, num_t, response_t, index_t, rng_t>;
 
+typedef rfr::trees::k_ary_random_tree<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_rss_tree_t;
 
 // FOREST(S)
 %include "rfr/forests/forest_options.hpp"
-%template(forest_options) rfr::trees::forest_options<double, double, unsigned int>;
-
+%template(forest_opts) rfr::forests::forest_options<num_t, response_t, index_t>;
+%include "rfr/forests/regression_forest.hpp"
+%template(binary_rss_forest) rfr::forests::regression_forest< binary_rss_tree_t, num_t, response_t, index_t, rng_t>;

@@ -376,7 +376,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		return(subspaces);
 	}
 
-	bool can_be_split(std::vector<num_t> &feature_vector) const {
+	bool can_be_split(const std::vector<num_t> &feature_vector) const {
 		return(!std::isnan(feature_vector[feature_index]));
 	}
 };

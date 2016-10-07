@@ -123,7 +123,7 @@ class k_ary_node{
 	}	
 
 	/* \brief function to check if a feature vector can be splitted */
-	bool can_be_split(std::vector<num_t> &feature_vector){return(split.can_be_split(feature_vector));}
+	bool can_be_split(const std::vector<num_t> &feature_vector) const {return(split.can_be_split(feature_vector));}
 
 	/** \brief returns the index of the child into which the provided sample falls
 	 * 
