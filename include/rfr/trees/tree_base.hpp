@@ -66,7 +66,7 @@ class tree_base{
 	 * 
 	 * \return std::vector<response_t> all response values in that leaf
 	 */
-	virtual std::vector<response_t> const &leaf_entries (std::vector<num_t> &feature_vector) const = 0;
+	virtual std::vector<response_t> const &leaf_entries (const std::vector<num_t> &feature_vector) const = 0;
 	
 	
 	

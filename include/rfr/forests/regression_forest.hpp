@@ -36,7 +36,6 @@ typedef cereal::PortableBinaryOutputArchive oarch_t;
 template <typename tree_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_type=std::default_random_engine>
 class regression_forest{
   private:
-	forest_options<num_t, response_t, index_t> forest_opts;
 	std::vector<tree_type> the_trees;
 	index_t num_features;
 
@@ -47,18 +46,21 @@ class regression_forest{
 
   public:
 
+	forest_options<num_t, response_t, index_t> options;
+
+
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( forest_opts, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error);
+		archive( options, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error);
 	}
 
 
-	regression_forest(): forest_opts(), the_trees(){}
+	regression_forest(): options(), the_trees(){}
 
 
-	regression_forest(forest_options<num_t, response_t, index_t> forest_opts): forest_opts(forest_opts), the_trees(forest_opts.num_trees){}
+	regression_forest(forest_options<num_t, response_t, index_t> options): options(options){}
 
 
 	/* \brief growing the random forest for a given data set
@@ -68,20 +70,23 @@ class regression_forest{
 	 */
 	void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_type &rng){
 
-		if ((!forest_opts.do_bootstrapping) && (data.num_data_points() < forest_opts.num_data_points_per_tree))
+		if ((!options.do_bootstrapping) && (data.num_data_points() < options.num_data_points_per_tree))
 			throw std::runtime_error("You cannot use more data points per tree than actual data point present without bootstrapping!");
+
+		the_trees.resize(options.num_trees);
+
 
 		std::vector<index_t> data_indices( data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
-		std::vector<index_t> data_indices_to_be_used( forest_opts.num_data_points_per_tree);
+		std::vector<index_t> data_indices_to_be_used( options.num_data_points_per_tree);
 
 		num_features = data.num_features();
 		
 		// catch some stupid things that will make the forest crash when fitting
-		if (forest_opts.num_data_points_per_tree == 0)
+		if (options.num_data_points_per_tree == 0)
 			throw std::runtime_error("The number of data points per tree is set to zero!");
 		
-		if (forest_opts.tree_opts.max_features == 0)
+		if (options.tree_opts.max_features == 0)
 			throw std::runtime_error("The number of features used for a split is set to zero!");
 		
 		bootstrap_sample_weights.clear();
@@ -89,21 +94,21 @@ class regression_forest{
 		for (auto &tree : the_trees){
             std::vector<num_t> bssw (data.num_data_points(), 0);
 			// prepare the data(sub)set
-			if (forest_opts.do_bootstrapping){
+			if (options.do_bootstrapping){
                 std::uniform_int_distribution<index_t> dist (0,data.num_data_points()-1);
                 auto die = std::bind(dist, rng);
-                for (auto i=0u; i < forest_opts.num_data_points_per_tree; ++i)
+                for (auto i=0u; i < options.num_data_points_per_tree; ++i)
                     ++bssw[die()];
 			}
 			else{
 				std::shuffle(data_indices.begin(), data_indices.end(), rng);
-                for (auto i=0u; i < forest_opts.num_data_points_per_tree; ++i)
+                for (auto i=0u; i < options.num_data_points_per_tree; ++i)
                     ++bssw[data_indices[i]];
 			}
-			tree.fit(data, forest_opts.tree_opts, bssw, rng);
+			tree.fit(data, options.tree_opts, bssw, rng);
 			
 			// record sample counts for later use
-			if (forest_opts.compute_oob_error){
+			if (options.compute_oob_error){
 				bootstrap_sample_weights.emplace_back(std::vector<num_t> ( data.num_data_points(),0));
 				for (auto &i: data_indices_to_be_used){
 					++(bootstrap_sample_weights.back()[i]);
@@ -113,7 +118,7 @@ class regression_forest{
 		
 		oob_error = NAN;
 		
-		if (forest_opts.compute_oob_error){
+		if (options.compute_oob_error){
 			
 			rfr::util::running_statistics<num_t> oob_error_stat;
 			
@@ -148,9 +153,11 @@ class regression_forest{
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> mean_stats;
-		for (auto &tree: the_trees)
+		for (auto &tree: the_trees){
+			std::cout<<tree.predict(feature_vector)<<std::endl;
 			mean_stats.push(tree.predict(feature_vector));
-		
+		}
+		std::cout<<mean_stats.number_of_points()<<std::endl;
 		return(mean_stats.mean());
 	}
     
@@ -304,9 +311,7 @@ class regression_forest{
 	*/
 
     
-    /*
-
-	std::vector< std::vector<num_t> > all_leaf_values (num_t * feature_vector){
+	std::vector< std::vector<num_t> > all_leaf_values (const std::vector<num_t> &feature_vector){
 		std::vector< std::vector<num_t> > rv;
 		rv.reserve(the_trees.size());
 
@@ -315,9 +320,8 @@ class regression_forest{
 		}
 		return(rv);
 	}
-    */
 
-	forest_options<num_t, response_t, index_t> get_forest_options(){return(forest_opts);}
+	forest_options<num_t, response_t, index_t> get_forest_options(){return(options);}
 
 	std::vector<std::vector< std::vector<num_t> > > partition_of_tree( index_t tree_index,
 														std::vector<std::vector<num_t> > pcs){
@@ -336,7 +340,7 @@ class regression_forest{
 		return(rv);
 	}
 
-	std::vector<std::vector<std::vector<num_t> > > all_split_values(index_t *types){
+	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
 		std::vector<std::vector<std::vector<num_t> > > rv;
 		rv.reserve(the_trees.size());
 			
@@ -362,10 +366,10 @@ class regression_forest{
 			//for each tree
 			for (auto &t: the_trees){
 		
-				index_t index = t.find_leaf(p.data());
+				index_t index = t.find_leaf(p);
 		
 				// add value
-				t.the_nodes[index].push_response_value(data.response(i));
+				t.the_nodes[index].push_response_value(data.response(i), data.weight(i));
 		
 				// note leaf as changed
 				(*it) = index;

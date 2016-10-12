@@ -8,111 +8,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestRegressor
-import pyrfr.regression
+import pyrfr.regression as reg
+
+
 
 
 data_set_prefix = '%(here)s/../test_data_sets/diabetes_' % {"here":here}
-
-# feature matrix contains one data point per row
-features  = np.loadtxt(data_set_prefix+'features.csv', delimiter=",")
-
-# the responses come in a 1d array
-responses =  np.loadtxt(data_set_prefix+'responses.csv', delimiter=",")
-
-# the types have the following meaning:
-#	0 - this variable is continuous
-#  >0 - the number of values from {0, 1, ...} this variable can take
-types = np.zeros([features.shape[1]],dtype=np.uint)
-
-# the data container to wrap the numpy arrays
-# note:	no copy of the data is made on creation if it is C continuous
-#		if the input is a sliced, or datapoints are added, a copy is made!
-data1 = pyrfr.regression.numpy_data_container(features, responses, np.zeros([features.shape[1]],dtype=np.uint))
-
-# this is how you add a data point
-data1.add_data_point(np.random.rand(10), 1)
-
-print("number of features: {}".format(data1.num_features()))
-print("number of data points: {}".format(data1.num_data_points()))
-
-# how to get data points out of the container. Negative indices are supported, too!
-data1.retrieve_data_point(-2)
-
-# this container grants access to the data arrays directly:
-data1.features
-data1.responses
-data1.types
-
-# A second container living completely in the C++ code.
-# The only argument to the constructor  is the number of features
-data2 = pyrfr.regression.mostly_continuous_data_container(features.shape[1])
-
-# set the types of each feature, before any data is added!
-# you can set the type of each feature like that:
-data2.set_type_of_feature(0,5) #arguments are "feature index" and "type"
-
-# how to get the type of a feature out of the container
-print("feature 0 is now of type {}".format(data2.get_type_of_feature(0)))
-
-# define each type before you add any data points
-data2 = pyrfr.regression.mostly_continuous_data_container(features.shape[1])
-
-# besides adding data points as above (add_data_point method), this 
-# container can import numpy arrays (a copy of the data will be made!)
-data2.import_numpy_arrays(features, responses);
+data = reg.data_container()
+data.import_csv_files(data_set_prefix+'features.csv', data_set_prefix+'responses.csv')
 
 
-
-if np.allclose(data2.export_responses(),responses) and  np.allclose(data2.export_features(),features):
-	print("Import of data into data2 was successful")
-
+rng = reg.default_random_engine()
 
 # create an instance of a regerssion forest using binary splits and the RSS loss
-the_forest = pyrfr.regression.binary_rss()
-
-the_forest.num_trees = 2
 
 
-# the forest's parameters
-the_forest.seed=12					# reset to reseed the rng for the next fit
-the_forest.do_bootstrapping=True	# default: false
-the_forest.num_data_points_per_tree=0 # means same number as data points
-the_forest.max_features = features.shape[1]//2 # 0 would mean all the features
-the_forest.min_samples_to_split = 0	# 0 means split until pure
-the_forest.min_samples_in_leaf = 0	# 0 means no restriction 
-the_forest.max_depth=1024			# 0 means no restriction
-the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
+the_forest = reg.binary_rss_forest()
+
+the_forest.options.num_trees = 64
+the_forest.options.num_data_points_per_tree = 200
 
 
-the_forest.fit(data1)
+print(the_forest.options.num_trees)
+the_forest.fit(data, rng)
 
 # you can save the forest to disk
-the_forest.save_to_binary_file(b"/tmp/pyrfr_test.bin")
+the_forest.save_to_binary_file("/tmp/pyrfr_test.bin")
 
 
-num_datapoints_old = the_forest.num_data_points_per_tree
+num_datapoints_old = the_forest.options.num_data_points_per_tree
 
 
 # loading it works like that
 
-the_forest = pyrfr.regression.binary_rss()
-the_forest.load_from_binary_file(b"/tmp/pyrfr_test.bin")
-
-num_data_points_new = the_forest.num_data_points_per_tree
-
-print("Beware that some values are not restored as you might expect:")
-print("{} != {}".format(num_datapoints_old, num_data_points_new))
-print("If you set some variables,e.g. max_features, to zero, the underlying value this shorthand represents is recovered!")
-print("As the saving/loading should only be used for predictions rather than refitting, this should not be a problem!")
+the_forest = reg.binary_rss_forest()
+the_forest.load_from_binary_file("/tmp/pyrfr_test.bin")
 
 # you can save a LaTeX document that you can compile with pdflatex
-the_forest.save_latex_representation(b"/tmp/rfr_test")
+the_forest.save_latex_representation("/tmp/rfr_test")
 
 
 # the predict method will return a tuple containing the predicted mean and the standard deviation.
-print(the_forest.predict(features[0]))
+feature_vector = data.retrieve_data_point(0)
+print(feature_vector)
+print(the_forest.predict(feature_vector))
 
-
+exit(0)
 
 # it is possible to get the actual response values from the corresponding
 # leaf in each tree that the given feature vector falls into

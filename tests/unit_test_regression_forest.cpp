@@ -100,26 +100,12 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 }
 
 
-/*
+
 BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	
 	double unique_value = 42.424242;
 	
-    data_container_type data;
-
-    char *filename = (char*) malloc(1024*sizeof(char));
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-    //strcat(filename, "toy_data_set_features.csv");
-    strcat(filename, "diabetes_features.csv");
-    std::cout<<filename<<"\n";
-    data.read_feature_file(filename);
-
-    strcpy(filename, boost::unit_test::framework::master_test_suite().argv[1]);
-	//strcat(filename, "toy_data_set_responses.csv");
-	strcat(filename, "diabetes_responses.csv");
-	std::cout<<filename<<"\n";
-    data.read_response_file(filename);
+	auto data = load_diabetes_data();
 
 	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
 	tree_opts.min_samples_to_split = 2;
@@ -133,7 +119,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	forest_opts.do_bootstrapping = true;
 
 
-	rfr::forests::regression_forest< tree_type, rng_t, num_t, response_t, index_t> the_forest(forest_opts);
+	forest_type the_forest(forest_opts);
 	
 	rng_t rng;
 
@@ -141,16 +127,16 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	the_forest.fit(data, rng);
 
 	// get reference leaf values for one configuration
-	std::vector<std::vector< num_t> > before = the_forest.all_leaf_values(data.retrieve_data_point(0).data());
+	std::vector<std::vector< num_t> > before = the_forest.all_leaf_values(data.retrieve_data_point(0));
 
 	// update forest with that configuration and a unique response value
 	data_container_type pseudo_data(data.num_features());
-	pseudo_data.add_data_point(data.retrieve_data_point(0).data(), data.num_features(), unique_value);
+	pseudo_data.add_data_point(data.retrieve_data_point(0), unique_value, 1);
 	
 	the_forest.pseudo_update(pseudo_data);
 	
 	// get new leaf values
-	std::vector<std::vector< num_t> > after_update = the_forest.all_leaf_values(data.retrieve_data_point(0).data());
+	std::vector<std::vector< num_t> > after_update = the_forest.all_leaf_values(data.retrieve_data_point(0));
 	
 	// compare them to ensure the data point has been added correctly
 	
@@ -164,7 +150,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	BOOST_REQUIRE(the_forest.pseudo_downdate() == true);
 	
 	// get new leaf values
-	std::vector<std::vector< num_t> > after_downdate = the_forest.all_leaf_values(data.retrieve_data_point(0).data());
+	std::vector<std::vector< num_t> > after_downdate = the_forest.all_leaf_values(data.retrieve_data_point(0));
 	
 	// compare them to ensure the last data point has been removed
 	for (auto i=0u; i < before.size(); ++i)
@@ -173,17 +159,11 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	BOOST_REQUIRE(the_forest.pseudo_downdate() == false);
 	
 	
-	std::cout<<the_forest.covariance(data.retrieve_data_point(0).data(), data.retrieve_data_point(1).data())<<std::endl;
+	//std::cout<<the_forest.covariance(data.retrieve_data_point(0), data.retrieve_data_point(1).data())<<std::endl;
 
-	num_t m1 , v1;
-	std::tie(m1, v1) = the_forest.predict_mean_var(data.retrieve_data_point(0).data());
+	auto m = the_forest.predict(data.retrieve_data_point(0));
 
-	num_t v2 = the_forest.covariance(data.retrieve_data_point(0).data(), data.retrieve_data_point(0).data());
+	//num_t v2 = the_forest.covariance(data.retrieve_data_point(0).data(), data.retrieve_data_point(0));
 
-	BOOST_REQUIRE_CLOSE(v1, v2, 1e-4);
-	
-    free(filename);
+	//BOOST_REQUIRE_CLOSE(v1, v2, 1e-4);
 }
-
-
-*/

@@ -31,7 +31,7 @@ namespace rfr{ namespace trees{
 template <const int k,typename split_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_type = std::default_random_engine>
 class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_t, rng_type> {
 	
-	//friend class rfr::forests::regression_forest<k_ary_random_tree<k,split_type, rng_type,num_t,response_t,index_t>, num_t, response_t, index_t, rng_type>;
+	friend class rfr::forests::regression_forest<k_ary_random_tree<k,split_type, num_t, response_t, index_t, rng_type>, num_t, response_t, index_t, rng_type>;
 	
   private:
 	typedef rfr::nodes::k_ary_node<k, split_type, num_t, response_t, index_t, rng_type> node_type;
@@ -179,7 +179,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 
 
 	
-	virtual std::vector<response_t> const &leaf_entries (std::vector<num_t> &feature_vector) const {
+	virtual std::vector<response_t> const &leaf_entries (const std::vector<num_t> &feature_vector) const {
 		index_t i = find_leaf(feature_vector);
 		return(the_nodes[i].responses());
 	}
@@ -239,7 +239,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	 * 
 	 * This function only makes sense for axis aligned splits!
 	 * */
-	std::vector<std::vector<num_t> > all_split_values (std::vector<index_t> &types) const {
+	std::vector<std::vector<num_t> > all_split_values (const std::vector<index_t> &types) const {
 		std::vector<std::vector<num_t> > split_values(types.size());
 		
 		for (auto &n: the_nodes){

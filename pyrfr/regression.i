@@ -20,10 +20,24 @@ typedef rfr::trees::k_ary_random_tree<2, binary_rss_split_t, num_t, response_t, 
 
 %feature("autodoc",1);
 
+%include "exception.i" 
+
+%exception {
+  try {
+    $action
+  } catch (const std::exception& e) {
+    SWIG_exception(SWIG_RuntimeError, e.what());
+  } catch (const std::string& e) {
+    SWIG_exception(SWIG_RuntimeError, e.c_str());
+  }
+} 
+
+
 class std::default_random_engine{
-	std::default_random_engine ();
-	std::default_random_engine (unsigned int seed);
-	void seed (unsigned int);
+	public:
+		default_random_engine ();
+		default_random_engine (unsigned int seed);
+		void seed (unsigned int);
 };
 
 typedef double num_t;
@@ -69,11 +83,10 @@ typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_
 // TREES
 %include "rfr/trees/tree_options.hpp"
 %template(tree_opts) rfr::trees::tree_options<num_t, response_t, index_t>;
-%ignore rfr::trees::tree_base::fit;
+
 %include "rfr/trees/tree_base.hpp"
-%template(base_tree)       rfr::trees::tree_base<num_t, response_t, index_t, rng_t>;
 %include "rfr/trees/k_ary_tree.hpp"
-%template(base_k_ary_tree) rfr::trees::k_ary_random_tree<2, binary_rss_split_t, num_t, response_t, index_t, rng_t>;
+%template(base_tree)       rfr::trees::tree_base<num_t, response_t, index_t, rng_t>;
 %template(binary_rss_tree) rfr::trees::k_ary_random_tree<2, binary_rss_split_t, num_t, response_t, index_t, rng_t>;
 
 typedef rfr::trees::k_ary_random_tree<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_rss_tree_t;
