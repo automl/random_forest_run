@@ -2,6 +2,7 @@
 #define RFR_UTIL_HPP
 
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
@@ -26,15 +27,14 @@ inline void merge_two_vectors ( num_t* f1, num_t* f2, num_t* dest, index_type n)
 template<typename num_t>
 class running_statistics{
   private:
-	typedef long unsigned int luint;
-	luint N;
+	long unsigned int N;
 	num_t avg, sdm; // the mean and the squared distance from the mean
 
 
   public:
 	running_statistics(): N(0), avg(0), sdm(0) {}
 
-	running_statistics( luint n, num_t a, num_t s): N(n), avg(a), sdm(s) {}
+	running_statistics( long unsigned int n, num_t a, num_t s): N(n), avg(a), sdm(s) {}
 	
 	void push(num_t x){
 		++N;
@@ -56,7 +56,7 @@ class running_statistics{
 
 	num_t	divide_sdm_by(num_t fraction)	const	{ return(N>1 ? std::max<num_t>(0.,sdm/fraction) : NAN);}
 
-	luint	number_of_points()		const	{return(N);}
+	long unsigned int	number_of_points()		const	{return(N);}
 	num_t	mean()					const	{return(N>0 ? avg : NAN);}
 	num_t	sum()					const	{return(avg*N);}
 	num_t	sum_of_squares()		const	{return(sdm + N*mean());}
@@ -76,7 +76,7 @@ class running_statistics{
 	running_statistics operator+ ( const running_statistics &other) const{
 
 		// total number of points is trivial
-		luint N_total = N + other.N;
+		long unsigned int N_total = N + other.N;
 		num_t n1(N), n2(other.N), nt(N_total);
 
 		// the total mean is also pretty easy to figure out
@@ -90,7 +90,7 @@ class running_statistics{
 	running_statistics& operator+= ( const running_statistics &other) {
 
 		// total number of points is trivial
-		luint N_total = N + other.N;
+		long unsigned int N_total = N + other.N;
 		num_t n1(N), n2(other.N), nt(N_total);
 
 		// the total mean is also pretty easy to figure out
@@ -110,7 +110,7 @@ class running_statistics{
 			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
 		// new number of points is trivial
-		luint N1 = N - other.N;
+		long unsigned int N1 = N - other.N;
 
 		num_t n1(N1), n2(other.N), nt(N);
 		// the total mean is also pretty easy to figure out
@@ -127,7 +127,7 @@ class running_statistics{
 			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
 		// new number of points is trivial
-		luint N1 = N - other.N;
+		long unsigned int N1 = N - other.N;
 
 		num_t n1(N1), n2(other.N), nt(N);
 		// the total mean is also pretty easy to figure out
