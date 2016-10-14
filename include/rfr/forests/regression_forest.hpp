@@ -49,21 +49,19 @@ class regression_forest{
 	forest_options<num_t, response_t, index_t> options;
 
 
-  	/* serialize function for saving forests */
+  	/** \brief serialize function for saving forests with cerial*/
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
 		archive( options, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error);
 	}
 
-
-	regression_forest(): options(), the_trees(){}
-
-
+	regression_forest() {}
+	
 	regression_forest(forest_options<num_t, response_t, index_t> options): options(options){}
 
 
-	/* \brief growing the random forest for a given data set
+	/**\brief growing the random forest for a given data set
 	 * 
 	 * \param data a filled data container
 	 * \param rng the random number generator to be used
@@ -145,10 +143,8 @@ class regression_forest{
 	 * Every random tree makes an individual prediction which are averaged for the forest's prediction.
 	 *
 	 * \param feature_vector a valid (size and values) array containing features
-	 *
 	 * \return response_t the predicted value
 	 */
-
     response_t predict( const std::vector<num_t> &feature_vector) const{
 
 		// collect the predictions of individual trees

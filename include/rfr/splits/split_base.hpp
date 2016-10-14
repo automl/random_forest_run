@@ -29,6 +29,9 @@ struct data_info_t{
 template <const int k, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t=std::default_random_engine>
 class k_ary_split_base{
   public:
+
+	virtual ~k_ary_split_base() {};
+  
 	/** \brief member function to find the optimal split for a subset of the data and features
 	 *
 	 * Defining the interface that every split has to implement. Unfortunately, virtual constructors are

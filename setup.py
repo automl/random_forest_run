@@ -6,10 +6,13 @@ from Cython.Build import cythonize
 
 
 
-include_dirs = ['./include', np.get_include()]
+
+include_dirs = ['${CMAKE_SOURCE_DIR}/include', np.get_include()]
 extra_compile_args = ['-O2', '-std=c++11']
 #extra_compile_args = ['-g', '-std=c++11']
 
+
+"""
 extensions = cythonize(
 					[
 						Extension('pyrfr.regression',
@@ -26,7 +29,15 @@ extensions = cythonize(
 						extra_compile_args = extra_compile_args
 						)
 					])
+"""
 
+extensions = [Extension(
+				name = '_regression',
+				sources=['pyrfr/regression.i'],
+				include_dirs = include_dirs,
+				swig_opts=['-c++'] + ['-I{}'.format(s) for s in include_dirs],
+				extra_compile_args = extra_compile_args
+			)]
 
 
 setup(

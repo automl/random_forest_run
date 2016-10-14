@@ -1,5 +1,6 @@
 %module regression
 
+
 %{
 #include <random>
 #include "rfr/data_containers/data_container.hpp"
@@ -18,8 +19,8 @@ typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_
 typedef rfr::trees::k_ary_random_tree<2, binary_rss_split_t, num_t, response_t, index_t, rng_t> binary_rss_tree_t;
 %}
 
-%feature("autodoc",1);
 
+%include "docstrings.i"
 %include "exception.i" 
 
 %exception {
@@ -51,6 +52,9 @@ typedef std::default_random_engine rng_t;
 %include "std_vector.i"
 %template(num_vector) std::vector<double>;
 %template(idx_vector) std::vector<unsigned int>;
+
+
+%ignore rfr::*::serialize;
 
 
 

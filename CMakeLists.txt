@@ -17,6 +17,7 @@ ENDIF()
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Doxygen)
 find_package(PythonInterp)
+find_package(SWIG)
 
 enable_testing()
 
@@ -28,7 +29,8 @@ include_directories ("${Boost_INCLUDE_DIR}")
 # the documentation
 if(DOXYGEN_FOUND)
 	configure_file(${PROJECT_SOURCE_DIR}/Doxyfile ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-	add_custom_target(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+	add_custom_target(doc
+		COMMAND	${DOXYGEN_EXECUTABLE} Doxyfile
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM)
 endif(DOXYGEN_FOUND)
@@ -38,11 +40,23 @@ endif(DOXYGEN_FOUND)
 add_subdirectory(tests)
 
 
-if(PYTHONINTERP_FOUND)
-	add_test(NAME BuildPyRFR
-			COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/setup.py build_ext --force --inplace
-			WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
-endif(PYTHONINTERP_FOUND)
+if(PYTHONINTERP_FOUND AND SWIG_FOUND)
+	file(COPY "pyrfr" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+	configure_file(${PROJECT_SOURCE_DIR}/setup.py ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
+
+	add_custom_target(pyrfr_docstrings
+		COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/lib/doxy2swig/doxy2swig.py -a -t -f -q -c ${CMAKE_CURRENT_BINARY_DIR}/doc/xml/index.xml ${CMAKE_CURRENT_BINARY_DIR}/pyrfr/docstrings.i
+		DEPENDS doc
+		COMMENT "Generating Python Docstrings" VERBATIM
+	)
+
+	add_custom_target(pyrfr_build
+		COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --inplace
+		DEPENDS pyrfr_docstrings
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+	)
+
+endif(PYTHONINTERP_FOUND AND SWIG_FOUND)
 
 
 IF(CMAKE_COMPILER_IS_GNUCXX)

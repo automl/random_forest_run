@@ -44,6 +44,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
   public:
   
 	k_ary_random_tree(): the_nodes(0), num_leafs(0), actual_depth(0) {}
+
+	virtual ~k_ary_random_tree() {}
 	
     /* serialize function for saving forests */
   	template<class Archive>
@@ -62,7 +64,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	 * made. Just make sure the max_features in tree_opts to a number smaller than the number of features!
 	 * 
 	 * \param data the container holding the training data
-	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
+	 * \param tree_opts a tree_options object that controls certain aspects of "growing" the tree
 	 * \param sample_weights vector containing the weights of all allowed datapoints (set to individual entries to zero for subsampling), no checks are done here!
 	 */
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,

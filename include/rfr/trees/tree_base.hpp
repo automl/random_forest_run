@@ -13,6 +13,9 @@ namespace rfr{ namespace trees{
 template <typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_type=std::default_random_engine>
 class tree_base{
   public:
+
+	virtual ~tree_base() {}
+  
 	/** \brief member function to fit the tree to the whole data
 	 *
 	 * The interface is very general, and allows for deterministic and randomized decision tree at this point.
@@ -70,14 +73,6 @@ class tree_base{
 	
 	
 	
-	/** \brief member function to predict the response values for a batch of  feature vectors stored in a data container
-	 * 
-	 * \param data a filled data container. For the prediction the (possibly empty) response values are ignored.
-	 * 
-	 * \return std::vector<num_t> the predictions for all points in a vector.
-	 */	
-	//virtual std::vector<response_t> predict (const rfr::base<num_t, index_t> &data) = 0;
-		
 	
 	virtual index_t number_of_nodes() const = 0;
 	virtual index_t number_of_leafs() const = 0;

@@ -13,22 +13,23 @@ namespace rfr{ namespace trees{
 
 template <typename num_type = float,typename response_type = float, typename index_type = unsigned int>
 struct tree_options{
-    index_type max_features;
-    index_type max_depth;
+    index_type max_features; 		///< number of features to consider for each split 
+	index_type max_depth;			///< maximum depth for the tree
     
-    index_type min_samples_to_split;
-    index_type min_samples_in_leaf;
+    index_type min_samples_to_split;///< minumum number of samples to try splitting
+    index_type min_samples_in_leaf;	///< minimum number of samples in a leaf
+    num_type   min_weight_in_leaf;	///< minimum total sample weights in a leaf
+
+    index_type max_num_nodes;		///< maxmimum total number of nodes in the tree
     
-    index_type max_num_nodes;
-    
-    response_type epsilon_purity;
+    response_type epsilon_purity;	///< minimum difference between two response values to be considered different*/
 
 
-  	/* serialize function for saving forests */
+  	/** serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( max_features, max_depth, min_samples_to_split, min_samples_in_leaf, max_num_nodes, epsilon_purity);
+		archive( max_features, max_depth, min_samples_to_split, min_samples_in_leaf, min_weight_in_leaf, max_num_nodes, epsilon_purity);
 	}
 
     /** (Re)set to default values with no limits on the size of the tree
@@ -46,6 +47,7 @@ struct tree_options{
 	
 		min_samples_to_split = 2;
 		min_samples_in_leaf = 1;
+		min_weight_in_leaf = 1;
 	
 		max_num_nodes = std::numeric_limits<index_type>::max();
 	

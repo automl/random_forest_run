@@ -13,13 +13,13 @@ namespace rfr{ namespace forests{
 
 template <typename num_t = float,typename response_t = float, typename index_t = unsigned int>
 struct forest_options{
-	index_t num_trees;
-	index_t num_data_points_per_tree;
+	index_t num_trees;					///< number of trees in the forest
+	index_t num_data_points_per_tree;	///< number of datapoints used in each tree
 
-	bool do_bootstrapping;
-	bool compute_oob_error;
-	rfr::trees::tree_options<num_t,response_t,index_t> tree_opts;
+	bool do_bootstrapping;				///< flag to toggle bootstrapping
+	bool compute_oob_error;				///< flag to enable/disable computing the out-of-bag error
 
+	rfr::trees::tree_options<num_t,response_t,index_t> tree_opts;	///< the options for each tree
 
   	/* serialize function for saving forests */
   	template<class Archive>
