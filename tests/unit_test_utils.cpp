@@ -37,6 +37,8 @@ BOOST_AUTO_TEST_CASE(test_running_statistics){
 	BOOST_REQUIRE(stat1.number_of_points() == 256);
 	BOOST_REQUIRE_CLOSE(stat1.mean(),134.5078125,1e-6);
 	BOOST_REQUIRE_CLOSE(stat1.variance_population(),5481.3124389648438,1e-6);
+	BOOST_REQUIRE_CLOSE(stat1.sum_of_squares(), 6034858, 1e-6);
+	
 
 	BOOST_REQUIRE(stat2.number_of_points() == 256);
 	BOOST_REQUIRE_CLOSE(stat2.mean(),134.5078125+1e9,1e-6);
@@ -69,10 +71,6 @@ BOOST_AUTO_TEST_CASE(test_running_statistics_operators){
 		BOOST_REQUIRE(stat1.numerically_equal(stat_total-stat2, 1e-6));
 		BOOST_REQUIRE(stat2.numerically_equal(stat_total-stat1, 1e-6));
 	}
-
-
-	
-
 }
 
 
@@ -115,13 +113,15 @@ BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_push){
 	}
 
 	// reference computed with numpy, so should be fine
-	BOOST_REQUIRE_CLOSE(stat1.sum_of_weights(), (double) N, 1e-6);
-	BOOST_REQUIRE_CLOSE(stat1.mean(),134.415686275,1e-6);
+	BOOST_REQUIRE_CLOSE(stat1.sum_of_weights()     , (double) N  , 1e-6);
+	BOOST_REQUIRE_CLOSE(stat1.mean()               ,134.415686275,1e-6);
 	BOOST_REQUIRE_CLOSE(stat1.variance_population(),5500.63504806,1e-6);
+	BOOST_REQUIRE_CLOSE(stat1.sum_of_squares()     , 6009894     ,1e-6);   
 
 	BOOST_REQUIRE_CLOSE(stat2.sum_of_weights()		,125.273	,1e-6);
 	BOOST_REQUIRE_CLOSE(stat2.mean()				,136.6691945,1e-6);
 	BOOST_REQUIRE_CLOSE(stat2.variance_population()	,5340.296298,1e-6);
+	BOOST_REQUIRE_CLOSE(stat2.sum_of_squares()      ,3008902.75 ,1e-6);
 }
 
 BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_pop){
