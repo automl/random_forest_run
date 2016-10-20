@@ -50,8 +50,10 @@ typedef std::default_random_engine rng_t;
 
 %include "std_string.i"
 %include "std_vector.i"
-%template(num_vector) std::vector<double>;
-%template(idx_vector) std::vector<unsigned int>;
+%template(num_vector) std::vector<num_t>;
+%template(idx_vector) std::vector<index_t>;
+
+%template(num_num_vector) std::vector< std::vector<num_t> >;
 
 
 %ignore rfr::*::serialize;
@@ -100,3 +102,18 @@ typedef rfr::trees::k_ary_random_tree<2, rfr::splits::binary_split_one_feature_r
 %template(forest_opts) rfr::forests::forest_options<num_t, response_t, index_t>;
 %include "rfr/forests/regression_forest.hpp"
 %template(binary_rss_forest) rfr::forests::regression_forest< binary_rss_tree_t, num_t, response_t, index_t, rng_t>;
+
+%extend binary_rss_forest{
+	 %pythoncode %{
+		def __reduce__(self):
+			d = {}
+			d['str_representation'] = self.forest_ptr.save_into_string()
+			return (binary_rss_forest, (), d)
+	
+		def __setstate__(self, d):
+			del self.this
+			self.this = _regression.new_binary_rss_forest(*args)
+			self.this.load_from_string(d['str_representation'])
+      %}
+
+};

@@ -21,3 +21,18 @@ foreach(TEST_SOURCE ${TESTS})
 		message("Skipping ${TEST_SOURCE}")
 	endif()
 endforeach()
+
+
+if(PYTHONINTERP_FOUND AND SWIG_FOUND)
+	file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+	file(GLOB PYRFR_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyrfr_unit_test_*.py)
+
+	foreach(PYRFR_TEST ${PYRFR_TESTS})
+		configure_file(${PYRFR_TEST} ${CMAKE_CURRENT_BINARY_DIR}/${PYRFR_TEST})
+	endforeach()
+
+	add_test(pyrfr_test "${PYTHON_EXECUTABLE}" "-m" "unittest" "discover" "-p" "pyrfr_unit_test*.py")
+
+
+endif(PYTHONINTERP_FOUND AND SWIG_FOUND)
+

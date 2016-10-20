@@ -43,6 +43,9 @@ add_subdirectory(tests)
 if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 	file(COPY "pyrfr" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 	configure_file(${PROJECT_SOURCE_DIR}/setup.py ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
+	
+	
+	configure_file(${PROJECT_SOURCE_DIR}/setup.py ${CMAKE_CURRENT_BINARY_DIR}/setup.py)
 
 	add_custom_target(pyrfr_docstrings
 		COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/lib/doxy2swig/doxy2swig.py -a -t -f -q -c ${CMAKE_CURRENT_BINARY_DIR}/doc/xml/index.xml ${CMAKE_CURRENT_BINARY_DIR}/pyrfr/docstrings.i
@@ -50,12 +53,11 @@ if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 		COMMENT "Generating Python Docstrings" VERBATIM
 	)
 
-	add_custom_target(pyrfr_build
+	add_custom_target(pyrfr_build ALL
 		COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --inplace
 		DEPENDS pyrfr_docstrings
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	)
-
 endif(PYTHONINTERP_FOUND AND SWIG_FOUND)
 
 

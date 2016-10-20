@@ -7,7 +7,7 @@ from Cython.Build import cythonize
 
 
 
-include_dirs = ['${CMAKE_SOURCE_DIR}/include', np.get_include()]
+include_dirs = ['${CMAKE_SOURCE_DIR}/include']
 extra_compile_args = ['-O2', '-std=c++11']
 #extra_compile_args = ['-g', '-std=c++11']
 

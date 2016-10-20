@@ -194,6 +194,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 
     
     virtual response_t predict (const std::vector<num_t> &feature_vector) const {
+		leaf_statistic(feature_vector).sum_of_weights();
         return(leaf_statistic(feature_vector).mean());
     }
     
@@ -324,14 +325,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 				num_t Wj = total_weight_in_subtree(the_nodes[i].get_child_index(j));
 				num_t fj =  Wj / W;
 				
-				if ((fj - the_nodes[i].get_split_fraction(j))/the_nodes[i].get_split_fraction(j) > epsilon){
-                    std::cout<<"node index: "<<i<<std::endl;
-                    std::cout<<"total_weight_in_subtree() =  "<<W<<std::endl;
-                    std::cout<<"total_weight_in_subtree("<<j<<") =  "<<Wj<<std::endl;
-                    std::cout<<"get_split_fratcion("<<j<<") =  "<<the_nodes[i].get_split_fraction(j)<<std::endl;
-                    std::cout<<"recomputed split fraction =  "<<fj<<std::endl;
+				if ((fj - the_nodes[i].get_split_fraction(j))/the_nodes[i].get_split_fraction(j) > epsilon)
 					return(false);
-                }
 			}
 		}
 		return(true);
