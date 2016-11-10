@@ -16,6 +16,7 @@
 
 #include <cereal/cereal.hpp>
 #include <cereal/types/vector.hpp>
+#include <cereal/types/array.hpp>
 #include <cereal/archives/portable_binary.hpp>
 #include <iostream>
 #include <sstream>
@@ -43,6 +44,11 @@ class regression_forest{
 	std::vector<std::vector<num_t> > bootstrap_sample_weights;
 	
 	num_t oob_error;
+	
+	// the forest needs to remember the data types it was trained on
+	std::vector<index_t> types;
+	std::vector< std::array<num_t,2> > bounds;
+	
 
   public:
 
@@ -53,7 +59,7 @@ class regression_forest{
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( options, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error);
+		archive( options, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error, types, bounds);
 	}
 
 	regression_forest() {}
@@ -77,6 +83,11 @@ class regression_forest{
 		std::vector<index_t> data_indices( data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
 		std::vector<index_t> data_indices_to_be_used( options.num_data_points_per_tree);
+
+		types.resize(data.num_features());
+		bounds.resize(data.num_features());
+
+		
 
 		num_features = data.num_features();
 		
@@ -142,7 +153,7 @@ class regression_forest{
 	 *
 	 * Every random tree makes an individual prediction which are averaged for the forest's prediction.
 	 *
-	 * \param feature_vector a valid (size and values) array containing features
+	 * \param feature_vector a valid vector containing the features
 	 * \return response_t the predicted value
 	 */
     response_t predict( const std::vector<num_t> &feature_vector) const{
@@ -150,7 +161,6 @@ class regression_forest{
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> mean_stats;
 		for (auto &tree: the_trees){
-			std::cout<<tree.predict(feature_vector)<<std::endl;
 			mean_stats.push(tree.predict(feature_vector));
 		}
 		std::cout<<mean_stats.number_of_points()<<std::endl;
@@ -158,41 +168,56 @@ class regression_forest{
 	}
     
     
-    /*
-    std::pair<num_t, num_t> predict_mean_var( num_t * feature_vector){
+   /* \brief makes a prediction for the mean and a variance estimation
+    * 
+    * Every tree returns the mean and the variance of the leaf the feature vector falls into.
+    * These are combined to the forests mean prediction (mean of the means) and a variance estimate
+    * (mean of the variance + variance of the means).
+    * 
+    * This function assumes the weights assigned to each data point where frequencies, not importance weights.
+    * Use this if you haven't assigned any weigths.
+    * 
+	* \param feature_vector a valid feature vector
+	* \return std::pair<response_t, num_t> mean and variance prediction
+    */
+    std::pair<num_t, num_t> predict_mean_var_frequencies( const std::vector<num_t> &feature_vector){
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> mean_stats, var_stats;
 		for (auto &tree: the_trees){
-			num_t m , v;	index_t n;
-
-			std::tie(m, v, n) = tree.predict_mean_var_N(feature_vector);
-
-			mean_stats(m); 
-			var_stats(v);
+			auto stat = tree.leaf_statistic(feature_vector);
+			mean_stats.push(stat.mean()); 
+			var_stats.push(stat.variance_unbiased_frequency());
 		}
 		
-		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance() + var_stats.mean()) ));
+		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance_sample() + var_stats.mean()) ));
 	}
-	*/
 
-	/* \brief combines the prediction of all trees in the forest
-	 *
-	 * Every random tree makes an individual prediction. From that, the mean and the standard
-	 * deviation of those predictions is calculated. (See Frank's PhD thesis section 11.?)
-	 *
-	 * \param feature_vector a valid (size and values) array containing features
-	 *
-	 * \return std::pair<num_t, num_t> mean and sqrt(total variance = mean of variances + variance of means )
-	 */
-    
-    /*
-	std::pair<num_t, num_t> predict_mean_std( num_t * feature_vector){
-		auto p = predict_mean_var(feature_vector);
-		p.second = sqrt(p.second);
-		return(p);
-	}
+   /* \brief makes a prediction for the mean and a variance estimation
+    * 
+    * Every tree returns the mean and the variance of the leaf the feature vector falls into.
+    * These are combined to the forests mean prediction (mean of the means) and a variance estimate
+    * (mean of the variance + variance of the means).
+    * 
+    * This function assumes the weights assigned to each data point where importance weights, not frequencies.
+    * Use this if you have actively assigned weigths.
+    * 
+	* \param feature_vector a valid feature vector
+	* \return std::pair<response_t, num_t> mean and variance prediction
     */
+    std::pair<num_t, num_t> predict_mean_var_importance_weights( const std::vector<num_t> &feature_vector){
+
+		// collect the predictions of individual trees
+		rfr::util::running_statistics<num_t> mean_stats, var_stats;
+		for (auto &tree: the_trees){
+			auto stat = tree.leaf_statistic(feature_vector);
+			mean_stats.push(stat.mean()); 
+			var_stats.push(stat.variance_unbiased_importance());
+		}
+		
+		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance_sample() + var_stats.mean()) ));
+	}
+
 
 	/* \brief predict the mean and the variance deviation for a configuration marginalized over a given set of partial configurations
 	 * 
@@ -307,7 +332,7 @@ class regression_forest{
 	*/
 
     
-	std::vector< std::vector<num_t> > all_leaf_values (const std::vector<num_t> &feature_vector){
+	std::vector< std::vector<num_t> > all_leaf_values (const std::vector<num_t> &feature_vector) const {
 		std::vector< std::vector<num_t> > rv;
 		rv.reserve(the_trees.size());
 
@@ -317,11 +342,9 @@ class regression_forest{
 		return(rv);
 	}
 
-	forest_options<num_t, response_t, index_t> get_forest_options(){return(options);}
-
 	std::vector<std::vector< std::vector<num_t> > > partition_of_tree( index_t tree_index,
 														std::vector<std::vector<num_t> > pcs){
-		return(the_trees[tree_index].partition(pcs));
+		return(the_trees.at(tree_index).partition(pcs));
 	}
 	
 	/* \brief returns the predictions of every tree marginalized over the NAN values in the feature_vector

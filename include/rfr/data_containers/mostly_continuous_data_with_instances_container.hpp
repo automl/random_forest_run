@@ -102,11 +102,11 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		return(0);
 	}
 
-	index_t add_configuration(num_t* config_features, index_t num_elements){
-		if (num_elements != configurations.size())
+	index_t add_configuration(const std:vector<num_t> &config_features){
+		if (config_features.size() != configurations.size())
 			throw std::runtime_error("Number of configuration features is not what it should be!");
 
-		for (auto i = 0u; i< num_elements; i++)
+		for (auto i = 0u; i< config_features.size(); i++)
 			configurations[i].push_back(config_features[i]);
 		return(num_configurations()-1);
 	}
@@ -129,18 +129,6 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		return(vec);
 	}
 
-	/** \brief method to query the type of a feature
-	 *
-	 * As most features are assumed to be numerical, it is actually
-	 * beneficial to store only the categorical exceptions in a hash-map.
-	 * Type = 0 means continuous, and Type = n >= 1 means categorical with
-	 * options \in {1, n}. For consistency, we exclude zero from the categorical
-	 * values if anyone wants to add sparse data later on.
-	 *
-	 * \param feature_index the index of the feature
-	 * \return int type of the feature: 0 - numerical value (float or int); n>0 - categorical value with n different values {1,2,...,n}
-	 *
-	 */
 	virtual index_t get_type_of_feature (index_t feature_index) const{
 		auto it = categorical_ranges.find(feature_index);
 		if ( it == categorical_ranges.end())
@@ -185,18 +173,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 	}
 
 	virtual void set_type_of_feature(index_t index, index_t type){
-		if (index >= num_features())
-			throw std::runtime_error("Unknown index specified.");
-		if (! (type >= 0))
-			throw std::runtime_error("Type value should be >= 0");
-
-
-		if (index < configurations.size())
-			set_type_of_configuration_feature(index, type);
-
-		else
-			set_type_of_instance_feature(index-configurations.size(), type);
-
+		throw std::runtime_error("This container does not support setting the feature type with this function. Use set_type_of_configuration_feature or set_type_of_instance_feature instead.");
 	}
 
 	virtual index_t num_features() const {return(configurations.size() + instances.size());}

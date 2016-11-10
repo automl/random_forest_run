@@ -1,6 +1,8 @@
 #ifndef RFR_DATA_CONTAINER_HPP
 #define RFR_DATA_CONTAINER_HPP
 
+
+#include <array>
 #include <vector>
 
 
@@ -92,11 +94,23 @@ class base{
 
 	/** \brief specifying the type of the response
 	 *
-	 * \param feature_t the actual type (0 - numerical, value >0 catergorical with values from {0,2,...value-1}
-	 * \return bool success of the operation (fail do to consistency checks)
+	 * \param response_t the actual type (0 - numerical, value >0 catergorical with values from {0,2,...value-1}
 	 */
 	virtual void set_type_of_response (index_t response_type) = 0;
 
+
+	/** \brief specifies the interval of allowed values for a feature
+	 * 
+	 * To marginalize out certain feature dimensions using non-i.i.d. data, the numerical bounds
+	 * on each variable have to be known. This only applies to numerical features. 
+	 * 
+	 * \param index_t feature_index the index of the feature
+	 * \param min the smallest value for the feature
+	 * \param max the largest value for the feature
+	 */
+	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max) = 0;
+
+	virtual std::array<num_t,2> get_bounds_of_feature(index_t feature_index) = 0;
 
 	virtual index_t num_features() const = 0;
 	virtual index_t num_data_points()  const = 0;

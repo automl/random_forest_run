@@ -266,7 +266,7 @@ class weighted_running_statistics{
 	num_t 	variance_population()			const	{return(divide_sdm_by(weight_stat.sum(),0.));}
 	// source: https://en.wikipedia.org/wiki/Weighted_arithmetic_mean#Weighted_sample_variance
 	num_t	variance_unbiased_frequency()	const	{return(divide_sdm_by(weight_stat.sum()-1,1.));}
-	num_t	variance_unbiased_importance()	const	{return(divide_sdm_by(weight_stat.sum() - (weight_stat.sum_of_squares() / weight_stat.sum())), 0);}
+	num_t	variance_unbiased_importance()	const	{return(divide_sdm_by(weight_stat.sum() - (weight_stat.sum_of_squares() / weight_stat.sum()), 0));}
 
 
 	weighted_running_statistics operator+ ( const weighted_running_statistics &other) const{

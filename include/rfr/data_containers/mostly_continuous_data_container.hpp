@@ -2,9 +2,10 @@
 #define RFR_MOSTLY_CONTINUOUS_DATA_CONTAINER_HPP
 
 
-#include<vector>
-#include<string>
-#include<map>
+#include <vector>
+#include <string>
+#include <map>
+#include <limits>
 
 
 #include "rfr/data_containers/data_container.hpp"
@@ -27,6 +28,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	std::vector<num_t> weights;            				 //!< the associated weights
 	std::map<index_t, index_t> categorical_ranges;//!< a map storing the few categorical indices and their range
 	response_t response_type;
+	std::vector<std::array<num_t, 2> > bounds;
   public:
 
 	// empty constructor. Use this only if you read the data from a file!
@@ -36,7 +38,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features 
-	mostly_continuous_data (index_t num_f): feature_values(num_f, std::vector<num_t>(0)), response_type(0){}
+	mostly_continuous_data (index_t num_f): feature_values(num_f, std::vector<num_t>(0)), response_type(0), bounds(num_f, {-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity()}){}
   
 	virtual num_t feature  (index_t feature_index, index_t sample_index) const {
 		//return(feature_values.at(feature_index).at(sample_index));
@@ -124,6 +126,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
 			}
 			categorical_ranges[index] = type;
+			bounds[index] = {NAN,NAN};
 		}
 		else{
 			
@@ -131,7 +134,31 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 	virtual index_t num_features() const {return(feature_values.size());}
+
 	virtual index_t num_data_points() const {return(response_values.size());}
+
+	virtual index_t get_type_of_response () const{return(response_type);}
+
+	virtual void set_type_of_response (index_t resp_t){
+		if (resp_t > 0){
+			for (auto &rv: response_values){
+				if (!(rv < resp_t))
+					throw std::runtime_error("Response value not consistent with provided type. Data contains a value larger than allowed.");
+				if (rv < 0)
+					throw std::runtime_error("Response values contain a negative value, can't make that a categorical value.");
+			}
+			response_type = resp_t;
+		}
+	}
+
+	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max){
+		bounds.at(feature_index)[0] = min;
+		bounds.at(feature_index)[1] = max;
+	}
+	
+	virtual std::array<num_t, 2> get_bounds_of_feature(index_t feature_index){
+		return(bounds.at(feature_index));
+	}
 
 
 	// some helper functions
@@ -160,20 +187,6 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 		if (weights.size() != num_data_points()) return(false);
 		
 		return(true);
-	}
-
-	virtual index_t get_type_of_response () const{return(response_type);}
-
-	virtual void set_type_of_response (index_t resp_t){
-		if (resp_t > 0){
-			for (auto &rv: response_values){
-				if (!(rv < resp_t))
-					throw std::runtime_error("Response value not consistent with provided type. Data contains a value larger than allowed.");
-				if (rv < 0)
-					throw std::runtime_error("Response values contain a negative value, can't make that a categorical value.");
-			}
-			response_type = resp_t;
-		}
 	}
 
 
