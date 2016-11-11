@@ -86,16 +86,12 @@ class k_ary_node{
 			for (index_t i = 0; i < k; i++){
 				tmp_nodes.emplace_back(num_nodes+i, tmp_node.node_index, tmp_node.node_level+1, split_indices_it[i], split_indices_it[i+1]);
                 split_fractions[i]=tmp_nodes.back().total_weight();
-                std::cout<<"+ "<<split_fractions[i];
                 total_weight += split_fractions[i];
 				children[i] = num_nodes + i;
 			}
-			std::cout<<" ?= "<<total_weight<<std::endl;
-			for (auto &sf: split_fractions){
+			for (auto &sf: split_fractions)
                 sf /= total_weight;
-                std::cout<<sf;
-            }
-            std::cout<<std::endl;
+
 		}
 		else
 			make_leaf_node(tmp_node, data);
@@ -112,8 +108,6 @@ class k_ary_node{
 		parent_index = tmp_node.parent_index;
 		children.fill(0);
 		
-        tmp_node.print_info();
-        
 		response_values.reserve(std::distance(tmp_node.begin, tmp_node.end));
 		response_weights.reserve(std::distance(tmp_node.begin, tmp_node.end));
         

@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <limits>
+#include <algorithm>
 
 
 #include "rfr/data_containers/data_container.hpp"
@@ -28,7 +29,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	std::vector<num_t> weights;            				 //!< the associated weights
 	std::map<index_t, index_t> categorical_ranges;//!< a map storing the few categorical indices and their range
 	response_t response_type;
-	std::vector<std::array<num_t, 2> > bounds;
+	std::vector<std::pair<num_t, num_t> > bounds;
   public:
 
 	// empty constructor. Use this only if you read the data from a file!
@@ -38,7 +39,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features 
-	mostly_continuous_data (index_t num_f): feature_values(num_f, std::vector<num_t>(0)), response_type(0), bounds(num_f, {-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity()}){}
+	mostly_continuous_data (index_t num_f): feature_values(num_f, std::vector<num_t>(0)), response_type(0), bounds(num_f, std::pair<num_t,num_t>(-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity())){}
   
 	virtual num_t feature  (index_t feature_index, index_t sample_index) const {
 		//return(feature_values.at(feature_index).at(sample_index));
@@ -126,10 +127,9 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
 			}
 			categorical_ranges[index] = type;
-			bounds[index] = {NAN,NAN};
 		}
 		else{
-			
+			categorical_ranges.erase(index);
 		}
 	}
 
@@ -152,12 +152,22 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max){
-		bounds.at(feature_index)[0] = min;
-		bounds.at(feature_index)[1] = max;
+		bounds.at(feature_index).first = min;
+		bounds.at(feature_index).second = max;
 	}
 	
-	virtual std::array<num_t, 2> get_bounds_of_feature(index_t feature_index){
+	virtual std::pair<num_t, num_t> get_bounds_of_feature(index_t feature_index){
 		return(bounds.at(feature_index));
+	}
+
+
+	void guess_bounds_from_data(){
+		bounds.clear();
+		bounds.reserve(feature_values.size());
+		for (auto &f:  feature_values){
+			auto mm = std::minmax_element(f.begin(), f.end());
+			bounds.emplace_back(*mm.first, *mm.second);
+		}
 	}
 
 
@@ -169,6 +179,8 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
             weights = (read_csv_file<num_t>(weight_file))[0];
         else
             weights = std::vector<num_t> (response_values.size(), 1);
+
+		guess_bounds_from_data();
 		return(feature_values.size());
 	}
 

@@ -102,7 +102,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		return(0);
 	}
 
-	index_t add_configuration(const std:vector<num_t> &config_features){
+	index_t add_configuration(const std::vector<num_t> &config_features){
 		if (config_features.size() != configurations.size())
 			throw std::runtime_error("Number of configuration features is not what it should be!");
 
@@ -111,10 +111,10 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		return(num_configurations()-1);
 	}
 
-	index_t add_instance(num_t* instance_features, index_t num_elements){
-		if (num_elements != instances.size())
+	index_t add_instance(const std::vector<num_t> instance_features){
+		if (instance_features.size() != instances.size())
 			throw std::runtime_error("Number of instance features is not what it should be!");
-		for (auto i = 0u; i< num_elements; i++)
+		for (auto i = 0u; i< instance_features.size(); i++)
 			instances[i].push_back(instance_features[i]);
 		return(num_instances()-1);
 	}
@@ -242,6 +242,17 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 			response_type = resp_t;
 		}
 	}
+
+	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max){
+		throw std::runtime_error("Function not supported by this data container! Use set_bounds_of_configuration_feature or set_bounds_of_instance_feature instead!");
+	}
+
+	 virtual std::pair<num_t,num_t> get_bounds_of_feature(index_t feature_index){
+		std::pair<num_t,num_t> r(NAN, NAN);
+		return(r);
+	 }
+
+	
 	
 	/** \brief method to get instance as set_feature for predict_mean_var_of_mean_response_on_set method in regression forest
 	 */

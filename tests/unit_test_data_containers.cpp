@@ -98,20 +98,20 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 	data.set_type_of_feature(0,0);
 	data.set_type_of_instance_feature(0,0);
 
-	num_t config1 [] = {1,1};
-	num_t config2 [] = {2,2};
-	num_t config3 [] = {3,3};
+	std::vector<num_t> config1 = {1,1};
+	std::vector<num_t> config2 = {2,2};
+	std::vector<num_t> config3 = {3,3};
 
-	num_t instance1 [] = {4,4};
-	num_t instance2 [] = {5,5};
+	std::vector<num_t> instance1 = {4,4};
+	std::vector<num_t> instance2 = {5,5};
 
-	BOOST_CHECK( data.add_configuration(config1, 2) == 0);
-	BOOST_CHECK( data.add_configuration(config2, 2) == 1);
-	BOOST_CHECK( data.add_configuration(config3, 2) == 2);
+	BOOST_CHECK( data.add_configuration(config1) == 0);
+	BOOST_CHECK( data.add_configuration(config2) == 1);
+	BOOST_CHECK( data.add_configuration(config3) == 2);
 	BOOST_CHECK( data.num_configurations() == 3);
 
-	BOOST_CHECK( data.add_instance(instance1,2) == 0);
-	BOOST_CHECK( data.add_instance(instance2,2) == 1);
+	BOOST_CHECK( data.add_instance(instance1) == 0);
+	BOOST_CHECK( data.add_instance(instance2) == 1);
 	BOOST_CHECK( data.num_instances() == 2);
 
 	data.add_data_point(0u,0,0.1); // first argument cannot be "0" because than the compiler has trouble resolving the overloading!

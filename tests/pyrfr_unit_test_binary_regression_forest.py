@@ -41,7 +41,7 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		the_forest.options.num_trees = 1
 		the_forest.options.do_bootstrapping = False
 		the_forest.options.num_data_points_per_tree = self.data.num_data_points()
-		the_forest.options.tree_opts.max_features = data.num_features()
+		the_forest.options.tree_opts.max_features = self.data.num_features()
 
 		the_forest.fit(self.data, self.rng)
 		

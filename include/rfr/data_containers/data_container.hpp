@@ -2,8 +2,8 @@
 #define RFR_DATA_CONTAINER_HPP
 
 
-#include <array>
 #include <vector>
+#include <utility>
 
 
 namespace rfr{ namespace data_containers{
@@ -110,7 +110,7 @@ class base{
 	 */
 	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max) = 0;
 
-	virtual std::array<num_t,2> get_bounds_of_feature(index_t feature_index) = 0;
+	virtual std::pair<num_t,num_t> get_bounds_of_feature(index_t feature_index) = 0;
 
 	virtual index_t num_features() const = 0;
 	virtual index_t num_data_points()  const = 0;

@@ -160,10 +160,8 @@ class regression_forest{
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> mean_stats;
-		for (auto &tree: the_trees){
+		for (auto &tree: the_trees)
 			mean_stats.push(tree.predict(feature_vector));
-		}
-		std::cout<<mean_stats.number_of_points()<<std::endl;
 		return(mean_stats.mean());
 	}
     
