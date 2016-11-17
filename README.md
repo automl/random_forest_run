@@ -10,16 +10,17 @@ You probably have to set CMAKE\_CXX\_FLAGS to -std=c++11 when using older compil
 
 ```
 CMAKE
-DOXYGEN (if you want docstrings)
+DOXYGEN (if you want docstrings, which you probably do)
 SWIG
 ```
 
 
 ## Installing the Python Bindings
-Checkout the repo, create a build directory, and build them using the following commands:
+Checkout the repo (and the refactor branch), create a build directory, and build them using the following commands:
 ```
 git checkout git@bitbucket.org:aadfreiburg/random_forest_run.git
 cd random_forest_run
+git checkout refactor
 mkdir build
 cd build
 cmake ..
