@@ -1,4 +1,6 @@
 language: cpp
+compiler: g++
+
 
 sudo: false
 dist: trusty
@@ -8,17 +10,28 @@ addons:
   apt:
     packages:
       - libboost-test-dev
+      - lcov
       - cmake
 
 
-install:
-  - export CXX="clang++"
-  - export CC="clang"
+#install:
+#  - export CXX="clang++"
+#  - export CC="clang"
 
+
+before_script:
+  - cd ${TRAVIS_BUILD_DIR}
+  - lcov --directory . --zerocounters
 
 script:
-  - mkdir build
-  - cd build
-  - cmake ..
+  - cd ${TRAVIS_BUILD_DIR}
+  - cmake .
   - make
-  - ctest
+  - ctest --verbose --output-on-failure
+
+after_success:
+  - cd ${TRAVIS_BUILD_DIR}
+  - lcov --directory . --capture --output-file coverage.info
+  - lcov --remove coverage.info 'tests/*' '/usr/*' --output-file coverage.info
+  - lcov --list coverage.info
+  - coveralls-lcov --repo-token ${COVERALLS_TOKEN} coverage.info
