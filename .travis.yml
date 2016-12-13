@@ -8,15 +8,13 @@ addons:
   apt:
     packages:
       - libboost-test-dev
-      - clang-3.7
-      - g++-5
+      - clang
       - cmake
-      - swig
 
 
 install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-5" CC="gcc-5"; fi
-  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.7" CC="clang-3.7"; fi
+  - export CXX="clang++"
+  - export CC="clang"
 
 
 script:
