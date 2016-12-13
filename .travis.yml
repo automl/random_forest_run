@@ -6,4 +6,9 @@ addons:
       - cmake
 
 
-script: mkdir build && cd build && cmake .. && make && ctest
+script:
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - ctest

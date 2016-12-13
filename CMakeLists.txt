@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
+cmake_minimum_required (VERSION 2.8 FATAL_ERROR)
 project (RFR CXX)
 
 # add a version number
