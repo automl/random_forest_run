@@ -95,8 +95,7 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 	data.set_type_of_instance_feature(0,2);
 	BOOST_CHECK(data.get_type_of_feature(2) == 2);
 
-	data.set_type_of_feature(0,0);
-	data.set_type_of_instance_feature(0,0);
+	BOOST_CHECK_THROW(data.set_type_of_feature(0,0), std::runtime_error);
 
 	std::vector<num_t> config1 = {1,1};
 	std::vector<num_t> config2 = {2,2};

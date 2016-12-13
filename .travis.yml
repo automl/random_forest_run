@@ -8,7 +8,6 @@ addons:
   apt:
     packages:
       - libboost-test-dev
-      - clang
       - cmake
 
 
