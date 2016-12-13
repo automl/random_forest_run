@@ -430,7 +430,7 @@ class regression_forest{
 	}
 
 	// serialize into a string; used for Python's pickle.dump
-	std::string save_into_string(){
+	std::string string_representation(){
 		std::stringstream oss;
 		oarch_t oarch(oss);
 		serialize(oarch);
@@ -438,7 +438,7 @@ class regression_forest{
 	}
 
 	// deserialize from string; used for Python's pickle.load
-	void load_from_string( std::string str){
+	void load_from_string( std::string const &str){
 		std::stringstream iss;
 		iss.str(str);
 		iarch_t iarch(iss);
@@ -464,6 +464,7 @@ class regression_forest{
 			t.print_info();
 		}
 	}
+	
 };
 
 

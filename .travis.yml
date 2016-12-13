@@ -25,11 +25,11 @@ script:
   - cd ${TRAVIS_BUILD_DIR}
   - cmake .
   - make
-  - ctest --verbose --output-on-failure
+  - ctest --output-on-failure
 
 after_success:
   - cd ${TRAVIS_BUILD_DIR}
   - lcov --directory . --capture --output-file coverage.info
-  - lcov --remove coverage.info 'tests/*' '/usr/*' --output-file coverage.info
+  - lcov --remove coverage.info 'tests/*' '/usr/*' 'include/cereal/*'--output-file coverage.info
   - lcov --list coverage.info
   - coveralls-lcov --repo-token ${COVERALLS_TOKEN} coverage.info

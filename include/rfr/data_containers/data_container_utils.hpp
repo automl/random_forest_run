@@ -45,7 +45,7 @@ std::vector< std::vector<num_type> > read_csv_file( std::string filename){
 		}
 	}
 	else
-		std::cerr << "Error: Unable to open file " << filename << std::endl;
+		throw std::runtime_error("Couldn't open file " + filename);
 	return(csv_values);
 }
 

@@ -31,6 +31,12 @@ data_container_type load_diabetes_data(){
 
 
 
+BOOST_AUTO_TEST_CASE(data_container_missing_file_test){
+	data_container_type data;
+	BOOST_CHECK_THROW(data.import_csv_files("", ""), std::runtime_error);
+}
+
+
 BOOST_AUTO_TEST_CASE( data_container_tests ){
 
     

@@ -107,13 +107,11 @@ typedef rfr::trees::k_ary_random_tree<2, rfr::splits::binary_split_one_feature_r
 	 %pythoncode %{
 		def __reduce__(self):
 			d = {}
-			d['str_representation'] = self.forest_ptr.save_into_string()
+			d['str_representation'] = self.string_representation()
 			return (binary_rss_forest, (), d)
-	
-		def __setstate__(self, d):
-			del self.this
-			self.this = _regression.new_binary_rss_forest(*args)
-			self.this.load_from_string(d['str_representation'])
+		
+		def __setstate__(self, sState):
+			self.__init__()
+			self.load_from_string(sState['str_rep'])
       %}
-
 };
