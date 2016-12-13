@@ -1,0 +1,9 @@
+language: cpp
+addons:
+  apt:
+    packages:
+      - libboost-dev
+      - cmake
+
+
+script: mkdir build && cd build && cmake .. && make && ctest
