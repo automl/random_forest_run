@@ -14,8 +14,8 @@ addons:
       - cmake
 
 
-services:
-  - docker
+install:
+  - gem install coveralls-lcov
 
 before_script:
   - cd ${TRAVIS_BUILD_DIR}
