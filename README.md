@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/sfalkner/random_forest_run.svg?branch=master)](https://travis-ci.org/sfalkner/random_forest_run)
+
 #RFR
 A extensible C++ library for random forests with Python bindings.
 
