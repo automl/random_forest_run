@@ -2,7 +2,7 @@ language: cpp
 compiler: g++
 
 
-sudo: false
+sudo: required
 dist: trusty
 
 
@@ -14,10 +14,8 @@ addons:
       - cmake
 
 
-#install:
-#  - export CXX="clang++"
-#  - export CC="clang"
-
+services:
+  - docker
 
 before_script:
   - cd ${TRAVIS_BUILD_DIR}
