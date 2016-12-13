@@ -168,7 +168,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 		// first, sort the info vector by the feature
 		std::sort(infos_begin, infos_end,
-			[] (rfr::splits::data_info_t<num_t, response_t, index_t> &a, rfr::splits::data_info_t<num_t, response_t, index_t> &b) {return (a.feature < b.feature) ;});
+			[] (const rfr::splits::data_info_t<num_t, response_t, index_t> &a, const rfr::splits::data_info_t<num_t, response_t, index_t> &b) {return (a.feature < b.feature) ;});
 
 		// first some temporary variables
 		rfr::util::weighted_running_statistics<num_t> left_stat;
