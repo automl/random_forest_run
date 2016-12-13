@@ -1,5 +1,5 @@
 import sys
-sys.path.append("..")
+sys.path.append("../build")
 import os
 here = os.path.dirname(os.path.realpath(__file__))
 

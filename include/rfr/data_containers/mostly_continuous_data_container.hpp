@@ -24,12 +24,13 @@ namespace rfr{ namespace data_containers{
 template<typename num_t = float, typename response_t = float, typename index_t = unsigned int>
 class mostly_continuous_data : public rfr::data_containers::base<num_t, response_t, index_t>{
   protected:
-	std::vector< std::vector<num_t> > feature_values;//!< 2d vector to store the feature values
-	std::vector<response_t> response_values;              //!< the associated responses
-	std::vector<num_t> weights;            				 //!< the associated weights
-	std::map<index_t, index_t> categorical_ranges;//!< a map storing the few categorical indices and their range
-	response_t response_type;
-	std::vector<std::pair<num_t, num_t> > bounds;
+	std::vector< std::vector<num_t> > feature_values;	//!< 2d vector to store the feature values
+	std::vector<response_t> response_values;			//!< the associated responses
+	std::vector<num_t> weights;							//!< the associated weights
+	std::map<index_t, index_t> categorical_ranges;		//!< a map storing the few categorical indices and their range
+	response_t response_type;							//!< to discriminate between regression and classification
+	std::vector<std::pair<num_t, num_t> > bounds;		//!< stores the intervals for all continuous variables
+	std::vector<std::pair<num_t, num_t> > min_max;		//!< if no bounds are know, the will be imputed by the min/max values
   public:
 
 	// empty constructor. Use this only if you read the data from a file!
@@ -39,7 +40,12 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features 
-	mostly_continuous_data (index_t num_f): feature_values(num_f, std::vector<num_t>(0)), response_type(0), bounds(num_f, std::pair<num_t,num_t>(-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity())){}
+	mostly_continuous_data (index_t num_f):
+			feature_values(num_f, std::vector<num_t>(0)),
+			response_type(0),
+			bounds(num_f, std::pair<num_t,num_t>(NAN, NAN)),
+			min_max(num_f, std::pair<num_t,num_t>(std::numeric_limits<num_t>::infinity(), -std::numeric_limits<num_t>::infinity()))
+			{}
   
 	virtual num_t feature  (index_t feature_index, index_t sample_index) const {
 		//return(feature_values.at(feature_index).at(sample_index));
@@ -77,8 +83,10 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 			}
 		}
 
-		for (size_t i=0; i<features.size(); i++)
+		for (size_t i=0; i<features.size(); i++){
 				feature_values[i].push_back(features[i]);
+				min_max[i] = std::pair<num_t,num_t> (std::min(min_max[i].first, features[i]), std::max(min_max[i].second, features[i]));
+		}
 
 		response_values.push_back(response);
 		weights.push_back(weight);
@@ -160,14 +168,12 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 		return(bounds.at(feature_index));
 	}
 
+	virtual std::pair<num_t, num_t> get_min_max_of_feature(index_t feature_index){
+		return(min_max.at(feature_index));
+	}
 
 	void guess_bounds_from_data(){
-		bounds.clear();
-		bounds.reserve(feature_values.size());
-		for (auto &f:  feature_values){
-			auto mm = std::minmax_element(f.begin(), f.end());
-			bounds.emplace_back(*mm.first, *mm.second);
-		}
+		bounds = min_max;
 	}
 
 

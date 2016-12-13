@@ -52,13 +52,13 @@ class base{
 
 	/** \brief method to add a single data point
 	 *
-	 * \param features an array containing all the features
-	 * \param num_features length of the array
-	 * \param response The corresponding response value
-	 * \return bool whether the action was sucessful
+	 * \param features a vector containing the features
+	 * \param response the corresponding response value
+	 * \param weight the weight of the data point
 	 *
 	 */
 	virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight) = 0;
+
 
 	/** \brief method to retrieve a data point
 	 *

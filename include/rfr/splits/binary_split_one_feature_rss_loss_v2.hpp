@@ -265,7 +265,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 		// sort the categories by their individual mean. only consider the ones with actual specimen here
 		std::sort(	cat_ranking.begin(), empty_cat_ranking_it,
-					[cat_stats](index_t &a, index_t &b){return ( cat_stats[a].mean() < cat_stats[b].mean() );});		// C++11 lambda function, how exciting :)
+					[cat_stats](const index_t a, const index_t &b){return ( cat_stats[a].mean() < cat_stats[b].mean() );});		// C++11 lambda function, how exciting :)
 
 
 		auto it1 = cat_ranking.begin();
