@@ -1,8 +1,14 @@
 language: cpp
+compiler: clang
+
+sudo: required
+dist: trusty
+
+
 addons:
   apt:
     packages:
-      - libboost-dev
+      - libboost-all-dev
       - cmake
 
 
