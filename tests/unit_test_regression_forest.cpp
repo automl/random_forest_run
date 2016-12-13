@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	std::ostringstream oss;
 	
 	{
-		cereal::XMLOutputArchive oarchive(oss);
+		oarch_type oarchive(oss);
 		oarchive(the_forest);
 	}
 
@@ -88,11 +88,8 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	
 	forest_type the_forest2;
 
-	{
-		std::istringstream iss(oss.str());
-		cereal::XMLInputArchive iarchive(iss);
-		iarchive(the_forest2);
-	}	
+	the_forest2.load_from_string(oss.str());
+
 	
 	forest_type the_forest3;
 	the_forest3.load_from_binary_file("regression_forest_test.bin");
