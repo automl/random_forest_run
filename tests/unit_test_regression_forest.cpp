@@ -88,7 +88,9 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	
 	forest_type the_forest2;
 
-	the_forest2.load_from_string(oss.str());
+	auto s = the_forest.ascii_string_representation();
+
+	the_forest2.load_from_ascii_string(s);
 
 	
 	forest_type the_forest3;
