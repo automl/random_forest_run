@@ -105,7 +105,7 @@ typedef rfr::trees::k_ary_random_tree<2, rfr::splits::binary_split_one_feature_r
 
 %extend binary_rss_forest{
 	 %pythoncode %{
-		def __reduce__(self):
+		def __getstate__(self):
 			d = {}
 			d['str_representation'] = self.string_representation()
 			return (binary_rss_forest, (), d)
