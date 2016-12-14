@@ -18,6 +18,8 @@
 #include <cereal/types/vector.hpp>
 #include <cereal/types/array.hpp>
 #include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/json.hpp>
+
 #include <iostream>
 #include <sstream>
 
@@ -29,8 +31,12 @@
 
 namespace rfr{ namespace forests{
 
-typedef cereal::PortableBinaryInputArchive iarch_t;
-typedef cereal::PortableBinaryOutputArchive oarch_t;
+typedef cereal::PortableBinaryInputArchive binary_iarch_t;
+typedef cereal::PortableBinaryOutputArchive binary_oarch_t;
+
+typedef cereal::JSONInputArchive ascii_iarch_t;
+typedef cereal::JSONOutputArchive ascii_oarch_t;
+
 
 
 
@@ -414,36 +420,50 @@ class regression_forest{
 	
 	num_t out_of_bag_error(){return(oob_error);}
 
-	// writes serialized representation into string (used for pickling in python)
+	/* \brief writes serialized representation into a binary file
+	 * 
+	 * \param filename name of the file to store the forest in. Make sure that the directory exists!
+	 */
 	void save_to_binary_file(const std::string filename){
 		std::ofstream ofs(filename, std::ios::binary);
-		oarch_t oarch(ofs);
+		binary_oarch_t oarch(ofs);
 		serialize(oarch);
 	}
 
-	// deserialize from a representation provided by the string (used for unpickling in python)
+	/* \brief deserialize from a binary file created by save_to_binary_file
+	 *
+	 * \param filename name of the file in which the forest is stored. 
+	 */
 	void load_from_binary_file(const std::string filename){
 		std::ifstream ifs(filename, std::ios::binary);
-		std::cout<<"opening file "<<filename<<std::endl;
-		iarch_t iarch(ifs);
+		binary_iarch_t iarch(ifs);
 		serialize(iarch);
 	}
 
-	// serialize into a string; used for Python's pickle.dump
-	std::string string_representation(){
+	/* serialize into a string; used for Python's pickle.dump
+	 * 
+	 * \retiurn std::string a JSON serialization of the forest
+	 */
+	std::string ascii_string_representation(){
 		std::stringstream oss;
-		oarch_t oarch(oss);
-		serialize(oarch);
+		{
+			ascii_oarch_t oarch(oss);
+			serialize(oarch);
+		}
 		return(oss.str());
 	}
 
-	// deserialize from string; used for Python's pickle.load
-	void load_from_string( std::string const &str){
+	/* \brief deserialize from string; used for Python's pickle.load
+	 * 
+	 * \retiurn std::string a JSON serialization of the forest
+	 */
+	void load_from_ascii_string( std::string const &str){
 		std::stringstream iss;
 		iss.str(str);
-		iarch_t iarch(iss);
+		ascii_iarch_t iarch(iss);
 		serialize(iarch);
 	}
+
 
 
 	/* \brief stores a latex document for every individual tree

@@ -103,15 +103,22 @@ typedef rfr::trees::k_ary_random_tree<2, rfr::splits::binary_split_one_feature_r
 %include "rfr/forests/regression_forest.hpp"
 %template(binary_rss_forest) rfr::forests::regression_forest< binary_rss_tree_t, num_t, response_t, index_t, rng_t>;
 
-%extend binary_rss_forest{
+
+
+// adds required members to make the forests 'pickable'
+// note: the forest is stored in an ASCII string as the default translation
+// from std::string (raw bytes) to a Python string changes the encoding, and
+// I couldn't find an easy way around that.
+// Not sure if the pickle module compresses the data, if not that could be added here using the zlib module.
+%extend rfr::forests::regression_forest< binary_rss_tree_t, num_t, response_t, index_t, rng_t>{
 	 %pythoncode %{
 		def __getstate__(self):
 			d = {}
-			d['str_representation'] = self.string_representation()
-			return (binary_rss_forest, (), d)
+			d['str_representation'] = self.ascii_string_representation()
+			return (d)
 		
 		def __setstate__(self, sState):
 			self.__init__()
-			self.load_from_string(sState['str_rep'])
+			self.load_from_ascii_string(sState['str_representation'])
       %}
 };
