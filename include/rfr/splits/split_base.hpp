@@ -40,8 +40,9 @@ class k_ary_split_base{
 	 * 
 	 * \param data the container holding the training data
 	 * \param features_to_try a vector with the indices of all the features that can be considered for this split
-	 * \param indices a vector containing the subset of data point indices to be considered (output!)
-	 * \param split_indices_it iterators into indices specifying where to split the data for the children. Number of iterators is k+1, for easier iteration
+	 * \param infos_begin iterator to the first data_info element to be considered
+	 * \param infos_end iterator beyond the last data_info element to be considered
+	 * \param info_split_its iterators into indices specifying where to split the data for the children. Number of iterators is k+1, for easier iteration
 	 * \param rng (pseudo) random number generator as a source for stochasticity
 	 * 
 	 * \return float the loss of the found split

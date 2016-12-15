@@ -66,6 +66,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	 * \param data the container holding the training data
 	 * \param tree_opts a tree_options object that controls certain aspects of "growing" the tree
 	 * \param sample_weights vector containing the weights of all allowed datapoints (set to individual entries to zero for subsampling), no checks are done here!
+	 * \param rng the random number generator to be used
 	 */
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,

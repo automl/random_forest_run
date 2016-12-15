@@ -194,6 +194,7 @@ class running_statistics{
 		return(*this);
 	}
 	/**\brief method to check for numerical equivalency
+	 * \param other the other running statistic to compare against
 	 * \param rel_error relative tolerance for the mean and variance*/
 	bool numerically_equal (const running_statistics other, num_t rel_error){
 		if (N != other.N) return(false);

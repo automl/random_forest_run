@@ -45,6 +45,7 @@ class tree_base{
 	 * \param data the container holding the training data
 	 * \param tree_opts a tree_options opject that controls certain aspects of "growing" the tree
 	 * \param sample_weights vector containing the weights of all datapoints, can be used for subsampling (no checks are done here!)
+	 * \param rng a (pseudo) random number generator
 	 */
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,

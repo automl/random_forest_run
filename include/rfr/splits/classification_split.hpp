@@ -14,6 +14,8 @@ namespace rfr{ namespace splits{
 
 
 template <typename rng_t, typename num_t = float, typename response_t=unsigned int, typename index_t = unsigned int>
+/** \brief OUTDATED: Needs to be adapted to the new internal API for splitting!
+ */
 class binary_split_one_feature_gini: public rfr::splits::k_ary_split_base<2,rng_t, num_t, response_t, index_t> {
   private:
 
@@ -35,6 +37,7 @@ class binary_split_one_feature_gini: public rfr::splits::k_ary_split_base<2,rng_
 	 * \param features_to_try a vector with the indices of all the features that can be considered for this split
 	 * \param indices a vector containing the subset of data point indices to be considered (output!)
 	 * \param an iterator into this vector that says where to split the data for the two children
+	 * \param rng a pseudo random number generator instance
 	 * 
 	 */
 	 virtual num_t find_best_split(	const rfr::data_containers::data_container_base<num_t, response_t, index_t> &data,

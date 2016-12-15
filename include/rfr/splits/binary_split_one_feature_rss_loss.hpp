@@ -154,8 +154,8 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * \param infos_begin iterator to the first (relevant) element in a vector containing the minimal information in tuples
 	 * \param infos_end iterator beyond the last (relevant) element in a vector containing the minimal information in tuples
 	 * \param split_value a reference to store the split (numerical) criterion
-	 * \param total_stat a weighted_runnin_statistics object containing the statistics of all responses
-	 * \param rng an pseudo random number generator instance
+	 * \param right_stat a weighted_runnin_statistics object containing the statistics of all responses
+	 * \param rng a pseudo random number generator instance
 	 * 
 	 * \return float the loss of this split
 	 */
@@ -220,8 +220,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * \param infos_end iterator beyond the last (relevant) element in a vector containing the minimal information in tuples	 * 
 	 * \param num_categories the feature type (number of different values)
 	 * \param split_set a reference to store the split criterion
-	 * \param S_y_right the sum of all the response values
-	 * \param S_y2_right the sum of all squared response values
+	 * \param right_stat the statistics of the reponses of all remaining data points
 	 * \param rng an pseudo random number generator instance
 	 * 
 	 * \return float the loss of this split

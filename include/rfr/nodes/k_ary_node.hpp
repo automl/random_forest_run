@@ -121,7 +121,7 @@ class k_ary_node{
 
 	/** \brief returns the index of the child into which the provided sample falls
 	 * 
-	 * \param sample a feature vector of the appropriate size (not checked!)
+	 * \param feature_vector a feature vector of the appropriate size (not checked!)
 	 *
 	 * \return index_t index of the child
 	 */

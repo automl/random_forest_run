@@ -37,6 +37,7 @@ class base{
 	/** \brief member function to query a single response value, consistency checks might be omitted for performance
 	 *
 	 * \param sample_index the response of which data point
+	 * 
 	 * \return the response value
 	 */
 	virtual response_t response (index_t sample_index) const = 0;
@@ -45,6 +46,7 @@ class base{
 	/** \brief function to access the weight attributed to a single data point
 	 *
 	 * \param sample_index which data point
+	 * 
 	 * \return the weigth of that sample
 	 */
 	virtual num_t weight(index_t sample_index) const = 0;
@@ -55,7 +57,6 @@ class base{
 	 * \param features a vector containing the features
 	 * \param response the corresponding response value
 	 * \param weight the weight of the data point
-	 *
 	 */
 	virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight) = 0;
 
@@ -63,38 +64,36 @@ class base{
 	/** \brief method to retrieve a data point
 	 *
 	 * \param index index of the datapoint to extract
-	 * \param num_features length of the array
-	 * \param response The corresponding response value
-	 *
+	 * 
+	 * \return std::vector<num_t> the features of the data point
 	 */
 	virtual std::vector<num_t> retrieve_data_point (index_t index) const = 0;
+
 
 	/** \brief query the type of a feature
 	 *
 	 * \param feature_index the index of the feature
-	 * \return int type of the feature: 0 - numerical value (float or int); n>0 - categorical value with n different values {1,2,...,n}
-	 *
+	 * 
+	 * \return int type of the feature: 0 - numerical value (float or int); n>0 - categorical value with n different values {0,1,...,n-1}
 	 */
 	virtual index_t get_type_of_feature (index_t feature_index) const = 0;
 
 	/** \brief query the type of the response
 	 *
 	 * \return index_t type of the response: 0 - numerical value (float or int); n>0 - categorical value with n different values {0,1,...,n-1}
-	 *
 	 */
 	virtual index_t get_type_of_response () const = 0;
 
 	/** \brief specifying the type of a feature
 	 *
 	 * \param feature_index the index of the feature whose type is specified
-	 * \param feature_type the actual type (0 - numerical, value >0 catergorical with values from {1,2,...value}
-	 * \return bool success of the operation (fail do to consistency checks)
+	 * \param feature_type the actual type (0 - numerical, value >0 catergorical with values from {0,1,...value-1}
 	 */
 	virtual void set_type_of_feature (index_t feature_index, index_t feature_type) = 0;
 
 	/** \brief specifying the type of the response
 	 *
-	 * \param response_t the actual type (0 - numerical, value >0 catergorical with values from {0,2,...value-1}
+	 * \param response_type the actual type (0 - numerical, value >0 catergorical with values from {0,1,...value-1}
 	 */
 	virtual void set_type_of_response (index_t response_type) = 0;
 
@@ -102,17 +101,27 @@ class base{
 	/** \brief specifies the interval of allowed values for a feature
 	 * 
 	 * To marginalize out certain feature dimensions using non-i.i.d. data, the numerical bounds
-	 * on each variable have to be known. This only applies to numerical features. 
+	 * on each variable have to be known. This only applies to numerical features.
+	 *
+	 * Note: The forest will not check if a datapoint is consistent with the specified bounds!
 	 * 
-	 * \param index_t feature_index the index of the feature
+	 * \param feature_index feature_index the index of the feature
 	 * \param min the smallest value for the feature
 	 * \param max the largest value for the feature
 	 */
 	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max) = 0;
 
+
+	/** \brief query the allowed interval for a feature; applies only to continuous variables
+	 *
+	 * \param feature_index the index of the feature
+	 * \return std::pair<num_t,num_t> interval of allowed values
+	 */
 	virtual std::pair<num_t,num_t> get_bounds_of_feature(index_t feature_index) = 0;
 
+	/** \brief the number of features of every datapoint in the container */
 	virtual index_t num_features() const = 0;
+	/** \brief the number of data points in the container */
 	virtual index_t num_data_points()  const = 0;
 };
 
