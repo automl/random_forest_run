@@ -13,7 +13,7 @@
 #include <fstream>
 
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
-#include "rfr/splits/binary_split_one_feature_rss_loss_v2.hpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
 

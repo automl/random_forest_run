@@ -7,7 +7,7 @@
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/data_containers/mostly_continuous_data_container.hpp"
 #include "rfr/splits/split_base.hpp"
-#include "rfr/splits/binary_split_one_feature_rss_loss_v2.hpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/trees/k_ary_tree.hpp"
 #include "rfr/forests/regression_forest.hpp"
 
@@ -78,7 +78,7 @@ typedef std::default_random_engine rng_t;
 %ignore rfr::splits::binary_split_one_feature_rss_loss::find_best_split;
 %ignore rfr::splits::binary_split_one_feature_rss_loss::best_split_continuous;
 %ignore rfr::splits::binary_split_one_feature_rss_loss::best_split_categorical;
-%include "rfr/splits/binary_split_one_feature_rss_loss_v2.hpp"
+%include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 %template(binary_rss_split) rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>;
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128> binary_rss_split_t;
 
