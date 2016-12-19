@@ -57,7 +57,7 @@ if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 	)
 
 	add_custom_target(pyrfr_build ALL
-		COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --inplace
+		COMMAND ${PYTHON_EXECUTABLE} setup.py build_ext --inplace --swig ${SWIG_EXECUTABLE}
 		DEPENDS pyrfr_docstrings
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	)
