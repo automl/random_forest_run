@@ -66,6 +66,21 @@ data_container_type load_toy_data(){
 }
 
 
+data_container_type load_diabetes_data(){
+	data_container_type data;
+	
+    std::string feature_file, response_file;
+    
+    feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_features.csv";
+    response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_responses.csv";
+
+    data.import_csv_files(feature_file, response_file);
+    return(data);
+}
+
+
+
+
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and runs
 BOOST_AUTO_TEST_CASE( binary_tree_test ){
@@ -122,3 +137,49 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
 	BOOST_REQUIRE(partition1 == partition2);
 }
+
+
+
+BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
+
+	auto data = load_diabetes_data();
+    rfr::trees::tree_options<num_type, response_t, index_t> tree_opts;
+	
+	
+    tree_opts.max_features = 2;
+    tree_opts.max_depth = 3;
+	
+    rng_t rng_engine;
+
+	tree_type the_tree;
+	the_tree.fit(data, tree_opts, rng_engine);
+
+	BOOST_REQUIRE_EQUAL(the_tree.depth(), 3);
+
+
+	tree_opts.max_depth = 1024;
+	tree_opts.max_num_nodes = 15;
+	the_tree.fit(data, tree_opts, rng_engine);
+
+	BOOST_REQUIRE_EQUAL(the_tree.depth(), 3);
+	BOOST_REQUIRE_EQUAL(the_tree.number_of_nodes(), 15);
+	BOOST_REQUIRE_EQUAL(the_tree.number_of_leafs(), 8);
+
+
+
+	tree_opts.max_depth = 1024;
+	tree_opts.max_num_leaves = 16;
+	tree_opts.max_num_nodes = 1024;
+	the_tree.fit(data, tree_opts, rng_engine);
+
+	the_tree.save_latex_representation("/tmp/rfr.tex");
+
+
+	BOOST_REQUIRE_EQUAL(the_tree.depth(), 4);
+	BOOST_REQUIRE_EQUAL(the_tree.number_of_leafs(), 16);
+	BOOST_REQUIRE_EQUAL(the_tree.number_of_nodes(), 31);
+
+	
+}
+
+

@@ -21,6 +21,7 @@ struct tree_options{
     num_type   min_weight_in_leaf;	///< minimum total sample weights in a leaf
 
     index_type max_num_nodes;		///< maxmimum total number of nodes in the tree
+    index_type max_num_leaves;		///< maxmimum total number of leaves in the tree
     
     response_type epsilon_purity;	///< minimum difference between two response values to be considered different*/
 
@@ -50,6 +51,7 @@ struct tree_options{
 		min_weight_in_leaf = 1;
 	
 		max_num_nodes = std::numeric_limits<index_type>::max();
+		max_num_leaves = std::numeric_limits<index_type>::max();
 	
 		epsilon_purity = 1e-10;
     }

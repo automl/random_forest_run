@@ -141,6 +141,12 @@ BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_push){
 	BOOST_REQUIRE_CLOSE(stat2.variance_population()	,5340.296298,1e-6);
 	BOOST_REQUIRE_CLOSE(stat2.sum_of_squares()      ,3008902.75 ,1e-6);
 
+	// only positive weights
+	BOOST_REQUIRE_THROW(stat1.push(0.1, 0), std::runtime_error);
+	BOOST_REQUIRE_THROW(stat1.push(0.1, -2), std::runtime_error);
+
+
+
 }
 
 

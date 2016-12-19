@@ -123,7 +123,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 			if ((tmp_nodes.front().node_level < tree_opts.max_depth) &&                     // don't grow the tree to deep!
 				(std::distance(tmp_nodes.front().begin, tmp_nodes.front().end) >= tree_opts.min_samples_to_split)&& // are enough sample left in the node?
 				(is_not_pure) &&                                                            // are not all the values the same?
-				(the_nodes.size() <= tree_opts.max_num_nodes-k)                             // don't have more nodes than the user specified number
+				(the_nodes.size() <= tree_opts.max_num_nodes-k) &&                          // don't have more nodes than the user specified number
+				(tmp_nodes.size() < tree_opts.max_num_leaves - num_leafs)
 				){
 				// generate a subset of the features to try
 				std::shuffle(feature_indices.begin(), feature_indices.end(), rng);
@@ -148,6 +149,16 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 							illegal_split = true;
 							break;
 						}
+						num_t tmp_weight = 0;
+						for (auto mew = (*tmp_it).begin; mew != (*tmp_it).end; mew++){
+							tmp_weight += (*mew).weight;
+						}
+
+						if (tmp_weight < tree_opts.min_weight_in_leaf){
+							illegal_split = true;
+							break;
+						}
+						
 					}
 					// in case it wasn't ...
 					if (illegal_split){
@@ -317,6 +328,9 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 
 	
 	bool check_split_fractions(num_t epsilon = 1e-6) const {
+
+		bool rt = true;
+		
 		for ( auto i=0u; i<the_nodes.size(); i++){
 			if (the_nodes[i].is_a_leaf()) continue;
 			
@@ -326,11 +340,11 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 				num_t Wj = total_weight_in_subtree(the_nodes[i].get_child_index(j));
 				num_t fj =  Wj / W;
 				
-				if ((fj - the_nodes[i].get_split_fraction(j))/the_nodes[i].get_split_fraction(j) > epsilon)
-					return(false);
+				rt = rt && ((fj - the_nodes[i].get_split_fraction(j))/the_nodes[i].get_split_fraction(j) < epsilon) ;
+
 			}
 		}
-		return(true);
+		return(rt);
 	}
 
 
