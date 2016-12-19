@@ -1,6 +1,8 @@
 language: cpp
 compiler: g++
 
+python:
+  - 2.7
 
 sudo: required
 dist: trusty
@@ -13,8 +15,6 @@ addons:
       - lcov
       - cmake
       - doxygen
-      - python-numpy
-
 
 before_install:
   - sudo apt-get -qq update
@@ -22,6 +22,9 @@ before_install:
 
 install:
   - gem install coveralls-lcov
+  - pip install -U pip pip-tools
+  - pip-compile
+  - pip install numpy
 
 before_script:
   - cd ${TRAVIS_BUILD_DIR}
