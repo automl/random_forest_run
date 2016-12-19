@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_running_statistics_operators){
 
 
 	for (auto i=10u; i<N-10; ++i){
-		rfr::util::running_statistics<double> stat1, stat2;
+		rfr::util::running_statistics<double> stat1, stat2, stat3;
 
 		for(auto j=0u; j<i; ++j)
 			stat1.push(values[j]);
@@ -70,7 +70,25 @@ BOOST_AUTO_TEST_CASE(test_running_statistics_operators){
 		BOOST_REQUIRE(stat_total.numerically_equal(stat1+stat2, 1e-6));
 		BOOST_REQUIRE(stat1.numerically_equal(stat_total-stat2, 1e-6));
 		BOOST_REQUIRE(stat2.numerically_equal(stat_total-stat1, 1e-6));
+
+		stat3 = stat1 + stat2;
+
+		BOOST_REQUIRE_THROW(stat1-stat3, std::runtime_error);
+		BOOST_REQUIRE_THROW(stat1-=stat3, std::runtime_error);
+
+
 	}
+
+	rfr::util::running_statistics<double> stat1, stat2;
+	stat1.push(values[0]);
+	BOOST_REQUIRE_THROW(stat1.pop(values[0]), std::runtime_error);
+
+	stat2.push(values[0]);
+	stat2.push(values[1]);
+
+	BOOST_REQUIRE_THROW(stat2.pop(512), std::runtime_error);
+
+	
 }
 
 
@@ -122,7 +140,48 @@ BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_push){
 	BOOST_REQUIRE_CLOSE(stat2.mean()				,136.6691945,1e-6);
 	BOOST_REQUIRE_CLOSE(stat2.variance_population()	,5340.296298,1e-6);
 	BOOST_REQUIRE_CLOSE(stat2.sum_of_squares()      ,3008902.75 ,1e-6);
+
 }
+
+
+BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_throws){
+
+	// 256 random ints in [0,256)
+	unsigned int N = 255;
+	double values[] = {  61,    99,   125,   222,   34,   208,   247,   156,    59,     2,   226,   116,   203,   213,   123,   250,   209,   124,   218,    20,    43,    66,   154,   142,   223,   117,   252,   249,   105,    42,     2,   248,    69,   180,   142,   196,   237,   124,    25,    53,    76,     5,     9,   219,   114,   251,    21,   247,   183,    83,   147,   202,    16,   101,   192,   209,   140,   207,   225,    34,   160,  171,   173,   188,   161,    76,   242,    97,   104,    10,   163,    32,   243,  140,  204,   211,   106,   212,   199,    14,   115,   116,   196,   120,    87,    50,   204,  28,  158,   191,   127,   110,  210,   224,  162,   105,    68,   236,    25,   142,    80,   196,   235,   219,   140,   251,   113,   240,    81,     9,   133,   219,   186,   153,    55,   35,   166,    9,   238,   125,   233,   69,   181,  109,    63,    34,   193,   240,   174,   194,   213,   165,    26,   210,   167,   21,   168,   167,    55,   135,   170,   206,    13,    91,   225,   159,  253,   127,   196,   140,   144,   222,   190,   15,    22,   185,    79,    11,   106,    57,    94,    78,   116,   183,  128,   161,   212,    38,  242,   157,    41,   253,   192,   184,     6,   163,    17,    66,   128,   245,    80,   194,   208,    73,   181,    91,    93,    38,   123,   213,   197,  109,   231,    36,   168,   199,   172,   211,   180,   246,   111,    45,   249,    73,   187,    42,   255,    83,   103,   45,    76,   145,    10,    59,  84,   179,   168,  251,  77,   218,   109,   221,   237,   135,   154,    94,    69,    49,    79,   102,   254,    77,    40,   107,    13,   226,    84,    78,   128,    35,   177,    4,  123,   172,    55,   174,    46,  176,    43,    77,   110,    43,  37,   148,  237};
+	double weights[]= {0.07, 0.985, 0.056, 0.089, 0.18, 0.619, 0.267, 0.528, 0.138, 0.468, 0.666, 0.858, 0.204, 0.126, 0.116, 0.739, 0.484, 0.311, 0.598, 0.947, 0.499, 0.777, 0.434, 0.976, 0.109, 0.267, 0.758, 0.455, 0.841, 0.028, 0.328, 0.426, 0.072, 0.508, 0.771, 0.197, 0.551, 0.656, 0.152, 0.207, 0.765, 0.315, 0.112, 0.095, 0.743, 0.262, 0.865, 0.361, 0.276, 0.035, 0.208, 0.307, 0.212, 0.894, 0.246, 0.716, 0.573, 0.929, 0.173, 0.077, 0.982, 0.68, 0.954, 0.009, 0.417, 0.255, 0.211, 0.586, 0.608, 0.844, 0.311, 0.702, 0.474, 0.98, 0.89, 0.658, 0.293, 0.973, 0.104, 0.333, 0.187, 0.532, 0.899, 0.364, 0.618, 0.768, 0.683, 0.8, 0.85, 0.221, 0.212, 0.048, 0.73, 0.477, 0.84, 0.817, 0.729, 0.825, 0.927, 0.934, 0.586, 0.482, 0.023, 0.282, 0.454, 0.255, 0.197, 0.529, 0.692, 0.092, 0.809, 0.316, 0.914, 0.221, 0.091, 0.04, 0.791, 0.82, 0.205, 0.698, 0.455, 0.02, 0.842, 0.14, 0.005, 0.968, 0.486, 0.463, 0.992, 0.426, 0.147, 0.591, 0.262, 0.276, 0.299, 0.64, 0.607, 0.165, 0.907, 0.342, 0.413, 0.413, 0.202, 0.103, 0.167, 0.996, 0.35, 0.291, 0.184, 0.538, 0.921, 0.556, 0.772, 0.88, 0.982, 0.398, 0.917, 0.329, 0.961, 0.714, 0.064, 0.237, 0.735, 0.531, 0.27, 0.098, 0.565, 0.699, 0.32, 0.452, 0.002, 0.699, 0.888, 0.516, 0.404, 0.464, 0.051, 0.304, 0.178, 0.919, 0.503, 0.667, 0.628, 0.079, 0.864, 0.827, 0.363, 0.644, 0.551, 0.846, 0.641, 0.07, 0.346, 0.505, 0.672, 0.143, 0.083, 0.881, 0.398, 0.787, 0.662, 0.799, 0.354, 0.477, 0.506, 0.124, 0.233, 0.963, 0.529, 0.54, 0.781, 0.935, 0.025, 0.475, 0.3, 0.837, 0.409, 0.38, 0.7, 0.575, 0.487, 0.432, 0.967, 0.017, 0.449, 0.513, 0.245, 0.834, 0.138, 0.751, 0.969, 0.183, 0.526, 0.813, 0.583, 0.759, 0.527, 0.675, 0.142, 0.007, 0.075, 0.85, 0.97, 0.567, 0.048, 0.121, 0.281, 0.65, 0.455, 0.936, 0.055, 0.709, 0.7, 0.384, 0.99};
+		rfr::util::weighted_running_statistics<double> stat1, stat2;
+
+	for (auto i=0u; i<N; i++){
+		stat1.push(values[i], 1);
+		stat2.push(values[i], weights[i]);
+		
+	}
+
+	// only positive weights
+	BOOST_REQUIRE_THROW(stat1.pop(0.1, 0), std::runtime_error);
+	BOOST_REQUIRE_THROW(stat1.pop(0.1, -2), std::runtime_error);
+
+	// remove too much weight
+	BOOST_REQUIRE_THROW(stat1.pop(0.1, 1e20), std::runtime_error);
+
+	// cannon subtract statistics with larger weight
+	BOOST_REQUIRE_THROW(stat2-stat1, std::runtime_error);
+	BOOST_REQUIRE_THROW(stat2-=stat1, std::runtime_error);
+
+
+	// see what happens if we try to pop all but one element
+	for (auto i=0u; i<N-2; i++){
+		stat1.pop(values[i], 1);
+		stat2.pop(values[i], weights[i]);
+	}
+	// due to rounding, the squared distance to the mean will be slightly negative!
+	BOOST_REQUIRE_THROW(stat1.pop(values[N-1], 1), std::runtime_error);
+	BOOST_REQUIRE_THROW(stat2.pop(values[N-1], weights[N-1]), std::runtime_error);
+
+}
+
+
 
 BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_pop){
 	
@@ -139,6 +198,7 @@ BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_pop){
 	BOOST_REQUIRE_CLOSE(stat_ref.sum_of_weights()		,125.273	,1e-6);
 	BOOST_REQUIRE_CLOSE(stat_ref.mean()					,136.6691945,1e-6);
 	BOOST_REQUIRE_CLOSE(stat_ref.variance_population()	,5340.296298,1e-6);
+
 
 
 	for (auto i=16u; i<N; ++i){
@@ -166,4 +226,7 @@ BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_pop){
 	}
 	
 }
+
+
+
 

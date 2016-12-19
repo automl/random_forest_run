@@ -159,7 +159,7 @@ class running_statistics{
 	 */
 	running_statistics operator- ( const running_statistics &other) const{
 
-		if (other.N >= N-1)
+		if (other.N >= N)
 			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
 		// new number of points is trivial
