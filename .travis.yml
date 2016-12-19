@@ -23,7 +23,6 @@ before_install:
 install:
   - gem install coveralls-lcov
   - pip install -U pip pip-tools
-  - pip-compile
   - pip install numpy
 
 before_script:
