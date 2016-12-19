@@ -2,7 +2,6 @@ from distutils.core import setup, Extension
 import distutils.command.build
 import numpy as np
 from subprocess import call
-from Cython.Build import cythonize
 
 
 
