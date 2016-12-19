@@ -12,6 +12,7 @@ addons:
       - libboost-test-dev
       - lcov
       - cmake
+      - doxygen
 
 
 before_install:
