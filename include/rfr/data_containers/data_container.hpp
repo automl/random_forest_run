@@ -32,7 +32,7 @@ class base{
 	 *
 	 * \return the stored values
 	 */
-	virtual std::vector<num_t> features (index_t feature_index, std::vector<index_t> &sample_indices) const = 0;
+	virtual std::vector<num_t> features (index_t feature_index, const std::vector<index_t> &sample_indices) const = 0;
 
 	/** \brief member function to query a single response value, consistency checks might be omitted for performance
 	 *

@@ -53,7 +53,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 
-	virtual std::vector<num_t> features (index_t feature_index, std::vector<index_t> &sample_indices) const {
+	virtual std::vector<num_t> features (index_t feature_index, const std::vector<index_t> &sample_indices) const {
 		std::vector<num_t> rv;
 		rv.reserve(sample_indices.size());
 		for (auto i : sample_indices)
