@@ -253,6 +253,11 @@ BOOST_AUTO_TEST_CASE( data_container_with_instances_tests ){
 
 
 
+	auto tmp = data.get_features_by_configuration_and_instance(0,1);
+	std::vector<num_t> ref = {1,1,5,5};
+	BOOST_CHECK_EQUAL_COLLECTIONS(	tmp.begin(), tmp.end(),
+									ref.begin(), ref.end());
+
 
 	// check exceptions
 
