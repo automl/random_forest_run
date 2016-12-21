@@ -51,7 +51,7 @@ class regression_forest{
 	
 	num_t oob_error;
 	
-	// the forest needs to remember the data types it was trained on
+	// the forest needs to remember the data types on which it was trained
 	std::vector<index_t> types;
 	std::vector< std::array<num_t,2> > bounds;
 	
@@ -299,6 +299,8 @@ class regression_forest{
 
 	/* \brief estimates the covariance of two feature vectors
 	 * 
+	 * TODO uncomment and test
+	 * 
 	 * The covariance between to input vectors contains information about the
 	 * feature space. For other models, like GPs, this is a natural quantity
 	 * (e.g., property of the kernel). Here, we try to estimate it using the
@@ -346,12 +348,30 @@ class regression_forest{
 		return(rv);
 	}
 
+	/* \brief yields the partition of the feature space induces by one tree
+	 * 
+	 * MOVE_TO: fANOVA_forest
+	 * 
+	 * Every split in the tree divides the input space into two partitions.
+	 * This means that every leaf of the tree corresponds to a 'rectangular
+	 * domain'. This function finds all leaves and computes a representation
+	 * of the partitioning.
+	 * 
+	 * Works for axis aligned splits only!
+	 * 
+	 * \param tree_index the index of the tree in the forest who's partitioning is requested
+	 * \param pcs a representation of the parameter configuration space
+	 * 
+	 * \return std::vector<std::vector< std::vector<num_t> > > A vector of nested vectors representing intervals (numerical features) and possible values (categorical features) of each dimension.
+	 */
 	std::vector<std::vector< std::vector<num_t> > > partition_of_tree( index_t tree_index,
 														std::vector<std::vector<num_t> > pcs){
 		return(the_trees.at(tree_index).partition(pcs));
 	}
 	
 	/* \brief returns the predictions of every tree marginalized over the NAN values in the feature_vector
+	 * 
+	 * TODO: more documentation over how the 'missing values' are handled
 	 * 
 	 * \param feature_vector non-specfied values (NaN) will be marginalized over according to the training data
 	 */
@@ -363,6 +383,11 @@ class regression_forest{
 		return(rv);
 	}
 
+
+	/* \brief aggregates all used split values for all features in each tree
+	 *
+	 * TODO: move to fANOVA forest
+	 */
 	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
 		std::vector<std::vector<std::vector<num_t> > > rv;
 		rv.reserve(the_trees.size());
@@ -374,6 +399,8 @@ class regression_forest{
 
 
 	/* \brief updates the forest by adding all provided datapoints without a complete retraining
+	 * 
+	 * TODO: change interface to match 'add_datapoint' of the data_container
 	 * 
 	 * As retraining can be quite expensive, this function can be used to quickly update the forest
 	 * by finding the leafs the datapoints belong into and just inserting them. This is, of course,
@@ -402,6 +429,9 @@ class regression_forest{
 	}
 	
 	/* \brief undoing a pseudo update by removing the last point added
+	 * 
+	 * TODO: change interface to match 'add_datapoint' of the data_container.
+	 * 
 	 * 
 	 * This function removes one point from the corresponding leaves that
 	 * were touched during a pseudo update.
