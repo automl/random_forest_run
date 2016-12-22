@@ -28,8 +28,13 @@ typedef rfr::splits::data_info_t<num_t, num_t, index_t> info_t;
 typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t> data_container_type;
 
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_type> split_type;
-typedef rfr::nodes::k_ary_node<2, split_type, num_t, response_t, index_t, rng_type> node_type;
 typedef rfr::nodes::temporary_node<num_t, response_t, index_t> tmp_node_type;
+
+
+
+typedef rfr::nodes::k_ary_node_minimal<2, split_type, num_t, response_t, index_t, rng_type> minimal_node_type;
+typedef rfr::nodes::k_ary_node_full<2, split_type, num_t, response_t, index_t, rng_type> full_node_type;
+
 
 
 data_container_type load_toy_data(){
@@ -49,39 +54,9 @@ data_container_type load_toy_data(){
 
 
 
-BOOST_AUTO_TEST_CASE( binary_nodes_make_leaf ){
 
-	auto data = load_toy_data();
-
-	std::vector<info_t > data_info(data.num_data_points());
-	BOOST_REQUIRE_EQUAL(data.num_data_points(), 100);
-    
-    
-	for (auto i=0u; i<data.num_data_points(); ++i){
-		data_info[i].index=i;
-		data_info[i].response = data.response(i);
-		data_info[i].weight = 1;
-
-	}
-  
-    rng_type rng;
-    
-	tmp_node_type tmp_node1(0, 0, 0, data_info.begin(), data_info.end());
-    
-    BOOST_REQUIRE_CLOSE(tmp_node1.total_weight(), 100, 1e-4);
-    
-	node_type root_node1;
-	
-	root_node1.make_leaf_node(tmp_node1, data);
-	
-    
-    auto infor = root_node1.leaf_statistic();
-    BOOST_REQUIRE(root_node1.is_a_leaf());
-    BOOST_REQUIRE_EQUAL(infor.sum_of_weights(), 100);
-}
-
-BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
-
+template <typename node_type>
+void test_make_internal_node_and_make_leaf_node(){
 	auto data = load_toy_data();
   	data.set_type_of_feature(1,0);  
 	std::vector<info_t > data_info(data.num_data_points());
@@ -97,32 +72,31 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
     rng_type rng;
 
 
+	// create an empty node
 	std::vector<node_type> nodes;
 	nodes.emplace_back();
-	
-	for (auto n: nodes)
-		n.print_info();
-	
+    BOOST_REQUIRE_EQUAL(nodes.size(), 1);
+
+
+    // setup a temporary node
 	std::deque<tmp_node_type> tmp_nodes;
-	
 	tmp_node_type tmp_node2(0, 0, 0, data_info.begin(), data_info.end());
 	tmp_nodes.push_back(tmp_node2);
+
 	
-    BOOST_REQUIRE_CLOSE(tmp_nodes.front().total_weight(), 100, 1e-4);
-    
 	std::vector<index_t> features_to_try({0,1});	
 
-    
-    BOOST_REQUIRE_EQUAL(nodes.size(), 1);
+    // actually split the data and remove the tmp_node
 	nodes[0].make_internal_node(tmp_nodes.front(), data, features_to_try, nodes.size(), tmp_nodes, rng);
 	tmp_nodes.pop_front();
-	
+
+	// turn the first child into a leaf
 	nodes.emplace_back();
-    BOOST_REQUIRE_EQUAL(nodes.size(), 2);
     BOOST_REQUIRE_CLOSE(tmp_nodes.front().total_weight(), 60, 1e-4);
 	nodes[1].make_leaf_node(tmp_nodes[0], data);
 	tmp_nodes.pop_front();
-	
+
+	// turn the second child into a leaf
 	nodes.emplace_back();
     BOOST_REQUIRE_EQUAL(nodes.size(), 3);
     BOOST_REQUIRE_CLOSE(tmp_nodes.front().total_weight(), 40, 1e-4);
@@ -130,8 +104,34 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
 	tmp_nodes.pop_front();
 	
 
-	// check calculation of mean and variance
+	// check is_leaf
+	BOOST_REQUIRE(!nodes[0].is_a_leaf());
+	BOOST_REQUIRE( nodes[1].is_a_leaf());
+	BOOST_REQUIRE( nodes[2].is_a_leaf());
 
+
+	//check children
+	auto children = nodes[0].get_children();
+	BOOST_REQUIRE_EQUAL(children[0],1);
+	BOOST_REQUIRE_EQUAL(children[1],2);
+
+	children = nodes[1].get_children();
+	BOOST_REQUIRE_EQUAL(children[0],0);
+	BOOST_REQUIRE_EQUAL(children[1],0);
+
+
+
+	//check split_fraction
+	auto sf = nodes[0].get_split_fractions();
+	BOOST_REQUIRE_CLOSE(sf[0], 0.6,1e-6);
+	BOOST_REQUIRE_CLOSE(sf[1], 0.4,1e-6);
+
+	sf = nodes[1].get_split_fractions();
+	BOOST_REQUIRE(std::isnan(sf[0]));
+	BOOST_REQUIRE(std::isnan(sf[1]));
+
+	
+	// check calculation of mean and variance
 	// first an internal node
 	auto info0 = nodes[0].leaf_statistic();
 	BOOST_CHECK(std::isnan(info0.mean()));
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
 	BOOST_REQUIRE_EQUAL(info2.sum_of_weights(), 40);
 	BOOST_REQUIRE(nodes[2].is_a_leaf());
 	
-	
+	// test serializability
 	{
 		std::ofstream ofs("test_binary_nodes.xml");
 		cereal::XMLOutputArchive oarchive(ofs);
@@ -172,3 +172,13 @@ BOOST_AUTO_TEST_CASE( binary_nodes_make_internal_node ){
 		iarchive(nodes2);
 	}
 }
+
+
+BOOST_AUTO_TEST_CASE( minimal_node_tests ){
+	test_make_internal_node_and_make_leaf_node<minimal_node_type>();
+}
+
+BOOST_AUTO_TEST_CASE( full_node_tests ){
+	test_make_internal_node_and_make_leaf_node<full_node_type>();
+}
+

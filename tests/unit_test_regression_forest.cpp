@@ -26,11 +26,11 @@ typedef std::default_random_engine rng_t;
 typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t> data_container_type;
 
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t> split_type;
-typedef rfr::nodes::k_ary_node<2, split_type, num_t, response_t, index_t, rng_t> node_type;
+typedef rfr::nodes::k_ary_node_full<2, split_type, num_t, response_t, index_t, rng_t> node_type;
 
 typedef rfr::nodes::temporary_node<num_t, index_t> tmp_node_type;
 
-typedef rfr::trees::k_ary_random_tree<2, split_type, num_t, response_t, index_t, rng_t> tree_type;
+typedef rfr::trees::k_ary_random_tree<2, node_type, num_t, response_t, index_t, rng_t> tree_type;
 
 
 typedef rfr::forests::regression_forest< tree_type, num_t, response_t, index_t, rng_t> forest_type;
@@ -129,10 +129,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	std::vector<std::vector< num_t> > before = the_forest.all_leaf_values(data.retrieve_data_point(0));
 
 	// update forest with that configuration and a unique response value
-	data_container_type pseudo_data(data.num_features());
-	pseudo_data.add_data_point(data.retrieve_data_point(0), unique_value, 1);
-	
-	the_forest.pseudo_update(pseudo_data);
+	the_forest.pseudo_update(data.retrieve_data_point(0), unique_value, 1);
 	
 	// get new leaf values
 	std::vector<std::vector< num_t> > after_update = the_forest.all_leaf_values(data.retrieve_data_point(0));
@@ -146,7 +143,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	}
 	
 	// downdate the tree
-	BOOST_REQUIRE(the_forest.pseudo_downdate() == true);
+	the_forest.pseudo_downdate(data.retrieve_data_point(0), unique_value, 1);
 	
 	// get new leaf values
 	std::vector<std::vector< num_t> > after_downdate = the_forest.all_leaf_values(data.retrieve_data_point(0));
@@ -154,8 +151,6 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	// compare them to ensure the last data point has been removed
 	for (auto i=0u; i < before.size(); ++i)
 		BOOST_CHECK_EQUAL_COLLECTIONS( before[i].begin(), before[i].end(), after_downdate[i].begin(), after_downdate[i].end());
-	
-	BOOST_REQUIRE(the_forest.pseudo_downdate() == false);
 	
 	
 	//std::cout<<the_forest.covariance(data.retrieve_data_point(0), data.retrieve_data_point(1).data())<<std::endl;

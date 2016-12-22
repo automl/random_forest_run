@@ -52,6 +52,9 @@ data_container_type load_toy_data(){
     data.import_csv_files(feature_file, response_file);
 	
 	data.set_type_of_feature(1,10);
+
+	BOOST_REQUIRE_EQUAL(data.get_type_of_feature(1), 10);
+	
     return(data);
 }
 
@@ -151,10 +154,10 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
     BOOST_REQUIRE_CLOSE(total_weight, data.num_data_points(), 1e-4);    
     
 	// actual best split and loss independently computed in python
-	BOOST_REQUIRE_CLOSE(loss, 88.57142857, 1e-4);
+	BOOST_REQUIRE_CLOSE(loss, 88.57142857, 1e-6);
 	auto split_set = split2.get_cat_split_set();
-	
-	
+	std::cout<< split2.get_num_split_value()<<std::endl;
+	std::cout<< split_set<<std::endl;
 	BOOST_REQUIRE(split_set[1]);
 	BOOST_REQUIRE(split_set[2]);
 	BOOST_REQUIRE(!split_set[3]);

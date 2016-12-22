@@ -24,21 +24,15 @@
 
 
 namespace rfr{ namespace nodes{
-	
-/** \brief The node class for regular k-ary trees.
- * 
- * In a regular k-ary tree, every node has either zero (a leaf) or exactly k-children (an internal node).
- * In this case, one can try to gain some speed by replacing variable length std::vectors by std::arrays.
- * 
- */
+
+
+
 template <int k, typename split_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
-class k_ary_node{
-  private:
+class k_ary_node_minimal{
+  protected:
 	index_t parent_index;
 
 	// for leaf nodes
-	std::vector<response_t> response_values;
-	std::vector<num_t> response_weights;
 	rfr::util::weighted_running_statistics<num_t> response_stat;   //TODO: needs to be serialized!
 
 	// for internal_nodes
@@ -51,7 +45,7 @@ class k_ary_node{
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {
-		archive( parent_index, response_values, response_weights, children, split_fractions, split); 
+		archive( parent_index, children, split_fractions, split); 
 	}
 
   
@@ -73,7 +67,6 @@ class k_ary_node{
 							 index_t num_nodes,
 							 std::deque<rfr::nodes::temporary_node<num_t, response_t, index_t> > &tmp_nodes,
 							 rng_t &rng){
-		response_values.clear();
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t> >::iterator, k+1> split_indices_it;
 		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.begin, tmp_node.end, split_indices_it,rng);
@@ -107,10 +100,8 @@ class k_ary_node{
 						const rfr::data_containers::base<num_t, response_t, index_t> &data){
 		parent_index = tmp_node.parent_index;
 		children.fill(0);
+		split_fractions.fill(NAN);
 		
-		response_values.reserve(std::distance(tmp_node.begin, tmp_node.end));
-		response_weights.reserve(std::distance(tmp_node.begin, tmp_node.end));
-        
 		for (auto it = tmp_node.begin; it != tmp_node.end; ++it){
 			push_response_value((*it).response, (*it).weight);
 		}
@@ -136,25 +127,20 @@ class k_ary_node{
 	 * This function can be used for pseudo updates of a tree by
 	 * simply adding observations into the corresponding leaf
 	 */
-	void push_response_value ( response_t r, num_t w){
-		response_values.push_back(r);
-		response_weights.push_back(w);
+	virtual void push_response_value ( response_t r, num_t w){
 		response_stat.push(r,w);
 	}
 
-	/** \brief removes the last added observation from the leaf node
+	/** \brief removes an observation from the leaf node
 	 *
 	 * This function can be used for pseudo updates of a tree by
-	 * simply adding observations into the corresponding leaf
+	 * simply removing observations from the corresponding leaf
 	 */
-	void pop_repsonse_value (){
-		response_stat.pop( response_values.back(), response_weights.back());
-		response_values.pop_back();
-		response_weights.pop_back();
+	void pop_repsonse_value (response_t r, num_t w){
+		response_stat.pop(r,w);
 	}
 
-	/**
-	 * \brief helper function for the fANOVA
+	/** \brief helper function for the fANOVA
 	 *
 	 * 	See description of rfr::splits::binary_split_one_feature_rss_loss.
 	 */
@@ -182,14 +168,12 @@ class k_ary_node{
 
 	split_type get_split() const {return(split);}
 
-	/** \brief get reference to the response values*/	
-	std::vector<response_t> const &responses () const { return( (std::vector<response_t> const &) response_values);}
-
 	/** \brief prints out some basic information about the node*/
-	void print_info() const {
+	virtual void print_info() const {
 		if (is_a_leaf()){
-			std::cout<<"status: leaf\nresponse values: ";
-			rfr::print_vector(response_values);
+			std::cout << "N = "<<response_stat.sum_of_weights()<<std::endl;
+			std::cout <<"mean = "<< response_stat.mean()<<std::endl;
+			std::cout <<"variance = " << response_stat.variance_unbiased_frequency()<<std::endl;
 		}
 		else{
 			std::cout<<"status: internal node\n";
@@ -201,20 +185,15 @@ class k_ary_node{
 	}
 
 	/** \brief generates a label for the node to be used in the LaTeX visualization*/
-	std::string latex_representation( int my_index) const {
+	virtual std::string latex_representation( int my_index) const {
 		std::stringstream str;
 			
 		if (is_a_leaf()){
 			str << "{i = " << my_index << ": ";
 
-			num_t s=0, ss=0;
-			for (auto v: response_values){
-				s += v;
-				ss+= v*v;
-			}
-
-			auto N = response_values.size();
-			str << "N = "<<N<<", mean = "<<s/N<<", variance = " << sqrt(ss/N - (s/N)*(s/N))<<"}";
+			str << "N = "<<response_stat.sum_of_weights();
+			str <<", mean = "<< response_stat.mean();
+			str <<", variance = " << response_stat.variance_unbiased_frequency()<<"}";
 			
 		}
 		else{
@@ -224,6 +203,76 @@ class k_ary_node{
 		}
 		return(str.str());
 	}
+};
+
+
+
+/** \brief The node class for regular k-ary trees.
+ * 
+ * In a regular k-ary tree, every node has either zero (a leaf) or exactly k-children (an internal node).
+ * In this case, one can try to gain some speed by replacing variable length std::vectors by std::arrays.
+ * 
+ */
+template <int k, typename split_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
+class k_ary_node_full: public k_ary_node_minimal<k, split_type, num_t, response_t, index_t, rng_t>{
+  protected:
+	// additional info for leaf nodes
+	std::vector<response_t> response_values;
+	std::vector<num_t> response_weights;
+	typedef k_ary_node_minimal<k, split_type, num_t, response_t, index_t, rng_t> super;
+	
+  public:
+
+  	/* serialize function for saving forests */
+  	template<class Archive>
+	void serialize(Archive & archive) {
+		archive(response_values, response_weights);
+		super::serialize(archive);
+	}
+
+
+	/** \brief adds an observation to the leaf node
+	 *
+	 * This function can be used for pseudo updates of a tree by
+	 * simply adding observations into the corresponding leaf
+	 */
+	virtual void push_response_value ( response_t r, num_t w){
+		super::push_response_value(r,w);
+		response_values.push_back(r);
+		response_weights.push_back(w);
+	}
+
+	/** \brief removes the last added observation from the leaf node
+	 *
+	 * This function can be used for pseudo updates of a tree by
+	 * simply adding observations into the corresponding leaf
+	 *
+	 * \param r ignored
+	 * \param w ignored
+	 * 
+	 */
+	virtual void pop_response_value (response_t r, num_t w){
+
+		
+		super::push_response_value(response_values.back(), response_weights.back());
+		response_values.pop_back();
+		response_weights.pop_back();
+	}
+
+	/** \brief get reference to the response values*/	
+	std::vector<response_t> const &responses () const { return( (std::vector<response_t> const &) response_values);}
+
+	/** \brief get reference to the response values*/	
+	std::vector<num_t> const &weights () const { return( (std::vector<num_t> const &) response_weights);}
+
+	/** \brief prints out some basic information about the node*/
+	virtual void print_info() const {
+		super::print_info();
+		if (super::is_a_leaf()){
+			rfr::print_vector(response_values);
+		}
+	}
+
 };
 
 

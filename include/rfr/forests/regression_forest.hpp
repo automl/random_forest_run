@@ -400,52 +400,36 @@ class regression_forest{
 
 	/* \brief updates the forest by adding all provided datapoints without a complete retraining
 	 * 
-	 * TODO: change interface to match 'add_datapoint' of the data_container
 	 * 
 	 * As retraining can be quite expensive, this function can be used to quickly update the forest
 	 * by finding the leafs the datapoints belong into and just inserting them. This is, of course,
 	 * not the right way to do it for many data points, but it should be a good approximation for a few.
 	 * 
-	 * \param data a data container instance that will be inserted into the tree
+	 * \param features a valid feature vector
+	 * \param response the corresponding response value
+	 * \param weight the associated weight
 	 */
-	void pseudo_update (const rfr::data_containers::base<num_t, response_t, index_t> &data){
-		for (auto i=0u; i<data.num_data_points(); ++i){
-			auto p = data.retrieve_data_point(i);
-			dirty_leafs.emplace_back(std::vector<index_t> (the_trees.size(),0));
-			auto it = (dirty_leafs.back()).begin();
-			//for each tree
-			for (auto &t: the_trees){
-		
-				index_t index = t.find_leaf(p);
-		
-				// add value
-				t.the_nodes[index].push_response_value(data.response(i), data.weight(i));
-		
-				// note leaf as changed
-				(*it) = index;
-				it++;
-			}
+	void pseudo_update (std::vector<num_t> features, response_t response, num_t weight){
+		for (auto &t: the_trees){
+			index_t index = t.find_leaf(features);
+			t.the_nodes[index].push_response_value(response, weight);
 		}
 	}
 	
-	/* \brief undoing a pseudo update by removing the last point added
+	/* \brief undoing a pseudo update by removing a point
 	 * 
-	 * TODO: change interface to match 'add_datapoint' of the data_container.
+	 * This function removes one point from the corresponding leaves into
+	 * which the given feature vector falls
 	 * 
-	 * 
-	 * This function removes one point from the corresponding leaves that
-	 * were touched during a pseudo update.
-	 * 
-	 * \return bool whether the tree was altered
+	 * \param features a valid feature vector
+	 * \param response the corresponding response value
+	 * \param weight the associated weight
 	 */
-	bool pseudo_downdate(){
-		if (dirty_leafs.empty())
-			return(false);
-		auto i = 0u;
-		for (auto li: dirty_leafs.back())
-			the_trees[i++].the_nodes[li].pop_repsonse_value();
-		dirty_leafs.pop_back();
-		return(true);
+	void pseudo_downdate(std::vector<num_t> features, response_t response, num_t weight){
+		for (auto &t: the_trees){
+			index_t index = t.find_leaf(features);
+			t.the_nodes[index].pop_response_value(response, weight);
+		}
 	}
 	
 	num_t out_of_bag_error(){return(oob_error);}
