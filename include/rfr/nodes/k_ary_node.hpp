@@ -42,7 +42,7 @@ class k_ary_node_minimal{
 	
   public:
 
-	virtual ~k_ary_node_minimal ();
+	virtual ~k_ary_node_minimal () {};
 
   	/* serialize function for saving forests */
   	template<class Archive>
@@ -225,7 +225,7 @@ class k_ary_node_full: public k_ary_node_minimal<k, split_type, num_t, response_
 	
   public:
 
-	virtual ~k_ary_node_full ();
+	virtual ~k_ary_node_full () {};
 
   	/* serialize function for saving forests */
   	template<class Archive>
