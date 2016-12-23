@@ -80,6 +80,9 @@ class regression_forest{
 	 */
 	void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_type &rng){
 
+		if (options.num_trees <= 0)
+			throw std::runtime_error("The number of trees has to be positive!");
+
 		if ((!options.do_bootstrapping) && (data.num_data_points() < options.num_data_points_per_tree))
 			throw std::runtime_error("You cannot use more data points per tree than actual data point present without bootstrapping!");
 

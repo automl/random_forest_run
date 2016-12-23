@@ -90,17 +90,9 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 
 	virtual num_t weight(index_t sample_index) const{ return(weights[sample_index]);}
 
-	index_t num_configurations(){
-		if (configurations.size() > 0)
-			return(configurations[0].size());
-		return(0);
-	}
+	index_t num_configurations(){ 	return(configurations[0].size());	}
 
-	index_t num_instances(){
-		if (instances.size() > 0)
-			return(instances[0].size());
-		return(0);
-	}
+	index_t num_instances(){		return(instances[0].size());}
 
 	index_t add_configuration(const std::vector<num_t> &config_features){
 		if (config_features.size() != configurations.size())

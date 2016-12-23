@@ -16,8 +16,37 @@ typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t>
 typedef rfr::data_containers::mostly_continuous_data_with_instances<num_t, response_t, index_t> data_container_type2;
 
 
-data_container_type load_diabetes_data(){
-	data_container_type data;
+
+
+class mess_with_internals: public data_container_type{
+	private:
+		typedef data_container_type super;
+
+
+	public:
+
+		void corrupt_one_feature(){
+			super::feature_values[0].pop_back();
+		}
+
+		void corrupt_resposes(){
+			super::response_values.pop_back();
+		}
+
+
+		void corrupt_weights(){
+			super::weights.pop_back();
+		}
+
+};
+
+
+
+
+
+template<typename data_type = data_container_type>
+data_type load_diabetes_data(){
+	data_type data;
 	
     std::string feature_file, response_file;
     
@@ -31,6 +60,7 @@ data_container_type load_diabetes_data(){
 
 
 
+
 BOOST_AUTO_TEST_CASE(data_container_corrupted_files_test){
 
 	// files not found!
@@ -38,23 +68,42 @@ BOOST_AUTO_TEST_CASE(data_container_corrupted_files_test){
 	BOOST_CHECK_THROW(data.import_csv_files("", ""), std::runtime_error);
 
     std::string feature_file, response_file, weight_file;
-    
+
+	// wrong number of responses
     feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_features.csv";
     response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "corrupted_toy_data_set_responses.csv";
 
 	BOOST_CHECK_THROW(data.import_csv_files(feature_file, response_file), std::runtime_error);
 
-
+	// wrong number of weights
 	response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_responses.csv";
 	weight_file   = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "corrupted_toy_data_set_weights.csv";
-
 	BOOST_CHECK_THROW(data.import_csv_files(feature_file, response_file, weight_file), std::runtime_error);
 
-
+	// should be ok!
 	weight_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_weights.csv";
 	BOOST_REQUIRE_EQUAL(data.import_csv_files(feature_file, response_file, weight_file), 2);
 	
 }
+
+
+BOOST_AUTO_TEST_CASE(data_container_internal_corruption){
+
+	auto data = load_diabetes_data<mess_with_internals>();
+	data.corrupt_one_feature();
+	BOOST_REQUIRE(!(data.check_consistency()));
+
+	data = load_diabetes_data<mess_with_internals>();
+	data.corrupt_resposes();
+	BOOST_REQUIRE(!(data.check_consistency()));
+
+	data = load_diabetes_data<mess_with_internals>();
+	data.corrupt_weights();
+	BOOST_REQUIRE(!(data.check_consistency()));
+
+}
+
+
 
 
 BOOST_AUTO_TEST_CASE( data_container_type_tests ){
@@ -143,7 +192,7 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 	BOOST_CHECK_THROW(d2.add_data_point( {0,0}, 0, -1), std::runtime_error);
 
 	// wrong dimensionality
-	BOOST_CHECK_THROW(d2.add_data_point( {0,0,0}, 0, -1), std::runtime_error);
+	BOOST_CHECK_THROW(d2.add_data_point( {0,0,0}, 0, 1), std::runtime_error);
 
 	d2.add_data_point({ 1, 0}, 0);
 	d2.add_data_point({ 0, 1}, 1);
@@ -156,8 +205,13 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 	d2.set_type_of_response(3);
 	BOOST_REQUIRE_EQUAL( d2.get_type_of_response(), 3);
 
+	// try to add a datapoint with an illegal response
+	BOOST_CHECK_THROW( d2.add_data_point({0,0}, 3, 1), std::runtime_error);
+	
+
 	// reset it to be a numerical values
 	d2.set_type_of_response(0);
+	BOOST_REQUIRE_EQUAL(d2.get_type_of_response(), 0);
 
 	// add a negative response and try to make it a categorical
 	d2.add_data_point({-1, 2}, -1);
@@ -166,6 +220,8 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 	// similar for the first feature
 	BOOST_CHECK_THROW( d2.set_type_of_feature(1,2), std::runtime_error);
 
+	d2.set_type_of_feature(1,3);
+	BOOST_CHECK_THROW( d2.add_data_point({0,3}, 2, 1), std::runtime_error);
 
 
 	auto p = d2.get_min_max_of_feature(0);
@@ -183,9 +239,11 @@ BOOST_AUTO_TEST_CASE( data_container_tests ){
 	BOOST_REQUIRE_EQUAL(p.first, -1);
 	BOOST_REQUIRE_EQUAL(p.second, 1);
 
-	
+	// try to set the type of a feature index that doesn't exists
+	BOOST_CHECK_THROW( d2.set_type_of_feature(5,0), std::runtime_error);
 
-	
+	// try to set the type of a feature index that doesn't exists
+	BOOST_CHECK_THROW( d2.set_type_of_feature(0,-1), std::runtime_error);
 }
 
 

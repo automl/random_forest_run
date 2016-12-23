@@ -171,6 +171,10 @@ void test_make_internal_node_and_make_leaf_node(){
 		cereal::XMLInputArchive iarchive(ifs);
 		iarchive(nodes2);
 	}
+
+	nodes2[0].print_info();
+	nodes2[1].print_info();
+	nodes2[2].print_info();
 }
 
 

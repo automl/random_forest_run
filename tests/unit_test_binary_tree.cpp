@@ -33,20 +33,6 @@ typedef rfr::nodes::temporary_node<num_type, index_t> tmp_node_type;
 typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_t, rng_t> tree_type;
 
 
-template <class T>
-void print_vector (T v){
-	for (auto e : v)
-		std::cout<<e<<", ";
-	std::cout<<"\b\b\n";
-}
-
-
-void print_pcs (std::vector<std::vector<num_type> > pcs){
-	for (auto i: pcs){
-		print_vector(i);
-	}
-}
-
 
 data_container_type load_toy_data(){
 	data_container_type data;
@@ -178,6 +164,15 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 	BOOST_REQUIRE_EQUAL(the_tree.depth(), 4);
 	BOOST_REQUIRE_EQUAL(the_tree.number_of_leafs(), 16);
 	BOOST_REQUIRE_EQUAL(the_tree.number_of_nodes(), 31);
+
+
+	tree_opts.max_num_leaves = 1024;
+	tree_opts.max_num_nodes = 2048;
+	tree_opts.min_weight_in_leaf = data.num_data_points()+1;
+
+	the_tree.fit(data, tree_opts, rng_engine);
+
+	BOOST_REQUIRE_EQUAL(1, the_tree.number_of_nodes());
 
 	
 }

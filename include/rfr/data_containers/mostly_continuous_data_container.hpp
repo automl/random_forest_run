@@ -74,12 +74,24 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 
 		for (size_t i=0; i<features.size(); i++){
 			if (get_type_of_feature(i) > 0){
-				if (features[i] >= get_type_of_feature(i))
-					throw std::runtime_error("Feature values not consistent with provided type. Data contains a value larger than allowed.");
-				if (features[i]< 0)
-					throw std::runtime_error("Feature values contain a negative value, can't make that a categorical feature.");
+				if ((features[i] >= get_type_of_feature(i)) || features[i] < 0){
+					std::stringstream errMsg;
+					errMsg << "Feature "<<i<<" is categorical with values in {0,...,"<<get_type_of_feature(i)-1<<"}, but datapoint has value "<<features[i]<<" which is inconsistent!";
+					throw std::runtime_error(errMsg.str().c_str());
+				}
 			}
 		}
+
+
+		if (get_type_of_response() > 0){
+			if ((response >= get_type_of_response()) || response < 0){
+				std::stringstream errMsg;
+				errMsg << "Response is categorical with values in {0,...,"<<get_type_of_response()-1<<"}, but datapoint has value "<<response<<" which is inconsistent!";
+				throw std::runtime_error(errMsg.str().c_str());
+			}
+		}
+
+		
 
 		for (size_t i=0; i<features.size(); i++){
 				feature_values[i].push_back(features[i]);
@@ -159,8 +171,8 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 				if (rv < 0)
 					throw std::runtime_error("Response values contain a negative value, can't make that a categorical value.");
 			}
-			response_type = resp_t;
 		}
+		response_type = resp_t;
 	}
 
 	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max){
@@ -237,7 +249,8 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 				return(false);
 		}
 		
-		if (weights.size() != num_data_points()) return(false);
+		if (weights.size() != num_data_points())
+			return(false);
 		
 		return(true);
 	}

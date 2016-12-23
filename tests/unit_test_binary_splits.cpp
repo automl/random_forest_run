@@ -119,7 +119,9 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	
 	BOOST_CHECK_EQUAL_COLLECTIONS( pcss[1][1].begin(), pcss[1][1].end(),
 									pcs[1].begin(), pcs[1].end());
-	
+
+
+	split1.print_info();
 	
 }
 
@@ -166,6 +168,8 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	// test the () operator for the trainings data
 	std::vector<index_t> operator_test = {0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 	
+
+	// test the pcs splitting
 	for (size_t i=0; i<operator_test.size(); i++){
 		std::vector<num_t> tmp_feature_vector ({data.feature(0,i), data.feature(1,i)});
 		BOOST_CHECK_MESSAGE(split2(tmp_feature_vector) == operator_test[i],split2(tmp_feature_vector) << "!=" <<  operator_test[i]<<" (index "<<i<<")\n");
@@ -185,6 +189,19 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 1) == pcss[1][1].end());
 	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 2) == pcss[1][1].end());
 	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 3) != pcss[1][1].end());
+
+
+	// test the can_be_split_function
+	
+	std::vector<num_t> eevee (data.num_features(), 0);
+
+	BOOST_REQUIRE(split2.can_be_split(eevee));
+
+	eevee[split2.get_feature_index()] = NAN;
+
+	BOOST_REQUIRE(!split2.can_be_split(eevee));
+
+	split2.print_info();
 	
 }
 
