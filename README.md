@@ -24,7 +24,6 @@ Checkout the repo (and the refactor branch), create a build directory, and build
 ```
 git checkout git@bitbucket.org:aadfreiburg/random_forest_run.git
 cd random_forest_run
-git checkout refactor
 mkdir build
 cd build
 cmake ..
