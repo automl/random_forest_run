@@ -34,13 +34,12 @@ struct forest_options{
 	 * 
 	 */
 	void set_default_values(){
-		num_trees = 10;
+		num_trees = 0;
 		num_data_points_per_tree = 0;
 
 		do_bootstrapping = true;
 		compute_oob_error = false;
-		
-		tree_opts.set_default_values();
+
 	}
 
 
@@ -50,7 +49,7 @@ struct forest_options{
 	}
 
 	/** Default constructor that initializes the values with their default */
-	forest_options(){ set_default_values();}
+	forest_options(){ set_default_values(); tree_opts.set_default_values();}
 
 	/** Constructor to feed in tree values but leave the forest parameters at their default.*/
 	forest_options(rfr::trees::tree_options<num_t,response_t,index_t> & to): tree_opts(to) { set_default_values();}
@@ -58,6 +57,7 @@ struct forest_options{
 	/** Constructor that adjusts to the data. */   
 	forest_options (rfr::trees::tree_options<num_t,response_t,index_t> & to, rfr::data_containers::base<num_t, response_t, index_t> &data): tree_opts(to){
 		set_default_values();
+		tree_opts.set_default_values();
 		adjust_limits_to_data(data);
 	}
 };

@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 
 	BOOST_REQUIRE_EQUAL(1, the_tree.number_of_nodes());
 
-	
+
 }
 
 

@@ -107,7 +107,9 @@ BOOST_AUTO_TEST_CASE(data_container_internal_corruption){
 
 
 BOOST_AUTO_TEST_CASE( data_container_type_tests ){
-	data_container_type d(2);
+	data_container_type d;
+
+	d.add_data_point({0,1,2}, 1);
 
 	BOOST_REQUIRE_EQUAL(d.get_type_of_feature(0), 0);
 

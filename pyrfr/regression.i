@@ -10,6 +10,8 @@
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/trees/k_ary_tree.hpp"
 #include "rfr/forests/regression_forest.hpp"
+#include "rfr/forests/quantile_regression_forest.hpp"
+
 
 typedef double num_t;
 typedef double response_t;
@@ -114,6 +116,9 @@ typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rs
 %template(forest_opts) rfr::forests::forest_options<num_t, response_t, index_t>;
 %include "rfr/forests/regression_forest.hpp"
 %template(binary_rss_forest) rfr::forests::regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
+
+%include "rfr/forests/quantile_regression_forest.hpp"
+%template(quantile_regression_forest) rfr::forests::quantile_regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
 
 
 

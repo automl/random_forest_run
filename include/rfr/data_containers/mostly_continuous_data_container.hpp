@@ -39,12 +39,15 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features 
-	mostly_continuous_data (index_t num_f):
-			feature_values(num_f, std::vector<num_t>(0)),
-			response_type(0),
-			bounds(num_f, std::pair<num_t,num_t>(-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity())),
-			min_max(num_f, std::pair<num_t,num_t>(std::numeric_limits<num_t>::infinity(), -std::numeric_limits<num_t>::infinity()))
-			{}
+
+	mostly_continuous_data(index_t num_f) { init_protected(num_f); }
+
+	void init_protected (index_t num_f){
+		feature_values = std::vector<std::vector<num_t> > (num_f, std::vector<num_t>(0));
+		response_type = 0;
+		bounds = std::vector<std::pair<num_t, num_t> > (num_f, std::pair<num_t,num_t>(-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity()));
+		min_max = std::vector<std::pair<num_t, num_t> > (num_f, std::pair<num_t,num_t>(std::numeric_limits<num_t>::infinity(), -std::numeric_limits<num_t>::infinity()));
+	}
   
 	virtual num_t feature  (index_t feature_index, index_t sample_index) const {
 		return(feature_values[feature_index][sample_index]);
@@ -68,6 +71,10 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 
 		if (weight <= 0)
 			throw std::runtime_error("Weight of a datapoint has to be positive.");
+
+		if (num_features() == 0){
+			init_protected(features.size());
+		}
 
 		if (num_features() != features.size())
 			throw std::runtime_error("Number of elements does not match.");

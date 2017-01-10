@@ -42,14 +42,14 @@ typedef cereal::JSONOutputArchive ascii_oarch_t;
 
 template <typename tree_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_type=std::default_random_engine>
 class regression_forest{
-  private:
+  protected:
 	std::vector<tree_type> the_trees;
 	index_t num_features;
 
 	std::vector<std::vector<index_t> > dirty_leafs;
 	std::vector<std::vector<num_t> > bootstrap_sample_weights;
 	
-	num_t oob_error;
+	num_t oob_error = NAN;
 	
 	// the forest needs to remember the data types on which it was trained
 	std::vector<index_t> types;
@@ -68,9 +68,9 @@ class regression_forest{
 		archive( options, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error, types, bounds);
 	}
 
-	regression_forest() {}
+	regression_forest(): options() {}
 	
-	regression_forest(forest_options<num_t, response_t, index_t> options): options(options){}
+	regression_forest(forest_options<num_t, response_t, index_t> opts): options(opts){}
 
 
 	/**\brief growing the random forest for a given data set
@@ -91,7 +91,6 @@ class regression_forest{
 
 		std::vector<index_t> data_indices( data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
-		std::vector<index_t> data_indices_to_be_used( options.num_data_points_per_tree);
 
 		types.resize(data.num_features());
 		bounds.resize(data.num_features());
@@ -110,28 +109,25 @@ class regression_forest{
 		bootstrap_sample_weights.clear();
 
 		for (auto &tree : the_trees){
-            std::vector<num_t> bssw (data.num_data_points(), 0);
+            std::vector<num_t> bssf (data.num_data_points(), 0); // BootStrap Sample Frequencies
 			// prepare the data(sub)set
 			if (options.do_bootstrapping){
                 std::uniform_int_distribution<index_t> dist (0,data.num_data_points()-1);
                 auto die = std::bind(dist, rng);
                 for (auto i=0u; i < options.num_data_points_per_tree; ++i)
-                    ++bssw[die()];
+                    ++bssf[die()];
 			}
 			else{
 				std::shuffle(data_indices.begin(), data_indices.end(), rng);
                 for (auto i=0u; i < options.num_data_points_per_tree; ++i)
-                    ++bssw[data_indices[i]];
+                    ++bssf[data_indices[i]];
 			}
-			tree.fit(data, options.tree_opts, bssw, rng);
+			
+			tree.fit(data, options.tree_opts, bssf, rng);
 			
 			// record sample counts for later use
-			if (options.compute_oob_error){
-				bootstrap_sample_weights.emplace_back(std::vector<num_t> ( data.num_data_points(),0));
-				for (auto &i: data_indices_to_be_used){
-					++(bootstrap_sample_weights.back()[i]);
-				}
-			}
+			if (options.compute_oob_error)
+				bootstrap_sample_weights.push_back(bssf);
 		}
 		
 		oob_error = NAN;
