@@ -78,3 +78,24 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 
 if __name__ == '__main__':
 	unittest.main()
+
+
+"""
+import pyrfr.regression as reg
+
+data_set_prefix = "../test_data_sets/"
+
+data = reg.data_container()
+data.import_csv_files(data_set_prefix+'features13.csv', data_set_prefix+'responses13.csv')
+rng = reg.default_random_engine(1)
+
+the_forest = reg.binary_rss_forest()
+
+the_forest.options.num_trees = 64
+the_forest.options.do_bootstrapping = True
+the_forest.options.num_data_points_per_tree = 200
+		
+the_forest.fit(data, rng)
+		
+
+"""

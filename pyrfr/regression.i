@@ -57,9 +57,11 @@ typedef std::default_random_engine rng_t;
 %include "std_vector.i"
 %template(num_vector) std::vector<num_t>;
 %template(idx_vector) std::vector<index_t>;
-
 %template(num_num_vector) std::vector< std::vector<num_t> >;
 
+
+%include "std_pair.i"
+%template(num_num_pair) std::pair<num_t, num_t>;
 
 %ignore rfr::*::serialize;
 
