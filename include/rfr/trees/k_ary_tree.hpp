@@ -182,7 +182,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		the_nodes.shrink_to_fit();
 	}
 
-	virtual index_t find_leaf(const std::vector<num_t> &feature_vector) const {
+	virtual index_t find_leaf_index(const std::vector<num_t> &feature_vector) const {
 		index_t node_index = 0;
 		while (! the_nodes[node_index].is_a_leaf()){
 			node_index = the_nodes[node_index].falls_into_child(feature_vector);
@@ -190,16 +190,20 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		return(node_index);
 	}
 
+	const node_type&  get_leaf(const std::vector<num_t> &feature_vector) const {
+		index_t node_index = find_leaf_index(feature_vector);
+		return(the_nodes[node_index]);
+	}
 
 	
 	virtual std::vector<response_t> const &leaf_entries (const std::vector<num_t> &feature_vector) const {
-		index_t i = find_leaf(feature_vector);
+		index_t i = find_leaf_index(feature_vector);
 		return(the_nodes[i].responses());
 	}
 	
 
 	rfr::util::weighted_running_statistics<num_t> const & leaf_statistic(const std::vector<num_t> &feature_vector) const {
-        index_t i = find_leaf(feature_vector);
+        index_t i = find_leaf_index(feature_vector);
         return(the_nodes[i].leaf_statistic());
     }
 

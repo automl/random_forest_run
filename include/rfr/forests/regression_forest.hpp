@@ -181,45 +181,22 @@ class regression_forest{
     * These are combined to the forests mean prediction (mean of the means) and a variance estimate
     * (mean of the variance + variance of the means).
     * 
-    * This function assumes the weights assigned to each data point where frequencies, not importance weights.
-    * Use this if you haven't assigned any weigths.
+    * Use weighted_data = false if the weights assigned to each data point were frequencies, not importance weights.
+    * Use this if you haven't assigned any weigths, too.
     * 
 	* \param feature_vector a valid feature vector
+	* \param weighted_data whether the data had importance weights
 	* \return std::pair<response_t, num_t> mean and variance prediction
     */
-    std::pair<num_t, num_t> predict_mean_var_frequencies( const std::vector<num_t> &feature_vector){
+    std::pair<num_t, num_t> predict_mean_var( const std::vector<num_t> &feature_vector, bool weighted_data = false){
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> mean_stats, var_stats;
 		for (auto &tree: the_trees){
 			auto stat = tree.leaf_statistic(feature_vector);
 			mean_stats.push(stat.mean()); 
-			var_stats.push(stat.variance_unbiased_frequency());
-		}
-		
-		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance_sample() + var_stats.mean()) ));
-	}
-
-   /* \brief makes a prediction for the mean and a variance estimation
-    * 
-    * Every tree returns the mean and the variance of the leaf the feature vector falls into.
-    * These are combined to the forests mean prediction (mean of the means) and a variance estimate
-    * (mean of the variance + variance of the means).
-    * 
-    * This function assumes the weights assigned to each data point where importance weights, not frequencies.
-    * Use this if you have actively assigned weigths.
-    * 
-	* \param feature_vector a valid feature vector
-	* \return std::pair<response_t, num_t> mean and variance prediction
-    */
-    std::pair<num_t, num_t> predict_mean_var_importance_weights( const std::vector<num_t> &feature_vector){
-
-		// collect the predictions of individual trees
-		rfr::util::running_statistics<num_t> mean_stats, var_stats;
-		for (auto &tree: the_trees){
-			auto stat = tree.leaf_statistic(feature_vector);
-			mean_stats.push(stat.mean()); 
-			var_stats.push(stat.variance_unbiased_importance());
+			if (weighted_data) var_stats.push(stat.variance_unbiased_importance());
+			else var_stats.push(stat.variance_unbiased_frequency());
 		}
 		
 		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance_sample() + var_stats.mean()) ));
@@ -414,7 +391,7 @@ class regression_forest{
 	 */
 	void pseudo_update (std::vector<num_t> features, response_t response, num_t weight){
 		for (auto &t: the_trees){
-			index_t index = t.find_leaf(features);
+			index_t index = t.find_leaf_index(features);
 			t.the_nodes[index].push_response_value(response, weight);
 		}
 	}
@@ -430,7 +407,7 @@ class regression_forest{
 	 */
 	void pseudo_downdate(std::vector<num_t> features, response_t response, num_t weight){
 		for (auto &t: the_trees){
-			index_t index = t.find_leaf(features);
+			index_t index = t.find_leaf_index(features);
 			t.the_nodes[index].pop_response_value(response, weight);
 		}
 	}
@@ -459,7 +436,7 @@ class regression_forest{
 
 	/* serialize into a string; used for Python's pickle.dump
 	 * 
-	 * \retiurn std::string a JSON serialization of the forest
+	 * \return std::string a JSON serialization of the forest
 	 */
 	std::string ascii_string_representation(){
 		std::stringstream oss;
@@ -472,7 +449,7 @@ class regression_forest{
 
 	/* \brief deserialize from string; used for Python's pickle.load
 	 * 
-	 * \retiurn std::string a JSON serialization of the forest
+	 * \return std::string a JSON serialization of the forest
 	 */
 	void load_from_ascii_string( std::string const &str){
 		std::stringstream iss;
