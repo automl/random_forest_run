@@ -46,7 +46,6 @@ class regression_forest{
 	std::vector<tree_type> the_trees;
 	index_t num_features;
 
-	std::vector<std::vector<index_t> > dirty_leafs;
 	std::vector<std::vector<num_t> > bootstrap_sample_weights;
 	
 	num_t oob_error = NAN;
@@ -65,20 +64,21 @@ class regression_forest{
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( options, the_trees, num_features, dirty_leafs, bootstrap_sample_weights, oob_error, types, bounds);
+		archive( options, the_trees, num_features, bootstrap_sample_weights, oob_error, types, bounds);
 	}
 
-	regression_forest(): options() {}
+	regression_forest(): options()	{}
 	
 	regression_forest(forest_options<num_t, response_t, index_t> opts): options(opts){}
 
+	virtual ~regression_forest()	{};
 
 	/**\brief growing the random forest for a given data set
 	 * 
 	 * \param data a filled data container
 	 * \param rng the random number generator to be used
 	 */
-	void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_type &rng){
+	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_type &rng){
 
 		if (options.num_trees <= 0)
 			throw std::runtime_error("The number of trees has to be positive!");
@@ -94,8 +94,6 @@ class regression_forest{
 
 		types.resize(data.num_features());
 		bounds.resize(data.num_features());
-
-		
 
 		num_features = data.num_features();
 		
@@ -324,26 +322,7 @@ class regression_forest{
 		return(rv);
 	}
 
-	/* \brief yields the partition of the feature space induces by one tree
-	 * 
-	 * MOVE_TO: fANOVA_forest
-	 * 
-	 * Every split in the tree divides the input space into two partitions.
-	 * This means that every leaf of the tree corresponds to a 'rectangular
-	 * domain'. This function finds all leaves and computes a representation
-	 * of the partitioning.
-	 * 
-	 * Works for axis aligned splits only!
-	 * 
-	 * \param tree_index the index of the tree in the forest who's partitioning is requested
-	 * \param pcs a representation of the parameter configuration space
-	 * 
-	 * \return std::vector<std::vector< std::vector<num_t> > > A vector of nested vectors representing intervals (numerical features) and possible values (categorical features) of each dimension.
-	 */
-	std::vector<std::vector< std::vector<num_t> > > partition_of_tree( index_t tree_index,
-														std::vector<std::vector<num_t> > pcs){
-		return(the_trees.at(tree_index).partition(pcs));
-	}
+
 	
 	/* \brief returns the predictions of every tree marginalized over the NAN values in the feature_vector
 	 * 
@@ -386,10 +365,8 @@ class regression_forest{
 	 * \param weight the associated weight
 	 */
 	void pseudo_update (std::vector<num_t> features, response_t response, num_t weight){
-		for (auto &t: the_trees){
-			index_t index = t.find_leaf_index(features);
-			t.the_nodes[index].push_response_value(response, weight);
-		}
+		for (auto &t: the_trees)
+			t.pseudo_update(features, response, weight);
 	}
 	
 	/* \brief undoing a pseudo update by removing a point
@@ -402,10 +379,8 @@ class regression_forest{
 	 * \param weight the associated weight
 	 */
 	void pseudo_downdate(std::vector<num_t> features, response_t response, num_t weight){
-		for (auto &t: the_trees){
-			index_t index = t.find_leaf_index(features);
-			t.the_nodes[index].pop_response_value(response, weight);
-		}
+		for (auto &t: the_trees)
+			t.pseudo_downdate(features, response, weight);
 	}
 	
 	num_t out_of_bag_error(){return(oob_error);}

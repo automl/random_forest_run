@@ -49,7 +49,7 @@ class tree_base{
 	 */
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
-			 std::vector<num_t> &sample_weights,
+			 const std::vector<num_t> &sample_weights,
 			 rng_type &rng) = 0;
 
 

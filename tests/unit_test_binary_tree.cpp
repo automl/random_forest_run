@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
     for (auto i = 0; i <1; i++){
 	tree_type the_tree;
-	the_tree.fit(data, tree_opts, rng_engine);
+	the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 	
 	char filename[100];
 		sprintf(filename, "/tmp/tree_%i.tex", i);
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
     }
     
 	tree_type the_tree1;
-	the_tree1.fit(data, tree_opts, rng_engine);
+	the_tree1.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 	
 	the_tree1.save_latex_representation("/tmp/test.tex");
 	
@@ -138,14 +138,14 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
     rng_t rng_engine;
 
 	tree_type the_tree;
-	the_tree.fit(data, tree_opts, rng_engine);
+	the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 
 	BOOST_REQUIRE_EQUAL(the_tree.depth(), 3);
 
 
 	tree_opts.max_depth = 1024;
 	tree_opts.max_num_nodes = 15;
-	the_tree.fit(data, tree_opts, rng_engine);
+	the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 
 	BOOST_REQUIRE_EQUAL(the_tree.depth(), 3);
 	BOOST_REQUIRE_EQUAL(the_tree.number_of_nodes(), 15);
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 	tree_opts.max_depth = 1024;
 	tree_opts.max_num_leaves = 16;
 	tree_opts.max_num_nodes = 1024;
-	the_tree.fit(data, tree_opts, rng_engine);
+	the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 
 	the_tree.save_latex_representation("/tmp/rfr.tex");
 
@@ -170,7 +170,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 	tree_opts.max_num_nodes = 2048;
 	tree_opts.min_weight_in_leaf = data.num_data_points()+1;
 
-	the_tree.fit(data, tree_opts, rng_engine);
+	the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 
 	BOOST_REQUIRE_EQUAL(1, the_tree.number_of_nodes());
 

@@ -31,9 +31,9 @@ namespace rfr{ namespace trees{
 template <const int k,typename node_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_type = std::default_random_engine>
 class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_t, rng_type> {
 	
-	friend class rfr::forests::regression_forest<k_ary_random_tree<k,node_type, num_t, response_t, index_t, rng_type>, num_t, response_t, index_t, rng_type>;
+	//friend class rfr::forests::regression_forest<k_ary_random_tree<k,node_type, num_t, response_t, index_t, rng_type>, num_t, response_t, index_t, rng_type>;
 	
-  private:
+  protected:
     typedef rfr::splits::data_info_t<num_t, response_t, index_t> info_t;
   
 	std::vector<node_type> the_nodes;
@@ -52,10 +52,6 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		archive(the_nodes, num_leafs, actual_depth);
 	}
 	
-
-	// make overloaded fit function with only 3 arguments from the base class visible here!
-	using rfr::trees::tree_base<num_t, response_t, index_t, rng_type>::fit;
-
 	/** \brief fits a randomized decision tree to a subset of the data
 	 * 
 	 * At each node, if it is 'splitworthy', a random subset of all features is considered for the
@@ -69,7 +65,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	 */
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
-			 std::vector<num_t> &sample_weights,
+			 const std::vector<num_t> &sample_weights,
 			 rng_type &rng){
 		
 		tree_opts.adjust_limits_to_data(data);
@@ -348,6 +344,37 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 			}
 		}
 		return(rt);
+	}
+
+	/* \brief updates the forest by adding all provided datapoints without a complete retraining
+	 * 
+	 * 
+	 * As retraining can be quite expensive, this function can be used to quickly update the forest
+	 * by finding the leafs the datapoints belong into and just inserting them. This is, of course,
+	 * not the right way to do it for many data points, but it should be a good approximation for a few.
+	 * 
+	 * \param features a valid feature vector
+	 * \param response the corresponding response value
+	 * \param weight the associated weight
+	 */
+	void pseudo_update (std::vector<num_t> features, response_t response, num_t weight){
+		index_t index = find_leaf_index(features);
+		the_nodes[index].push_response_value(response, weight);
+	}
+
+
+	/* \brief undoing a pseudo update by removing a point
+	 * 
+	 * This function removes one point from the corresponding leaves into
+	 * which the given feature vector falls
+	 * 
+	 * \param features a valid feature vector
+	 * \param response the corresponding response value
+	 * \param weight the associated weight
+	 */
+	void pseudo_downdate(std::vector<num_t> features, response_t response, num_t weight){
+		index_t index = find_leaf_index(features);
+		the_nodes[index].pop_response_value(response, weight);
 	}
 
 

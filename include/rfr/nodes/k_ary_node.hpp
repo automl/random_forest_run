@@ -138,13 +138,13 @@ class k_ary_node_minimal{
 	 * This function can be used for pseudo updates of a tree by
 	 * simply removing observations from the corresponding leaf
 	 */
-	void pop_repsonse_value (response_t r, num_t w){
+	virtual void pop_repsonse_value (response_t r, num_t w){
 		response_stat.pop(r,w);
 	}
 
 	/** \brief helper function for the fANOVA
 	 *
-	 * 	See description of rfr::splits::binary_split_one_feature_rss_loss.
+	 * 	See description of rfr::splits::binary_split_one_feature_rss_loss::compute_subspace.
 	 */
 	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace) const {
 		return(split.compute_subspaces(subspace));
