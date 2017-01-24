@@ -27,30 +27,23 @@
 
 #include "rfr/trees/tree_options.hpp"
 #include "rfr/forests/forest_options.hpp"
+
+#include "rfr/trees/binary_fanova_tree.hpp"
+
 #include "rfr/util.hpp"
 
 namespace rfr{ namespace forests{
 
-typedef cereal::PortableBinaryInputArchive binary_iarch_t;
-typedef cereal::PortableBinaryOutputArchive binary_oarch_t;
-
-typedef cereal::JSONInputArchive ascii_iarch_t;
-typedef cereal::JSONOutputArchive ascii_oarch_t;
-
-
-
-
-template <typename tree_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
-class fANOVA_forest: public rfr::forests::regression_forest<tree_t, num_t, response_t, index_t, rng_t> {
+template < typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
+class fANOVA_forest: public rfr::forests::regression_forest<rfr::trees:binary_fanova_tree<num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> {
   private:
 
 	typedef rfr::forests::regression_forest<tree_t, num_t, response_t, index_t, rng_t> super;
 
-	
-	std::vector<std::vector<num_t> > split_values_of_tree;
 
+  protected:
 	// to compute 'improvement over default' and such...
-	num_t lower_cutoff(-std::numeric_limits<num_t>::infinity());
+	num_t lower_cutoff();
 	num_t upper_cutoff(std::numeric_limits<num_t>::infinity());
 
   public:
@@ -69,10 +62,7 @@ class fANOVA_forest: public rfr::forests::regression_forest<tree_t, num_t, respo
 		// fit the forest normaly
 		super::fit(data, rng);
 
-		// compute all the split values for all variables of each tree
-		split_values_of_tree.reserve(super::the_trees.size());
-		for (auto &t: super::the_trees)
-			split_values_of_tree.emplace_back(t.all_split_values(types));
+		// compute all the other stuff specific to the fANOVA here
 		
 	}
 
@@ -85,16 +75,19 @@ class fANOVA_forest: public rfr::forests::regression_forest<tree_t, num_t, respo
 	 */
 	void set_cutoffs (num_t lower, num_t upper){
 		lower_cutoff = lower;
-		upper_cutpoff= upper;
+		upper_cutoff= upper;
 
 		prepare_trees_for_marginals();
 	}
 
+	/* \brief to read out the used cutoffs */
 	std::pair<num_t, num_t> get_cutoffs(){ return(std::pair<num_t, num_t> (lower_cutoff, upper_cutoff);}
 
 
-	void prepare_trees_form_marginal(){
-
+	/* \brief just calls the precompute marginals function of every tree */
+	void prepare_trees_for_marginal(){
+		for (auto &t: super.the_trees)
+			t.precompute_marginals(lower_cutoff, upper_cutoff);
 	}
 
 
@@ -104,89 +97,14 @@ class fANOVA_forest: public rfr::forests::regression_forest<tree_t, num_t, respo
 	 * "An efficient Approach for Assessing Hyperparameter Importance"
 	 * by Hutter et al.
 	 */
-	num_t marginal_prediction( std::<num_t> feature_vector){
-		
+	num_t marginal_mean_prediction( std::<num_t> feature_vector){
+		if (std::isnan(lower_cutoff){
+			lower_cutoff = -std::numeric_limits<num_t>::infinity()
+			upper_cutoff = std::numeric_limits<num_t>::infinity()
+			prepare_trees_for_marginal();
+		}
 	}
 
-
-
-	/* \brief predict the mean and the variance of the mean prediction across a set of partial features
-	 * 
-	 * A very special function to predict the mean response of a a partial assignment for a given set.
-	 * It takes the prediction of set-mean of every individual tree and combines to estimate the mean its
-	 * total variance. The predictions of two trees are considered uncorrelated
-	 * 
-	 * \param features a (partial) configuration where unset values should be set to NaN
-	 * \param set_features a 1d-array containing the (partial) assignments used for the averaging. Every NaN value will be replaced by the corresponding value from features. The array must hold set_size times the number of features entries! There is no consistency check!
-	 * \param set_size number of feature vectors in set_features
-	 * 
-	 * \return std::tuple<num_t, num_t, num_t> mean and variance of empirical mean prediction of a feature vector averaged over. The last one is the estimated variance of a sample drawn from partial assignment.
-	 */
-    /*
-	std::tuple<num_t, num_t, num_t> predict_mean_var_of_mean_response_on_set (num_t *features, num_t* set_features, index_t set_size){
-
-			num_t fv[num_features];
-
-			rfr::util::running_statistics<num_t> mean_stats, var_stats, sample_var_stats, sample_mean_stats;
-
-			for (auto &t : the_trees){
-
-					rfr::util::running_statistics<num_t> tree_mean_stats, tree_var_stats;
-
-					for (auto i=0u; i < set_size; ++i){
-
-							rfr::util::merge_two_vectors(features, &set_features[i*num_features], fv, num_features);
-
-							num_t m , v; index_t n;
-							std::tie(m, v, n) = t.predict_mean_var_N(fv);
-
-							tree_mean_stats(m); tree_var_stats(v); sample_mean_stats(m); sample_var_stats(v);
-					}
-
-					mean_stats(tree_mean_stats.mean());
-					var_stats(std::max<num_t>(0, tree_var_stats.mean()));
-					
-			}
-			
-			return(std::make_tuple(mean_stats.mean(), std::max<num_t>(0, mean_stats.variance()) + std::max<num_t>(0, var_stats.mean()/set_size), std::max<num_t>(0,sample_mean_stats.variance() + sample_var_stats.mean())));
-	}
-    */
-
-
-
-	/* \brief yields the partition of the feature space induces by one tree
-	 * 
-	 * Every split in the tree divides the input space into two partitions.
-	 * This means that every leaf of the tree corresponds to a 'rectangular
-	 * domain'. This function finds all leaves and computes a representation
-	 * of the partitioning.
-	 * 
-	 * Works for axis aligned splits only!
-	 * 
-	 * \param tree_index the index of the tree in the forest who's partitioning is requested
-	 * \param pcs a representation of the parameter configuration space
-	 * 
-	 * \return std::vector<std::vector< std::vector<num_t> > > A vector of nested vectors representing intervals (numerical features) and possible values (categorical features) of each dimension.
-	 */
-	std::vector<std::vector< std::vector<num_t> > > partition_of_tree( index_t tree_index,
-														std::vector<std::vector<num_t> > pcs){
-		return(the_trees.at(tree_index).partition(pcs));
-	}
-	
-	/* \brief returns the predictions of every tree marginalized over the NAN values in the feature_vector
-	 * 
-	 * TODO: more documentation over how the 'missing values' are handled
-	 * 
-	 * \param feature_vector non-specfied values (NaN) will be marginalized over according to the training data
-	 */
-	std::vector<num_t> marginalized_mean_predictions(const std::vector<num_t> &feature_vector) const {
-		std::vector<num_t> rv;
-		rv.reserve(the_trees.size());
-		for (auto &t : the_trees)
-			rv.emplace_back(t.marginalized_mean_prediction(feature_vector));
-		return(rv);
-	}
-	
 };
 
 

@@ -31,8 +31,6 @@ namespace rfr{ namespace trees{
 template <const int k,typename node_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_type = std::default_random_engine>
 class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_t, rng_type> {
 	
-	//friend class rfr::forests::regression_forest<k_ary_random_tree<k,node_type, num_t, response_t, index_t, rng_type>, num_t, response_t, index_t, rng_type>;
-	
   protected:
     typedef rfr::splits::data_info_t<num_t, response_t, index_t> info_t;
   
