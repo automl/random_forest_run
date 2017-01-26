@@ -36,8 +36,11 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
   protected:
 
 
-	std::vector<num_t> subspace_sizes;
-	std::vector<std::vector<bool>  > active_variables;		// note: vector<bool> uses bitwise operations, so it might be too slow
+	std::vector<num_t> subspace_sizes;					// size of the subspace in node's subtree
+	std::vector<num_t> marginal_prediction;				// prediction of the subtree below a node
+	std::vector<std::vector<bool>  > active_variables;	// note: vector<bool> uses bitwise operations, so it might be too slow
+
+	
 	std::vector<std::vector<num_t> > all_split_values;
 	
   public:
@@ -90,7 +93,7 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 	 * To compute the fANOVA faster, the tree can efficiently compute and cache the marginal
 	 * prediction for the subtree of any node. Combined with storing which variables remain constant
 	 * within it, this should reducet the computational overhead; at least for not too important variables. */
-	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff, std::vector<std::vector<num_t> > pcs){
+	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff, std::vector<std::vector<num_t> > pcs, std::vector<num_t> types){
 
 		/* This function should work in two steps:
 		 * 		1.	Compute the size of the subspace for each node. See partition_recursor
