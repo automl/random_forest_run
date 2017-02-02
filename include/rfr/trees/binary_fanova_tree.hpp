@@ -1,5 +1,5 @@
-#ifndef RFR_K_ARY_TREE_HPP
-#define RFR_K_ARY_TREE_HPP
+#ifndef RFR_FANOVA_TREE_HPP
+#define RFR_FANOVA_TREE_HPP
 
 #include<vector>
 #include<deque>
@@ -28,11 +28,11 @@
 
 namespace rfr{ namespace trees{
 
-template <typename node_type, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_type = std::default_random_engine>
-class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, num_t, response_t, index_t, rng_type> {
+template <typename node_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
+class binary_fANOVA_tree : public rfr::trees::k_ary_random_tree<2, node_t, num_t, response_t, index_t, rng_t> {
 
   private:
-	typedef rfr::trees::k_ary_random_tree<2, node_type, num_t, response_t, index_t, rng_type> super;
+	typedef rfr::trees::k_ary_random_tree<2, node_t, num_t, response_t, index_t, rng_t> super;
   protected:
 
 
@@ -41,18 +41,18 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 	std::vector<std::vector<bool>  > active_variables;	// note: vector<bool> uses bitwise operations, so it might be too slow
 
 	
-	std::vector<std::vector<num_t> > all_split_values;
+	std::vector<std::vector<num_t> > split_values;
 	
   public:
   
-	binary_fanova_tree(): super() {}
+	binary_fANOVA_tree(): super(), split_values(0) {}
 
-	virtual ~binary_fanova_tree() {}
+	virtual ~binary_fANOVA_tree() {}
 	
     /* serialize function for saving forests */
   	template<class Archive>
   	void serialize(Archive & archive){
-		super.serialize();
+		super::serialize();
 		
 	}
 
@@ -64,7 +64,9 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data,
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
 			 const std::vector<num_t> &sample_weights,
-			 rng_type &rng){
+			 rng_t &rng){
+				 
+			super::fit(data, tree_opts, sample_weights, rng);
 	}
 
 	/* \brief function to recursively compute the marginalized predictions
@@ -121,26 +123,30 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 
 	 
 	std::vector<std::vector<num_t> > all_split_values (const std::vector<index_t> &types) const {
-		std::vector<std::vector<num_t> > split_values(types.size());
 		
-		for (auto &n: the_nodes){
-			if (n.is_a_leaf()) continue;
+		if (split_values.size() == 0){
 			
-			const auto &s = n.get_split();
-			auto fi = s.get_feature_index();
+			split_values.resize(types.size());
+			
+			for (auto &n: super::the_nodes){
+				if (n.is_a_leaf()) continue;
+				
+				const auto &s = n.get_split();
+				auto fi = s.get_feature_index();
 
-			// if a split on a categorical occurs, just add all its possible values
-			if((types[fi] > 0) && (split_values[fi].size() == 0)){
-				split_values[fi].resize(types[fi]);
-				std::iota(split_values[fi].begin(), split_values[fi].end(), 0);
+				// if a split on a categorical occurs, just add all its possible values
+				if((types[fi] > 0) && (split_values[fi].size() == 0)){
+					split_values[fi].resize(types[fi]);
+					std::iota(split_values[fi].begin(), split_values[fi].end(), 0);
+				}
+				else{
+					split_values[fi].emplace_back(s.get_num_split_value());
+				}
 			}
-			else{
-				split_values[fi].emplace_back(s.get_num_split_value());
-			}
+			
+			for (auto &v: split_values)
+				std::sort(v.begin(), v.end());
 		}
-		
-		for (auto &v: split_values)
-			std::sort(v.begin(), v.end());
 		return(split_values);
 	}
 

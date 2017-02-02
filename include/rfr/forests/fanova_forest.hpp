@@ -34,19 +34,16 @@
 
 namespace rfr{ namespace forests{
 
-template < typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
-class fANOVA_forest: public
-	rfr::forests::regression_forest<	rfr::trees:binary_fanova_tree<num_t, response_t, index_t, rng_t>,
-										num_t, response_t, index_t, rng_t> {
+template <typename node_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
+class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees:binary_fANOVA_tree<node_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> {
   private:
 
-	//typedef rfr::forests::regression_forest<rfr::trees:binary_fanova_tree<num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> super;
-
+	typedef rfr::forests::regression_forest<rfr::trees:binary_fANOVA_tree<node_t, num_t, response_t, index_t, rng_t> , num_t, response_t, index_t, rng_t> super;
 
   protected:
 	// to compute 'improvement over default' and such...
-	num_t lower_cutoff(std::numeric_limits<num_t>::infinity());
-	num_t upper_cutoff(std::numeric_limits<num_t>::infinity());
+	num_t lower_cutoff = -std::numeric_limits<num_t>::infinity();
+	num_t upper_cutoff = std::numeric_limits<num_t>::infinity();
 
   public:
 
@@ -57,12 +54,12 @@ class fANOVA_forest: public
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		//super::archive( archive);
+		super::archive( archive);
 	}
 
-	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_type &rng){
+	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_t &rng){
 		// fit the forest normaly
-		//super::fit(data, rng);
+		super::fit(data, rng);
 
 		// compute all the other stuff specific to the fANOVA here
 		
@@ -83,12 +80,12 @@ class fANOVA_forest: public
 	}
 
 	/* \brief to read out the used cutoffs */
-	std::pair<num_t, num_t> get_cutoffs(){ return(std::pair<num_t, num_t> (lower_cutoff, upper_cutoff);}
+	std::pair<num_t, num_t> get_cutoffs(){ return(std::pair<num_t, num_t> (lower_cutoff, upper_cutoff));}
 
 
 	/* \brief just calls the precompute marginals function of every tree */
 	void prepare_trees_for_marginal(){
-		for (auto &t: super.the_trees)
+		for (auto &t: super::the_trees)
 			t.precompute_marginals(lower_cutoff, upper_cutoff);
 	}
 
@@ -118,7 +115,7 @@ class fANOVA_forest: public
 	 */
 	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
 		std::vector<std::vector<std::vector<num_t> > > rv;
-		rv.reserve(the_trees.size());
+		rv.reserve(super::the_trees.size());
 			
 		for (auto &t: the_trees)
 			rv.emplace_back(t.all_split_values(types));

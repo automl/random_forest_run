@@ -99,7 +99,7 @@ typedef std::default_random_engine rng_t;
 
 // NODES
 %include "rfr/nodes/k_ary_node.hpp"
-
+typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_full_node_rss_t;
 
 // TREES
 %include "rfr/trees/tree_options.hpp"
@@ -123,7 +123,7 @@ typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rs
 %template(qr_forest) rfr::forests::quantile_regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
 
 %include "rfr/forests/fanova_forest.hpp"
-%template(fanova_forest) rfr::forests::fANOVA_forest<num_t, response_t, index_t, rng_t>;
+%template(fanova_forest) rfr::forests::fANOVA_forest<binary_full_node_rss_t, num_t, response_t, index_t, rng_t>;
 
 
 

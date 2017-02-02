@@ -17,22 +17,19 @@
 #include "rfr/trees/tree_options.hpp"
 #include "rfr/trees/k_ary_tree.hpp"
 
+#include "rfr/trees/binary_fanova_tree.hpp"
 
 typedef double num_type;
 typedef double response_t;
 typedef unsigned int index_t;
 typedef std::default_random_engine rng_t;
 
-typedef rfr::data_containers::mostly_continuous_data<num_type, response_t, index_t> data_container_type;
-
-typedef rfr::splits::binary_split_one_feature_rss_loss<num_type, response_t, index_t, rng_t> split_type;
-typedef rfr::nodes::k_ary_node_full<2, split_type, num_type, response_t, index_t, rng_t> node_type;
-
-typedef rfr::nodes::temporary_node<num_type, index_t> tmp_node_type;
-
-typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_t, rng_t> tree_type;
-
-
+typedef rfr::data_containers::mostly_continuous_data<num_type, response_t, index_t> 			data_container_type;
+typedef rfr::splits::binary_split_one_feature_rss_loss<num_type, response_t, index_t, rng_t> 	split_type;
+typedef rfr::nodes::k_ary_node_full<2, split_type, num_type, response_t, index_t, rng_t> 		node_type;
+typedef rfr::nodes::temporary_node<num_type, index_t> 											tmp_node_type;
+typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_t, rng_t>		tree_type;
+typedef rfr::trees::binary_fANOVA_tree<node_type, num_type, response_t, index_t, rng_t>			fANOVA_tree_type;
 
 data_container_type load_toy_data(){
 	data_container_type data;
@@ -69,6 +66,8 @@ data_container_type load_diabetes_data(){
 
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and runs
+/*
+
 BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
 	auto data = load_toy_data();
@@ -123,8 +122,36 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
 	BOOST_REQUIRE(partition1 == partition2);
 }
+*/
+
+// Test does not actually check the correctness of the split or anything.
+// It makes sure everything compiles and runs
+BOOST_AUTO_TEST_CASE( binary_fANOVA_tree_test ){
+
+	auto data = load_toy_data();
 
 
+    data.set_type_of_feature(1, 4);
+    
+    rfr::trees::tree_options<num_type, response_t, index_t> tree_opts;
+	
+	
+    tree_opts.max_features = 2;
+    tree_opts.max_depth = 10;
+	
+    rng_t rng_engine;
+
+	fANOVA_tree_type the_tree;
+	the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
+	
+	
+	std::cout<<the_tree.predict(data.retrieve_data_point(1))<<std::endl;
+	
+	
+}
+
+
+/*
 
 BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 
@@ -174,7 +201,6 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 
 	BOOST_REQUIRE_EQUAL(1, the_tree.number_of_nodes());
 
-
 }
-
+*/
 
