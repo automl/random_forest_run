@@ -119,7 +119,7 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 	 * This function only makes sense for axis aligned splits!
 	 * */
 
-	 /*
+	 
 	std::vector<std::vector<num_t> > all_split_values (const std::vector<index_t> &types) const {
 		std::vector<std::vector<num_t> > split_values(types.size());
 		
@@ -143,7 +143,7 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 			std::sort(v.begin(), v.end());
 		return(split_values);
 	}
-	*/
+
 	
 	/* \brief Function to recursively compute the partition induced by the tree
 	 *

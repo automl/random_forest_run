@@ -35,15 +35,17 @@
 namespace rfr{ namespace forests{
 
 template < typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
-class fANOVA_forest: public rfr::forests::regression_forest<rfr::trees:binary_fanova_tree<num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> {
+class fANOVA_forest: public
+	rfr::forests::regression_forest<	rfr::trees:binary_fanova_tree<num_t, response_t, index_t, rng_t>,
+										num_t, response_t, index_t, rng_t> {
   private:
 
-	typedef rfr::forests::regression_forest<tree_t, num_t, response_t, index_t, rng_t> super;
+	//typedef rfr::forests::regression_forest<rfr::trees:binary_fanova_tree<num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> super;
 
 
   protected:
 	// to compute 'improvement over default' and such...
-	num_t lower_cutoff();
+	num_t lower_cutoff(std::numeric_limits<num_t>::infinity());
 	num_t upper_cutoff(std::numeric_limits<num_t>::infinity());
 
   public:
@@ -55,12 +57,12 @@ class fANOVA_forest: public rfr::forests::regression_forest<rfr::trees:binary_fa
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		super::archive( archive);
+		//super::archive( archive);
 	}
 
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_type &rng){
 		// fit the forest normaly
-		super::fit(data, rng);
+		//super::fit(data, rng);
 
 		// compute all the other stuff specific to the fANOVA here
 		
@@ -97,13 +99,32 @@ class fANOVA_forest: public rfr::forests::regression_forest<rfr::trees:binary_fa
 	 * "An efficient Approach for Assessing Hyperparameter Importance"
 	 * by Hutter et al.
 	 */
+
+	 /*
 	num_t marginal_mean_prediction( std::<num_t> feature_vector){
 		if (std::isnan(lower_cutoff){
 			lower_cutoff = -std::numeric_limits<num_t>::infinity()
 			upper_cutoff = std::numeric_limits<num_t>::infinity()
 			prepare_trees_for_marginal();
 		}
+		return(0);
 	}
+	*/
+
+
+	/* \brief aggregates all used split values for all features in each tree
+	 *
+	 * TODO: move to fANOVA forest
+	 */
+	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
+		std::vector<std::vector<std::vector<num_t> > > rv;
+		rv.reserve(the_trees.size());
+			
+		for (auto &t: the_trees)
+			rv.emplace_back(t.all_split_values(types));
+		return(rv);
+	}
+
 
 };
 
