@@ -22,7 +22,7 @@ SWIG
 ## Installing the Python Bindings
 Checkout the repo (and the refactor branch), create a build directory, and build them using the following commands:
 ```
-git checkout git@bitbucket.org:aadfreiburg/random_forest_run.git
+git checkout git@github.com:sfalkner/random_forest_run.git
 cd random_forest_run
 mkdir build
 cd build
