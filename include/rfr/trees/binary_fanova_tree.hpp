@@ -82,18 +82,16 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
      * \returns the mean prediction marginalized over the desired inputs
 	 * */
 	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector) const{
-		
 
 	}
-
-
 
 	/* \brief precomputes the marginal prediction in each node based on the subspace sizes
 	 *
 	 * To compute the fANOVA faster, the tree can efficiently compute and cache the marginal
 	 * prediction for the subtree of any node. Combined with storing which variables remain constant
 	 * within it, this should reducet the computational overhead; at least for not too important variables. */
-	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff, std::vector<std::vector<num_t> > pcs, std::vector<num_t> types){
+	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff,
+		const std::vector<std::vector<num_t> >& pcs, const std::vector<index_t>& types){
 
 		/* This function should work in two steps:
 		 * 		1.	Compute the size of the subspace for each node. See partition_recursor
@@ -105,6 +103,55 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 		 * 			During this step the active variables should also be stored, such that it can
 		 * 			be checked if the subtree's prediction depends on any of the 'active' variables
 		 */
+
+		// FIXME: types is not yet used.
+		assert(pcs.size() == types.size());
+
+		size_t variables_size = the_nodes[0].get_split().get_num_categories();	//  Get_variables_size
+
+		subspace_sizes.resize(the_nodes.size());
+		active_variables.resize(the_nodes.size());
+		marginal_prediction.resize(the_nodes.size());
+
+		for (index_t node_index = 0; node_index < the_nodes.size(); ++node_index) {
+			std::array<std::vector< std::vector<num_t> >, 2> subspaces = the_nodes[node_index].compute_subspaces(pcs[node_index]);
+			subspace_sizes[node_index] = 1; // #TODO Check type
+			for (const std::vector< std::vector<num_t> >& subspace : subspaces) {
+				for (const std::vector<num_t>& feature : subspace) {
+					num_t feature_size = 0;
+					if (!std::isnan(the_nodes[node_index].get_split().get_num_split_value())) {
+						// if feature is numerical
+						feature_size = feature[1] - feature[0];
+					} else {
+						// feature is discrete values
+						feature_size = feature.size();
+					}
+					subspace_sizes[node_index] *= feature_size;
+				}
+			}
+			active_variables[node_index].resize(variables_size);
+		}
+		for (index_t node_index = the_nodes.size() - 1; node_index >= 0; --node_index) {
+			std::vector<bool> active_vars = get_split_values(the_nodes[node_index]);  // TODO: Get split variables
+			index_t parent = the_nodes[node_index].parent();
+
+			assert(variables_size == active_vars.size());						// The total number of variables is always the same.
+			for (index_t var = 0; var < active_variables[par].size(); ++var) {
+				active_variables[par][var] |= active_vars[var];					// Take the active variables made by this split
+				active_variables[par][var] |= active_variables[par][var];		// Take the active variables of the children
+			}
+
+			if (the_nodes[node_index].is_a_leaf()) {
+				marginal_prediction[node_index] = the_nodes[node_index].leaf_statistic().mean(); // Get leaf's mean prediction
+			} else {
+				// TODO: Update the prediction formula, currently it's weighted sum over children
+				marginal_prediction[node_index] = 0.0;
+				for (size_t child_index : get_child_index(node_type)) {
+					marginal_prediction[node_index] += marginal_prediction[child_index] * subspace_sizes[child_index];
+				}
+			}
+		}
+
 	}
 
 
