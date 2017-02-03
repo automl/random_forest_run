@@ -24,15 +24,16 @@
 #include "rfr/trees/tree_options.hpp"
 
 #include "rfr/trees/k_ary_tree.hpp"
+#include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 
 
 namespace rfr{ namespace trees{
 
 template <typename node_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
-class binary_fANOVA_tree : public rfr::trees::k_ary_random_tree<2, node_t, num_t, response_t, index_t, rng_t> {
+class binary_fANOVA_tree : public rfr::trees::k_ary_random_tree<2, node_t , num_t, response_t, index_t, rng_t> {
 
   private:
-	typedef rfr::trees::k_ary_random_tree<2, node_t, num_t, response_t, index_t, rng_t> super;
+	typedef rfr::trees::k_ary_random_tree<2, rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> super;
   protected:
 
 

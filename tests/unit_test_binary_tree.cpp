@@ -29,7 +29,7 @@ typedef rfr::splits::binary_split_one_feature_rss_loss<num_type, response_t, ind
 typedef rfr::nodes::k_ary_node_full<2, split_type, num_type, response_t, index_t, rng_t> 		node_type;
 typedef rfr::nodes::temporary_node<num_type, index_t> 											tmp_node_type;
 typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_t, rng_t>		tree_type;
-typedef rfr::trees::binary_fANOVA_tree<node_type, num_type, response_t, index_t, rng_t>			fANOVA_tree_type;
+typedef rfr::trees::binary_fANOVA_tree<num_type, response_t, index_t, rng_t>					fANOVA_tree_type;
 
 data_container_type load_toy_data(){
 	data_container_type data;

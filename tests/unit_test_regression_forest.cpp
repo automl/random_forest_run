@@ -41,7 +41,7 @@ typedef rfr::forests::regression_forest< tree_type, num_t, response_t, index_t, 
 typedef rfr::forests::quantile_regression_forest< tree_type, num_t, response_t, index_t, rng_t> qrf_type;
 
 
-typedef rfr::forests::fANOVA_forest< node_type, num_t, response_t, index_t, rng_t> fANOVAf_type;
+typedef rfr::forests::fANOVA_forest<node_type, num_t, response_t, index_t, rng_t> fANOVAf_type;
 
 
 
