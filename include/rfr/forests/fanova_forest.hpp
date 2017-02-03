@@ -8,11 +8,11 @@
 
 namespace rfr{ namespace forests{
 
-template <typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
-class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> {
+template <typename split_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
+class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> {
   private:
 
-	//typedef rfr::forests::regression_forest<rfr::trees:binary_fANOVA_tree<node_t, num_t, response_t, index_t, rng_t> , num_t, response_t, index_t, rng_t> super;
+	typedef regression_forest<rfr::trees::binary_fANOVA_tree<split_t, num_t, response_t, index_t, rng_t> , num_t, response_t, index_t, rng_t> super;
 
   protected:
 	// to compute 'improvement over default' and such...
@@ -31,7 +31,7 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<nu
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		//super::archive( archive);
+		super::archive( archive);
 	}
 
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_t &rng){
@@ -52,8 +52,8 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<nu
 	void set_cutoffs (num_t lower, num_t upper){
 		lower_cutoff = lower;
 		upper_cutoff= upper;
-
-		this->prepare_trees_for_marginals();
+		// wired compiler waring about templates and function definition without the this....
+		precompute_marginals();
 	}
 
 	/* \brief to read out the used cutoffs */
@@ -61,9 +61,21 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<nu
 
 
 	/* \brief just calls the precompute marginals function of every tree */
-	void prepare_trees_for_marginal(){
-		//for (auto &t: super::the_trees)
-		//	t.precompute_marginals(lower_cutoff, upper_cutoff);
+	void precompute_marginals(){
+		
+		std::vector<std::vector<num_t> > pcs;
+		pcs.reserve(super::types.size());
+		
+		for (auto i=0u; i<super::types.size(); ++i){
+			if (super::types[i] == 0)
+				pcs.emplace_back(std::begin(super::bounds[i]), std::end(super::bounds[i]));
+			else
+				pcs.emplace_back(super::types[i], 0);
+				std::iota(pcs.back().begin(), pcs.back().end(), 0);
+		}
+				
+		for (auto &t: super::the_trees)
+			t.precompute_marginals(lower_cutoff, upper_cutoff, pcs, super::types);
 	}
 
 

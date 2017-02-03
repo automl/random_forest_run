@@ -41,7 +41,7 @@ typedef rfr::forests::regression_forest< tree_type, num_t, response_t, index_t, 
 typedef rfr::forests::quantile_regression_forest< tree_type, num_t, response_t, index_t, rng_t> qrf_type;
 
 
-typedef rfr::forests::fANOVA_forest<node_type, num_t, response_t, index_t, rng_t> fANOVAf_type;
+typedef rfr::forests::fANOVA_forest<split_type, num_t, response_t, index_t, rng_t> fANOVAf_type;
 
 
 
@@ -294,6 +294,10 @@ BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 
 	//fit forest
 	the_forest.fit(data, rng);
+	
+	// 10th and 90th percentile of the response values
+	the_forest.set_cutoffs(60,265);
+	
 
 }
 

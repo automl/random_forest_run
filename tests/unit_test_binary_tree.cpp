@@ -29,7 +29,7 @@ typedef rfr::splits::binary_split_one_feature_rss_loss<num_type, response_t, ind
 typedef rfr::nodes::k_ary_node_full<2, split_type, num_type, response_t, index_t, rng_t> 		node_type;
 typedef rfr::nodes::temporary_node<num_type, index_t> 											tmp_node_type;
 typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_t, rng_t>		tree_type;
-typedef rfr::trees::binary_fANOVA_tree<num_type, response_t, index_t, rng_t>					fANOVA_tree_type;
+typedef rfr::trees::binary_fANOVA_tree<split_type, num_type, response_t, index_t, rng_t>		fANOVA_tree_type;
 
 data_container_type load_toy_data(){
 	data_container_type data;
@@ -66,7 +66,6 @@ data_container_type load_diabetes_data(){
 
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and runs
-/*
 
 BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
@@ -122,7 +121,6 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
 	BOOST_REQUIRE(partition1 == partition2);
 }
-*/
 
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and runs
@@ -147,11 +145,8 @@ BOOST_AUTO_TEST_CASE( binary_fANOVA_tree_test ){
 	
 	std::cout<<the_tree.predict(data.retrieve_data_point(1))<<std::endl;
 	
-	
 }
 
-
-/*
 
 BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 
@@ -202,5 +197,4 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 	BOOST_REQUIRE_EQUAL(1, the_tree.number_of_nodes());
 
 }
-*/
 

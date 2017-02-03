@@ -29,11 +29,11 @@
 
 namespace rfr{ namespace trees{
 
-template <typename node_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
-class binary_fANOVA_tree : public rfr::trees::k_ary_random_tree<2, node_t , num_t, response_t, index_t, rng_t> {
+template <typename split_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
+class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t> , num_t, response_t, index_t, rng_t> {
 
   private:
-	typedef rfr::trees::k_ary_random_tree<2, rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> super;
+	typedef rfr::trees::k_ary_random_tree<2, rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> super;
   protected:
 
 
@@ -96,7 +96,7 @@ class binary_fANOVA_tree : public rfr::trees::k_ary_random_tree<2, node_t , num_
 	 * To compute the fANOVA faster, the tree can efficiently compute and cache the marginal
 	 * prediction for the subtree of any node. Combined with storing which variables remain constant
 	 * within it, this should reducet the computational overhead; at least for not too important variables. */
-	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff, std::vector<std::vector<num_t> > pcs, std::vector<num_t> types){
+	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff, std::vector<std::vector<num_t> > pcs, std::vector<index_t> types){
 
 		/* This function should work in two steps:
 		 * 		1.	Compute the size of the subspace for each node. See partition_recursor
