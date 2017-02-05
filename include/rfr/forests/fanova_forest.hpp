@@ -21,8 +21,8 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 
   public:
 
-	//fANOVA_forest() : super() {}
-	fANOVA_forest (forest_options<num_t, response_t, index_t> forest_opts): //super(forest_opts),
+	fANOVA_forest() : super() {}
+	fANOVA_forest (forest_options<num_t, response_t, index_t> forest_opts): super(forest_opts),
 						lower_cutoff (-std::numeric_limits<num_t>::infinity()),
 						upper_cutoff (std::numeric_limits<num_t>::infinity())
 						{};
@@ -31,12 +31,13 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		super::archive( archive);
+		super::serialize( archive);
+		archive ( lower_cutoff, upper_cutoff);
 	}
 
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_t &rng){
 		// fit the forest normaly
-		//super::fit(data, rng);
+		super::fit(data, rng);
 
 		// compute all the other stuff specific to the fANOVA here
 		
@@ -52,7 +53,6 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 	void set_cutoffs (num_t lower, num_t upper){
 		lower_cutoff = lower;
 		upper_cutoff= upper;
-		// wired compiler waring about templates and function definition without the this....
 		precompute_marginals();
 	}
 
@@ -86,16 +86,14 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 	 * by Hutter et al.
 	 */
 
-	 /*
-	num_t marginal_mean_prediction( std::<num_t> feature_vector){
-		if (std::isnan(lower_cutoff){
-			lower_cutoff = -std::numeric_limits<num_t>::infinity()
-			upper_cutoff = std::numeric_limits<num_t>::infinity()
-			prepare_trees_for_marginal();
+	num_t marginal_mean_prediction( const std::vector<num_t> & feature_vector){
+		if (std::isnan(lower_cutoff)){
+			lower_cutoff = -std::numeric_limits<num_t>::infinity();
+			upper_cutoff = std::numeric_limits<num_t>::infinity();
+			precompute_marginals();
 		}
 		return(0);
 	}
-	*/
 
 
 	/* \brief aggregates all used split values for all features in each tree
@@ -104,10 +102,10 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 	 */
 	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
 		std::vector<std::vector<std::vector<num_t> > > rv;
-		//rv.reserve(super::the_trees.size());
+		rv.reserve(super::the_trees.size());
 			
-		//for (auto &t: super::the_trees)
-		//	rv.emplace_back(t.all_split_values(types));
+		for (auto &t: super::the_trees)
+			rv.emplace_back(t.all_split_values(types));
 		return(rv);
 	}
 

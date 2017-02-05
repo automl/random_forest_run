@@ -123,7 +123,7 @@ typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rs
 %template(qr_forest) rfr::forests::quantile_regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
 
 %include "rfr/forests/fanova_forest.hpp"
-%template(fanova_forest) rfr::forests::fANOVA_forest<binary_full_node_rss_t, num_t, response_t, index_t, rng_t>;
+%template(fanova_forest) rfr::forests::fANOVA_forest<binary_rss_split_t, num_t, response_t, index_t, rng_t>;
 
 
 

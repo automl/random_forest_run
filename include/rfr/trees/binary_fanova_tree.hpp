@@ -123,7 +123,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	 * */
 
 	 
-	std::vector<std::vector<num_t> > all_split_values (const std::vector<index_t> &types) const {
+	std::vector<std::vector<num_t> > all_split_values (const std::vector<index_t> &types) {
 		
 		if (split_values.size() == 0){
 			

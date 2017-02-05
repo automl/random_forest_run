@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
 	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 1;
+	forest_opts.num_trees = 16;
 	forest_opts.do_bootstrapping = false;
 
 
