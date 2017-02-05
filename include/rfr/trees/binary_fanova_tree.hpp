@@ -110,6 +110,8 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 
 		assert(pcs.size() == types.size());
 
+		// get_num_categories simply returns the number of categories for a particular split (if it happens to split on a categorical value!
+		// what you can use here is simply types.size() as there is one entry for every variable
 		size_t features_size = super::the_nodes[0].get_split().get_num_categories();	//  TODO: Get features size
 
 		subspace_sizes.resize(super::the_nodes.size());

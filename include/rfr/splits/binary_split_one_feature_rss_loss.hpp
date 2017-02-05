@@ -42,7 +42,10 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		archive( feature_index, num_split_value, cat_split_set); 
 	}
   	
-	/** get the number of split categories.
+	/* get the number of split categories.
+	 * 
+	 * SF: that is definitely wrong .. 
+	 * 
 	*/
 	index_t get_num_categories() const { return max_num_categories; }//return cat_split_set.size(); }
   	
