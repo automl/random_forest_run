@@ -107,6 +107,9 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 		// FIXME: types is not yet used.
 		assert(pcs.size() == types.size());
 
+
+		// get_num_categories simply returns the number of categories for a particular split (if it happens to split on a categorical value!
+		// what you can use here is simply types.size() as there is one entry for every variable
 		size_t variables_size = the_nodes[0].get_split().get_num_categories();	//  Get_variables_size
 
 		subspace_sizes.resize(the_nodes.size());
@@ -114,11 +117,15 @@ class binary_fanova_tree : public rfr::trees::k_ary_random_tree<2, node_type, nu
 		marginal_prediction.resize(the_nodes.size());
 
 		for (index_t node_index = 0; node_index < the_nodes.size(); ++node_index) {
-			std::array<std::vector< std::vector<num_t> >, 2> subspaces = the_nodes[node_index].compute_subspaces(pcs[node_index]);
+			auto subspaces = the_nodes[node_index].compute_subspaces(pcs[node_index]);
 			subspace_sizes[node_index] = 1; // #TODO Check type
+			
+			// move to function in rfr::util for better testing
+			
 			for (const std::vector< std::vector<num_t> >& subspace : subspaces) {
 				for (const std::vector<num_t>& feature : subspace) {
 					num_t feature_size = 0;
+					// the types vector tells you which feature is categorical, don't use the splits for that
 					if (!std::isnan(the_nodes[node_index].get_split().get_num_split_value())) {
 						// if feature is numerical
 						feature_size = feature[1] - feature[0];
