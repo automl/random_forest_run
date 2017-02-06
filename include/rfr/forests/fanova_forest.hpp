@@ -40,7 +40,7 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 		super::fit(data, rng);
 
 		// compute all the other stuff specific to the fANOVA here
-		
+  
 	}
 
 	/* \brief sets the cutoff to perform fANOVA on subspaces with bounded predictions
