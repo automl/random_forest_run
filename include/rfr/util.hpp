@@ -1,12 +1,43 @@
 #ifndef RFR_UTIL_HPP
 #define RFR_UTIL_HPP
 
-
+#include <vector>
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
 namespace rfr{ namespace util{
+
+
+/* Compute (pairwise) disjunction of 2 boolean vectors and store the result in dest.*/
+inline void disjunction(const std::vector<bool> &source, std::vector<bool> &dest) {
+	if (source.size() > dest.size()) {
+		dest.resize(source.size());
+	}
+	for (size_t idx = 0; idx < dest.size(); ++idx) {
+		dest[idx] = source[idx] || dest[idx];
+	}
+}
+
+/* Compute the cardinality of a space given the subspaces. */
+template <typename num_t, typename index_type>
+inline num_t compute_subspace_cardinality(const std::array<std::vector< std::vector<num_t> >, 2> &subspaces, index_type type) {
+	num_t result = 1;
+	for (const auto& subspace : subspaces) {
+		for (const auto& feature : subspace) {
+			num_t feature_size = 0;
+			if (type) {
+				// if feature is numerical
+				feature_size = feature[1] - feature[0];
+			} else {
+				// feature is discrete values
+				feature_size = feature.size();
+			}
+			result *= feature_size;
+		}
+	}
+	return result;
+}
 
 /* Merges f1 and f2 into dest without copying NaNs. This allows for easy marginalization */
 template <typename num_t, typename index_type>

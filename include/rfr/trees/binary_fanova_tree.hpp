@@ -22,6 +22,7 @@
 #include "rfr/nodes/k_ary_node.hpp"
 #include "rfr/trees/tree_base.hpp"
 #include "rfr/trees/tree_options.hpp"
+#include "rfr/util.hpp"
 
 #include "rfr/trees/k_ary_tree.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
@@ -85,18 +86,16 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
      * \returns the mean prediction marginalized over the desired inputs
 	 * */
 	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector) const{
-		
 
 	}
-
-
 
 	/* \brief precomputes the marginal prediction in each node based on the subspace sizes
 	 *
 	 * To compute the fANOVA faster, the tree can efficiently compute and cache the marginal
 	 * prediction for the subtree of any node. Combined with storing which variables remain constant
 	 * within it, this should reducet the computational overhead; at least for not too important variables. */
-	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff, std::vector<std::vector<num_t> > pcs, std::vector<index_t> types){
+	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff,
+		std::vector<std::vector<num_t> > &pcs, const std::vector<index_t> &types){
 
 		/* This function should work in two steps:
 		 * 		1.	Compute the size of the subspace for each node. See partition_recursor
@@ -108,9 +107,39 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		 * 			During this step the active variables should also be stored, such that it can
 		 * 			be checked if the subtree's prediction depends on any of the 'active' variables
 		 */
+
+		assert(pcs.size() == types.size());
+
+		size_t features_size = super::the_nodes[0].get_split().get_num_categories();	//  TODO: Get features size
+
+		subspace_sizes.resize(super::the_nodes.size());
+		active_variables.resize(super::the_nodes.size());
+		marginal_prediction.resize(super::the_nodes.size());
+
+		for (index_t node_index = 0; node_index < super::the_nodes.size(); ++node_index) {
+			auto subspaces = super::the_nodes[node_index].compute_subspaces(pcs);
+			subspace_sizes[node_index] = rfr::util::compute_subspace_cardinality(subspaces, types[node_index]);
+			active_variables[node_index].resize(features_size);
+		}
+		for (index_t node_index = super::the_nodes.size() - 1; node_index >= 0; --node_index) {
+			std::vector<bool> active_vars(features_size);
+			active_vars[super::the_nodes[node_index].get_split().get_feature_index()] = true;
+			index_t parent_index = super::the_nodes[node_index].parent();
+
+			rfr::util::disjunction(active_vars, active_variables[node_index]);
+			rfr::util::disjunction(active_variables[node_index], active_variables[parent_index]);
+
+			if (super::the_nodes[node_index].is_a_leaf()) {
+				marginal_prediction[node_index] = super::the_nodes[node_index].leaf_statistic().mean(); // Get leaf's mean prediction
+			} else {
+				marginal_prediction[node_index] = 0.0;
+				for (index_t child_index : super::the_nodes[node_index].get_children()) {
+					marginal_prediction[node_index] += marginal_prediction[child_index] * subspace_sizes[child_index];
+				}
+				marginal_prediction[node_index] /= subspace_sizes[node_index];
+			}
+		}
 	}
-
-
 
 
 	////////////////////////////////////////////////////////////////////
