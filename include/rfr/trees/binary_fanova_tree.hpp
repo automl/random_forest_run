@@ -85,9 +85,34 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
      * 
      * \returns the mean prediction marginalized over the desired inputs
 	 * */
-	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector) const{
+  num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector) const{
+    assert(feature_vector.size() < 20);
 
-	}
+    size_t superset_bit_mask = (1u << feature_vector.size()) - 1; // Supset mask
+    for (index_t feature_index = 0; feature_index < feature_vector.size(); ++feature_index) {
+      if (feature_vector[feature_index] != feature_vector[feature_index]) { // If NAN, TODO: better way to check
+        superset_bit_mask &= ~(1u << feature_index); // un-choose nan features
+      }
+    }
+    num_t result = marginalized_mean_prediction[0]; // TODO: Mean prediction
+
+    // Loop over all subsets of the supserset
+    for (size_t subset_bit_mask = (superset_bit_mask - 1) & superset_bit_mask; subset_bit_mask >= 0; subset_bit_mask = (subset_bit_mask - 1) & superset_bit_mask) {
+      // For the subset of features
+      std::vector<num_t> subspace;
+      for (index_t feature_index = 0; feature_index < feature_vector.size(); ++feature_index) {
+        if ((1u << feature_index) & subset_bit_mask) {
+          subspace.push_back(feature_vector[feature_index]);
+        }
+      }
+      result -= marginalized_mean_prediction(subspace);
+      // Break if it's the empty set
+      if (subset_bit_mask == 0) {
+        break;
+      }
+    }
+    return result;
+  }
 
 	/* \brief precomputes the marginal prediction in each node based on the subspace sizes
 	 *
