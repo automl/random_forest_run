@@ -1,16 +1,16 @@
 #ifndef RFR_FANOVA_TREE_HPP
 #define RFR_FANOVA_TREE_HPP
 
-#include<vector>
-#include<deque>
-#include<stack>
-#include<utility>       // std::pair
-#include<algorithm>     // std::shuffle
-#include<numeric>       // std::iota
-#include<cmath>         // std::abs
-#include<iterator>      // std::advance
-#include<fstream>
-#include<random>
+#include <vector>
+#include <deque>
+#include <stack>
+#include <utility>       // std::pair
+#include <algorithm>     // std::shuffle
+#include <numeric>       // std::iota
+#include <cmath>         // std::abs
+#include <iterator>      // std::advance
+#include <fstream>
+#include <random>
 
 
 #include "cereal/cereal.hpp"
@@ -112,7 +112,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 
 		// get_num_categories simply returns the number of categories for a particular split (if it happens to split on a categorical value!
 		// what you can use here is simply types.size() as there is one entry for every variable
-		size_t features_size = super::the_nodes[0].get_split().get_num_categories();	//  TODO: Get features size
+		size_t features_size = types.size();
 
 		subspace_sizes.resize(super::the_nodes.size());
 		active_variables.resize(super::the_nodes.size());
@@ -123,7 +123,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 			subspace_sizes[node_index] = rfr::util::compute_subspace_cardinality(subspaces, types[node_index]);
 			active_variables[node_index].resize(features_size);
 		}
-		for (index_t node_index = super::the_nodes.size() - 1; node_index >= 0; --node_index) {
+		for (int node_index = super::the_nodes.size() - 1; node_index >= 0; --node_index) {
 			std::vector<bool> active_vars(features_size);
 			active_vars[super::the_nodes[node_index].get_split().get_feature_index()] = true;
 			index_t parent_index = super::the_nodes[node_index].parent();
@@ -142,6 +142,18 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 			}
 		}
 	}
+
+  num_t get_subspace_size(index_t node_index) {
+    return subspace_sizes[node_index];
+  }
+  
+  const std::vector<bool>& get_vars(index_t node_index) {
+    return active_variables[node_index];
+  }
+
+  const std::vector<rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>>& get_nodes() {
+    return super::the_nodes;
+  }
 
 
 	////////////////////////////////////////////////////////////////////
