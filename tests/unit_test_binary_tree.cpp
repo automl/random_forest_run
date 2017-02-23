@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 	tree_type the_tree1;
 	the_tree1.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 	
-	the_tree1.save_latex_representation("/tmp/test.tex");
+	the_tree1.save_latex_representation("/tmp/rfr_test_tree1.tex");
 	
 	BOOST_REQUIRE(the_tree1.check_split_fractions(1e-6));
 	
@@ -112,14 +112,17 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 		cereal::XMLInputArchive iarchive(iss);
 		iarchive(the_tree2);
 	}
-    
-    
-    std::vector<std::vector<num_type> > pcs = { {-1000, 1000}, {0,1,2,3,4,5,6,7,8,9}};
-	
-	auto partition1 = the_tree1.partition(pcs);
-	auto partition2 = the_tree2.partition(pcs);
 
-	BOOST_REQUIRE(partition1 == partition2);
+    the_tree2.save_latex_representation("/tmp/rfr_test_tree2.tex");
+    
+	for (auto i=0u; i < data.num_data_points(); ++i){
+		auto v1 = the_tree1.predict(data.retrieve_data_point(i));
+		auto v2 = the_tree2.predict(data.retrieve_data_point(i));
+		BOOST_REQUIRE_EQUAL(v1,v2);
+	}
+
+
+	
 }
 
 // Test does not actually check the correctness of the split or anything.

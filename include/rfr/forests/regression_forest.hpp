@@ -207,7 +207,6 @@ class regression_forest{
 	 * 
 	 * \return std::pair<num_t, num_t> mean and variance prediction of a feature vector averaged over 
 	 */
-    
     /*
 	std::pair<num_t, num_t> predict_mean_var_marginalized_over_set (num_t *features, num_t* set_features, index_t set_size){
 		
@@ -436,6 +435,9 @@ class regression_forest{
 			t.print_info();
 		}
 	}
+
+
+	virtual unsigned int num_trees (){ return(the_trees.size());}
 	
 };
 

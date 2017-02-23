@@ -33,7 +33,7 @@ class k_ary_node_minimal{
 	index_t parent_index;
 
 	// for leaf nodes
-	rfr::util::weighted_running_statistics<num_t> response_stat;   //TODO: needs to be serialized!
+	rfr::util::weighted_running_statistics<num_t> response_stat;
 
 	// for internal_nodes
 	std::array<index_t, k> children;
@@ -47,7 +47,7 @@ class k_ary_node_minimal{
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {
-		archive( parent_index, children, split_fractions, split); 
+		archive( parent_index, children, split_fractions, split, response_stat); 
 	}
 
   

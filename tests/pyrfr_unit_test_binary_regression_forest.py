@@ -1,9 +1,10 @@
-import unittest
-
 import sys
 sys.path.append("${CMAKE_BINARY_DIR}")
 
 import os
+import pickle
+import tempfile
+import unittest
 
 import pyrfr.regression as reg
 
@@ -46,18 +47,19 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		the_forest.options.tree_opts.max_features = self.data.num_features()
 
 		the_forest.fit(self.data, self.rng)
-		
+
+		self.assertEqual(the_forest.num_trees(), 1)
 		for i in range(self.data.num_data_points()):
 			self.assertEqual( the_forest.predict( self.data.retrieve_data_point(i)), self.data.response(i))
-	
+
 	def test_pickling(self):
-		import pickle
-		import tempfile
 		
 		the_forest = reg.binary_rss_forest()
 		the_forest.options.num_trees = 16
 		the_forest.options.do_bootstrapping = True
 		the_forest.options.num_data_points_per_tree = self.data.num_data_points()		
+
+		self.assertEqual(the_forest.options.num_trees, 16)
 
 		the_forest.fit(self.data,self.rng)
 		
@@ -72,30 +74,9 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		
 		for i in range(self.data.num_data_points()):
 			d = self.data.retrieve_data_point(i)
-			#self.assertEqual( the_forest.predict(d), a_second_forest.predict(d))
-		
+			self.assertEqual( the_forest.predict(d), a_second_forest.predict(d))
+
 
 
 if __name__ == '__main__':
 	unittest.main()
-
-
-"""
-import pyrfr.regression as reg
-
-data_set_prefix = "../test_data_sets/"
-
-data = reg.data_container()
-data.import_csv_files(data_set_prefix+'features13.csv', data_set_prefix+'responses13.csv')
-rng = reg.default_random_engine(1)
-
-the_forest = reg.binary_rss_forest()
-
-the_forest.options.num_trees = 64
-the_forest.options.do_bootstrapping = True
-the_forest.options.num_data_points_per_tree = 200
-		
-the_forest.fit(data, rng)
-		
-
-"""

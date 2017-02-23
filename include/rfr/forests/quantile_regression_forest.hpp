@@ -5,24 +5,18 @@
 
 namespace rfr{ namespace forests{
 
-typedef cereal::PortableBinaryInputArchive binary_iarch_t;
-typedef cereal::PortableBinaryOutputArchive binary_oarch_t;
-
-typedef cereal::JSONInputArchive ascii_iarch_t;
-typedef cereal::JSONOutputArchive ascii_oarch_t;
-
-
-
 
 template <typename tree_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
 class quantile_regression_forest: public rfr::forests::regression_forest<tree_t, num_t, response_t, index_t, rng_t> {
   private:
-	typedef regression_forest<tree_t, num_t, response_t, index_t, rng_t> super;
+	typedef rfr::forests::regression_forest<tree_t, num_t, response_t, index_t, rng_t> super;
 
   public:
 
 	quantile_regression_forest() : super()	{};
 	quantile_regression_forest (forest_options<num_t, response_t, index_t> forest_opts): super(forest_opts) {};
+
+	
 
 	virtual ~quantile_regression_forest()	{};
 

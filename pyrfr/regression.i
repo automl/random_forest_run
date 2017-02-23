@@ -24,6 +24,7 @@ typedef rfr::nodes::k_ary_node_minimal<2, rfr::splits::binary_split_one_feature_
 typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_full_node_rss_t;
 
 typedef rfr::trees::k_ary_random_tree<2, binary_full_node_rss_t, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t;
+typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,index_t,rng_t > binary_fanova_tree_t;
 %}
 
 
@@ -112,6 +113,8 @@ typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss
 %template(binary_full_tree_rss) rfr::trees::k_ary_random_tree<2, binary_full_node_rss_t, num_t, response_t, index_t, rng_t>;
 typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rss_split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t;
 
+%include "rfr/trees/binary_fanova_tree.hpp"
+typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,index_t,rng_t > binary_fanova_tree_t;
 
 // FOREST(S)
 %include "rfr/forests/forest_options.hpp"
@@ -119,12 +122,13 @@ typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rs
 %include "rfr/forests/regression_forest.hpp"
 %template(binary_rss_forest) rfr::forests::regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
 
+
 %include "rfr/forests/quantile_regression_forest.hpp"
 %template(qr_forest) rfr::forests::quantile_regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
 
 %include "rfr/forests/fanova_forest.hpp"
+%template(fanova_forest_prototype) rfr::forests::regression_forest< binary_fanova_tree_t,num_t, response_t, index_t, rng_t >; 
 %template(fanova_forest) rfr::forests::fANOVA_forest<binary_rss_split_t, num_t, response_t, index_t, rng_t>;
-
 
 
 // adds required members to make the forests 'pickable'
