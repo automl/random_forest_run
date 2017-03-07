@@ -9,6 +9,8 @@
 #include "rfr/trees/k_ary_tree.hpp"
 #include "rfr/forests/regression_forest.hpp"
 #include "rfr/forests/quantile_regression_forest.hpp"
+#include "rfr/forests/fanova_forest.hpp"
+
 
 #include <sstream>
 #include <cereal/archives/xml.hpp>
@@ -38,6 +40,11 @@ typedef rfr::forests::regression_forest< tree_type, num_t, response_t, index_t, 
 
 typedef rfr::forests::quantile_regression_forest< tree_type, num_t, response_t, index_t, rng_t> qrf_type;
 
+
+typedef rfr::forests::fANOVA_forest<split_type, num_t, response_t, index_t, rng_t> fANOVAf_type;
+
+
+
 data_container_type load_diabetes_data(){
 	data_container_type data;
 	
@@ -49,6 +56,8 @@ data_container_type load_diabetes_data(){
     data.import_csv_files(feature_file, response_file);
     return(data);
 }
+
+/*
 
 BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
     
@@ -231,14 +240,7 @@ BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
 	qrf_type sudowoodo;
 	BOOST_REQUIRE_THROW(sudowoodo.fit(data, rng), std::runtime_error);
 
-
-
-
 	qrf_type the_forest(forest_opts);
-
-	
-	
-	
 
 	//fit forest
 	the_forest.fit(data, rng);
@@ -265,3 +267,37 @@ BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
 	BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {1.1,0.5}) ,std::runtime_error);
 
 }
+
+
+*/
+BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
+	
+	auto data = load_diabetes_data();
+
+	rng_t rng;
+
+	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+	tree_opts.min_samples_to_split = 2;
+	tree_opts.min_samples_in_leaf = 1;
+	tree_opts.max_features = 10;
+
+
+	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+	forest_opts.num_data_points_per_tree = data.num_data_points();
+	forest_opts.num_trees = 16;
+	forest_opts.do_bootstrapping = false;
+
+
+
+	fANOVAf_type the_forest(forest_opts);
+
+	//fit forest
+	the_forest.fit(data, rng);
+	
+	// 10th and 90th percentile of the response values
+	the_forest.set_cutoffs(60,265);
+	
+
+}
+

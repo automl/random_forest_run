@@ -1,12 +1,63 @@
 #ifndef RFR_UTIL_HPP
 #define RFR_UTIL_HPP
 
-
+#include <vector>
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
 namespace rfr{ namespace util{
+
+
+/* Compute (pairwise) disjunction of 2 boolean vectors and store the result in dest.*/
+inline void disjunction(const std::vector<bool> &source, std::vector<bool> &dest) {
+	if (source.size() > dest.size()) {
+		dest.resize(source.size());
+	}
+	for (size_t idx = 0; idx < dest.size(); ++idx) {
+		dest[idx] = source[idx] || dest[idx];
+	}
+}
+
+
+template <typename num_t>
+std::vector<unsigned int> get_non_NAN_indices(const std::vector<num_t> &vector){
+	std::vector<unsigned int> indices;
+	for (auto i = 0u; i < vector.size(); ++i)
+		if (! std::isnan(vector[i]))
+			indices.push_back(i);
+	return(indices);
+}
+
+
+bool any_true( const std::vector<bool> & b_vector, const std::vector<unsigned int> indices){
+	for (auto &i: indices)
+		if (b_vector[i])
+			return(true);
+	return(false);
+}
+
+
+
+
+
+
+
+
+/* Compute the cardinality of a space given the subspaces. */
+template <typename num_t, typename index_t>
+inline num_t subspace_cardinality(const std::vector< std::vector<num_t> > &subspace, std::vector<index_t> types) {
+	num_t result = 1;
+	for (auto i=0u; i < types.size(); ++i){
+		if (types[i] == 0){ // numerical feature
+			result *= subspace[i][1] - subspace[i][0];
+		}
+		else{ // categorical feature
+			result *= subspace[i].size();
+		}
+	}
+	return result;
+}
 
 /* Merges f1 and f2 into dest without copying NaNs. This allows for easy marginalization */
 template <typename num_t, typename index_type>

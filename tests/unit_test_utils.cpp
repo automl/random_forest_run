@@ -235,4 +235,72 @@ BOOST_AUTO_TEST_CASE(test_weighted_running_statistics_pop){
 
 
 
+BOOST_AUTO_TEST_CASE(test_subspace_cardinality){
+	
+	std::vector<std::vector<double> > subspace;
+	std::vector<unsigned int> types;
+	
+	
+	subspace.push_back(std::vector<double> ({-1,1}));
+	types.emplace_back(0);
+	
+	BOOST_REQUIRE_EQUAL(2, rfr::util::subspace_cardinality(subspace, types) );
+	
+	subspace.push_back(std::vector<double> ({0,1,2,3,4,5}));
+	types.emplace_back(6);
+	
+	BOOST_REQUIRE_EQUAL(12, rfr::util::subspace_cardinality(subspace, types) );
+	
+	subspace.push_back(std::vector<double> ({0,1,2,4,5}));
+	types.emplace_back(6);
+	
+	BOOST_REQUIRE_EQUAL(60, rfr::util::subspace_cardinality(subspace, types) );
+
+}
+	
+
+
+
+BOOST_AUTO_TEST_CASE(test_boolean_vector_helper){
+	
+	std::vector<double> features(8,NAN);
+
+	auto indices = rfr::util::get_non_NAN_indices(features);
+
+	BOOST_REQUIRE_EQUAL(0, indices.size());
+
+	features[2] = 2;
+		
+	indices = rfr::util::get_non_NAN_indices(features);
+	
+	BOOST_REQUIRE_EQUAL(1, indices.size());
+	BOOST_REQUIRE_EQUAL(2, indices[0]);
+	
+
+	features[4] = 4;
+		
+	indices = rfr::util::get_non_NAN_indices(features);
+	
+	BOOST_REQUIRE_EQUAL(2, indices.size());
+	BOOST_REQUIRE_EQUAL(2, indices[0]);
+	BOOST_REQUIRE_EQUAL(4, indices[1]);
+
+
+
+
+	std::vector<bool> bit_vector (8, false);
+	BOOST_REQUIRE_EQUAL(false, rfr::util::any_true(bit_vector, indices));
+
+	bit_vector[3] = true;
+	BOOST_REQUIRE_EQUAL(false, rfr::util::any_true(bit_vector, indices));
+
+
+	bit_vector[2] = true;
+	BOOST_REQUIRE_EQUAL(true, rfr::util::any_true(bit_vector, indices));
+	
+	
+}
+
+
+
 

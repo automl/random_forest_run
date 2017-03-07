@@ -339,19 +339,6 @@ class regression_forest{
 	}
 
 
-	/* \brief aggregates all used split values for all features in each tree
-	 *
-	 * TODO: move to fANOVA forest
-	 */
-	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
-		std::vector<std::vector<std::vector<num_t> > > rv;
-		rv.reserve(the_trees.size());
-			
-		for (auto &t: the_trees)
-			rv.emplace_back(t.all_split_values(types));
-		return(rv);
-	}
-
 
 	/* \brief updates the forest by adding all provided datapoints without a complete retraining
 	 * 

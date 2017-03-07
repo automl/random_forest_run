@@ -1,16 +1,16 @@
 #ifndef RFR_K_ARY_TREE_HPP
 #define RFR_K_ARY_TREE_HPP
 
-#include<vector>
-#include<deque>
-#include<stack>
-#include<utility>       // std::pair
-#include<algorithm>     // std::shuffle
-#include<numeric>       // std::iota
-#include<cmath>         // std::abs
-#include<iterator>      // std::advance
-#include<fstream>
-#include<random>
+#include <vector>
+#include <deque>
+#include <stack>
+#include <utility>       // std::pair
+#include <algorithm>     // std::shuffle
+#include <numeric>       // std::iota
+#include <cmath>         // std::abs
+#include <iterator>      // std::advance
+#include <fstream>
+#include <random>
 
 
 #include "cereal/cereal.hpp"
@@ -247,33 +247,6 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	}
 
 
-	/* \brief finds all the split points for each dimension of the input space
-	 * 
-	 * This function only makes sense for axis aligned splits!
-	 * */
-	std::vector<std::vector<num_t> > all_split_values (const std::vector<index_t> &types) const {
-		std::vector<std::vector<num_t> > split_values(types.size());
-		
-		for (auto &n: the_nodes){
-			if (n.is_a_leaf()) continue;
-			
-			const auto &s = n.get_split();
-			auto fi = s.get_feature_index();
-
-			// if a split on a categorical occurs, just add all its possible values
-			if((types[fi] > 0) && (split_values[fi].size() == 0)){
-				split_values[fi].resize(types[fi]);
-				std::iota(split_values[fi].begin(), split_values[fi].end(), 0);
-			}
-			else{
-				split_values[fi].emplace_back(s.get_num_split_value());
-			}
-		}
-		
-		for (auto &v: split_values)
-			std::sort(v.begin(), v.end());
-		return(split_values);
-	}
 	
 	virtual index_t number_of_nodes() const {return(the_nodes.size());}
 	virtual index_t number_of_leafs() const {return(num_leafs);}
