@@ -93,7 +93,6 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector) const{
 
 		auto active_features = rfr::util::get_non_NAN_indices(feature_vector);
-		std::cout<<std::endl;
 		std::deque<index_t> active_nodes;
 		active_nodes.push_back(0);
 
@@ -101,7 +100,6 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		rfr::util::weighted_running_statistics<num_t> stats;
 
 		while (active_nodes.size() > 0){
-			
 			index_t node_index = active_nodes.back();
 			active_nodes.pop_back();
 			
@@ -117,8 +115,9 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 
 			// 3. node's subtree split on any active varialble and 
 			if (rfr::util::any_true(active_variables[node_index], active_features)){
-				for (auto &c: super::the_nodes[node_index].get_children())
+				for (auto &c: super::the_nodes[node_index].get_children()){
 					active_nodes.push_back(c);
+				}
 				continue;
 			}
 			

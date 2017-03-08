@@ -27,7 +27,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	std::vector< std::vector<num_t> > feature_values;	//!< 2d vector to store the feature values
 	std::vector<response_t> response_values;			//!< the associated responses
 	std::vector<num_t> weights;							//!< the associated weights
-		response_t response_type;							//!< to discriminate between regression and classification
+	response_t response_type;							//!< to discriminate between regression and classification
 	std::vector<std::pair<num_t, num_t> > bounds;		//!< stores the intervals for all continuous variables, stores the number of categories for categoricals
 	std::vector<std::pair<num_t, num_t> > min_max;		//!< if no bounds are know, they can be imputed by the min/max values
   public:
@@ -182,6 +182,8 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max){
+		if (std::isnan(bound.at(feature_index).second))
+			throw std::runtime_error("You are trying to set bounds for a categorical feature! This is not supported!")
 		bounds.at(feature_index).first = min;
 		bounds.at(feature_index).second = max;
 	}
@@ -195,6 +197,8 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 	void guess_bounds_from_data(){
+		// TODO: only copy the bounds for the numerical parameters, and don't overwrite
+		// the categorical bounds
 		bounds = min_max;
 	}
 
