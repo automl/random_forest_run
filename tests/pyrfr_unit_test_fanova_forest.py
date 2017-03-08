@@ -28,7 +28,11 @@ class TestfANOVAForest(unittest.TestCase):
 		fopts.num_data_points_per_tree = self.data.num_data_points()		
 
 		the_forest = self.forest_constructor(fopts)
+		self.assertEqual(the_forest.num_trees(), 0)
 		the_forest.fit(self.data, self.rng)
+
+		self.assertEqual(the_forest.num_trees(), 16)
+		
 
 	def test_options_member(self):
 
