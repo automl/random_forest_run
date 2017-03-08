@@ -355,7 +355,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * This is an essential function for the fANOVA. Every split
 	 * constraints one of the parameters in each of the children.
 	 */
-	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace) const {
+	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces(const std::vector< std::vector<num_t> > &subspace) const {
 		
 	
 		std::array<std::vector<std::vector<num_t> >, 2> subspaces = {subspace, subspace};

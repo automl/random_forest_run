@@ -57,8 +57,6 @@ data_container_type load_diabetes_data(){
     return(data);
 }
 
-/*
-
 BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
     
     
@@ -269,7 +267,7 @@ BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
 }
 
 
-*/
+/*
 BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 	
 	auto data = load_diabetes_data();
@@ -300,4 +298,4 @@ BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 	
 
 }
-
+*/

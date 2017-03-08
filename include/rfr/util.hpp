@@ -38,12 +38,6 @@ bool any_true( const std::vector<bool> & b_vector, const std::vector<unsigned in
 }
 
 
-
-
-
-
-
-
 /* Compute the cardinality of a space given the subspaces. */
 template <typename num_t, typename index_t>
 inline num_t subspace_cardinality(const std::vector< std::vector<num_t> > &subspace, std::vector<index_t> types) {

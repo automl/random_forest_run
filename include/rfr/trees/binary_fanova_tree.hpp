@@ -38,7 +38,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
   protected:
 
 
-	std::vector<num_t> subspace_sizes;					// size of the subspace in node's subtree
+	std::vector<num_t> subspace_sizes;					// size of the subspace in node's subtree -> for leaves it's the actual size but for the internal nodes it's the 'active size considering the cutoffs
 	std::vector<num_t> marginal_prediction;				// prediction of the subtree below a node
 	std::vector<std::vector<bool>  > active_variables;	// note: vector<bool> uses bitwise operations, so it might be too slow
 
@@ -59,7 +59,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	}
 
 
-	/* \brief fit the fANOVA forest
+	/* \brief fit the fANOVA tree
 	 *
 	 * Overloads the ancestor's method to reinitialize variables after fitting.
 	 */
@@ -68,10 +68,14 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 			 const std::vector<num_t> &sample_weights,
 			 rng_t &rng){
 				 
-			super::fit(data, tree_opts, sample_weights, rng);
+		super::fit(data, tree_opts, sample_weights, rng);
+
+			subspace_sizes.clear();
+			active_variables.clear();
+			marginal_prediction.clear();
 	}
 
-	/* \brief function to recursively compute the marginalized predictions
+	/* \brief function to precompute the marginalized predictions
 	 * 
 	 * To compute the fANOVA, the mean prediction over partial assingments is needed.
 	 * To accomplish that, feed this function a numerical vector where each element that
@@ -89,6 +93,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector) const{
 
 		auto active_features = rfr::util::get_non_NAN_indices(feature_vector);
+		std::cout<<std::endl;
 		std::deque<index_t> active_nodes;
 		active_nodes.push_back(0);
 
@@ -97,23 +102,28 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 
 		while (active_nodes.size() > 0){
 			
-			index_t i = active_nodes.back();
+			index_t node_index = active_nodes.back();
 			active_nodes.pop_back();
 			
-			// three cases
-			// 1. active node has subspace size zero -> no weight here -> skip
-			if (subspace_sizes[i] == 0)	continue;
-			
+			// four cases
+			// 1. active node has no weight (predicts NAN) -> skip
+			if (std::isnan(marginal_prediction[node_index]))	continue;
 
-			// 2. node's subtree split on any active varialble and 
-			if (rfr::util::any_true(active_variables[i], active_features)){
-			//		2.a. node itself splits on an active variable -> add corresponding child to active nodes
-			//		2.b. note itself does NOT split on an active variable -> add both children to active nodes
+			// 2. node itself splits on an active variable -> add corresponding child to active nodes
+			if (super::the_nodes[node_index].can_be_split(feature_vector)){
+				active_nodes.push_back(super::the_nodes[node_index].falls_into_child(feature_vector));
+				continue;
 			}
-			// 3. node's subtree does not split on any of the active variables -> add to statistics
-			else{
-				stats.push( marginal_prediction[i], subspace_sizes[i]);
+
+			// 3. node's subtree split on any active varialble and 
+			if (rfr::util::any_true(active_variables[node_index], active_features)){
+				for (auto &c: super::the_nodes[node_index].get_children())
+					active_nodes.push_back(c);
+				continue;
 			}
+			
+			// 4. node's subtree does not split on any of the active variables (this includes leaves) -> add to statistics
+			stats.push( marginal_prediction[node_index], subspace_sizes[node_index]);
 		}
 		return stats.mean();
 	}
@@ -125,105 +135,94 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	void precompute_marginals(num_t lower_cutoff, num_t upper_cutoff,
 		const std::vector<std::vector<num_t> >& pcs, const std::vector<index_t>& types){
 
-		/* This function should work in two steps:
-		 * 		1.	Compute the size of the subspace for each node. See partition_recursor
-		 * 			for an example. This is can be done in a top-down fashion.
-		 * 		2. 	Starting from the leaves, the marginalized prediction can be computed recursively
-		 * 			by averaging the prediction from the children w.r.t their subspace size.
-		 * 			Note, the cutoffs should be used to exclude leaves with a prediction outside the
-		 * 			bounds.
-		 * 			During this step the active variables should also be stored, such that it can
-		 * 			be checked if the subtree's prediction depends on any of the 'active' variables
+		/*
+		 * Starting from the leaves, the marginalized prediction can be computed recursively
+		 * by averaging the prediction from the children w.r.t their subspace size.
+		 * Note, the cutoffs should be used to exclude leaves with a prediction outside the
+		 * bounds.
+		 * During this step the active variables should also be stored, such that it can
+		 * be checked if the subtree's prediction depends on any of the 'active' variables
 		 */
 		assert(pcs.size() == types.size());
+
+		if (super::the_nodes.size() == 0){
+			throw std::runtime_error("The tree has not been fitted, yet. Call fit first and then precompute_marginals!");
+		}
 		size_t num_features = types.size();
 
-		subspace_sizes.resize(super::the_nodes.size());
-		active_variables.resize(super::the_nodes.size());
-		marginal_prediction.resize(super::the_nodes.size());
 
-		// unfortunately, the subspaces have to be stored on the downward pass
-		// this could be done dynamically by only storing the elements still needed, but for 
-		// simplicity, let's store all of them for now
-		std::vector< std::vector< std::vector <num_t> > > subspaces(super::the_nodes.size());
-		subspaces[0] = pcs;
+	
+		if (subspace_sizes.size() == 0){
+			/* Compute the size of the subspace for each node and the active variables
+			 * in the subtree below it. This is can be done in a top-down fashion.
+			 * These values don't change during the lifetime of the tree, so this step only
+			 * needs to be performed once.
+			 */
+
+			subspace_sizes.resize(super::the_nodes.size());
+			active_variables.resize(super::the_nodes.size());
+			marginal_prediction.resize(super::the_nodes.size());
 
 
-		// down pass
-		for (index_t i = 0; i < super::the_nodes.size(); ++i) {
-			auto & n = super::the_nodes[i];
-			subspace_sizes[i] = rfr::util::subspace_cardinality(subspaces, types);
-			
-			auto subss = n.compute_subspaces(pcs);
-			subspaces[n.get_child_index(0)] = subss[0];
-			subspaces[n.get_child_index(1)] = subss[1];
-			
-			// initialize the active variables
-			active_variables[i] = std::vector<bool>(0,num_features);
-			
-			// delete no longer needed subspaces right away
-			subspaces[i].clear();
+			// unfortunately, the subspaces have to be stored on the downward pass
+			// this could be done dynamically by only storing the elements still needed, but for 
+			// simplicity, let's store all of them for now
+			std::vector< std::vector< std::vector <num_t> > > subspaces;
+			subspaces.resize(super::the_nodes.size());
+			subspaces[0] = pcs;
+
+
+			// simple down pass
+			for (index_t i = 0; i < super::the_nodes.size(); ++i) {
+				auto & n = super::the_nodes[i];
+				subspace_sizes[i] = rfr::util::subspace_cardinality(subspaces[i], types);
+				
+				auto subss = n.compute_subspaces(subspaces[i]);
+				subspaces[n.get_child_index(0)] = subss[0];
+				subspaces[n.get_child_index(1)] = subss[1];
+				
+				// delete no longer needed subspaces right away
+				subspaces[i].clear();
+			}
 		}
 
+		// reinitialize the active variables
+		active_variables = std::vector<std::vector<bool> >(super::the_nodes.size(), std::vector<bool>(num_features, false));
 
-		for (index_t node_index = super::the_nodes.size() - 1; node_index >= 0; --i) {
-			if (super::the_nodes[node_index].is_a_leaf()) {
-				// TODO: add lower and upper cutoff checks here
-				marginal_prediction[node_index] = super::the_nodes[node_index].leaf_statistic().mean(); // Get leaf's mean prediction
+
+		// node_index needs to be an int so it can be smaller than 0
+		for (int node_index = super::the_nodes.size() - 1; node_index >= 0; --node_index) {
+			auto & the_node = super::the_nodes[node_index];
+			
+			if (the_node.is_a_leaf()) {
+				marginal_prediction[node_index] = the_node.leaf_statistic().mean(); // Get leaf's mean prediction
+				// apply cutoffs
+				if ((marginal_prediction[node_index] < lower_cutoff) || (marginal_prediction[node_index] > upper_cutoff)){
+					marginal_prediction[node_index] = NAN;
+				}
 			}
 			else{
-				// record active variable
-				active_variables[node_index][super::the_nodes[node_index].get_split().get_feature_index()] = true;
-				
-				// propagate to parent
-				index_t parent_index = super::the_nodes[node_index].parent();
-				rfr::util::disjunction(active_variables[node_index], active_variables[parent_index]);
 
-				// compute marginal prediction
-				marginal_prediction[node_index] = 0.0;
-				num_t children_subspace_size = 0;
-				
+				rfr::util::weighted_running_statistics<num_t> stat;
+
 				for (index_t child_index : super::the_nodes[node_index].get_children()) {
-					if (subspace_size[child_index] > 0.0){
-						children_subspace_sizes += subspace_sizes[child_index];
-						marginal_prediction[node_index] += marginal_prediction[child_index] * subspace_sizes[child_index];
+					if (!std::isnan(marginal_prediction[child_index])){
+						stat.push(marginal_prediction[child_index], subspace_sizes[child_index]);
+						active_variables[node_index][the_node.get_split().get_feature_index()] = true;
 					}
 				}
-				if (children_subspace_size > 0)
-					marginal_prediction[node_index] /= children_subspace_size;
-				else
-					marginal_prediction[node_index] = NaN;
-				
-				// the subspace size is updated to account for the cutoffs which might 'deactivate' certain leaves.
-				// this will be reflected by a zero subspace size for a node!
-				subspace_sizes[node_index] = children_subspace_size;
+				rfr::util::disjunction(active_variables[node_index], active_variables[the_node.parent()]);
+				subspace_sizes[node_index] = stat.sum_of_weights();
+				marginal_prediction[node_index] = stat.mean();
 			}
 		}
 	}
 
-  num_t get_subspace_size(index_t node_index) {
-    return subspace_sizes[node_index];
-  }
-  
-  const std::vector<bool>& get_vars(index_t node_index) {
-    return active_variables[node_index];
-  }
-
-  const std::vector<rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>>& get_nodes() {
-    return super::the_nodes;
-  }
-
-
-	////////////////////////////////////////////////////////////////////
-	// LEGACY CODE below, should be refactored/removed soon!
-	////////////////////////////////////////////////////////////////////
 
 	/* \brief finds all the split points for each dimension of the input space
 	 * 
 	 * This function only makes sense for axis aligned splits!
 	 * */
-
-	 
 	std::vector<std::vector<num_t> > all_split_values (const std::vector<index_t> &types) {
 		
 		if (split_values.size() == 0){
@@ -252,44 +251,23 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		return(split_values);
 	}
 
-	
-	/* \brief Function to recursively compute the partition induced by the tree
-	 *
-	 * Do not call this function from the outside! Needs become private at some point!
-	 */
-	 /*
-	void partition_recursor (	std::vector<std::vector< std::vector<num_t> > > &the_partition,
-							std::vector<std::vector<num_t> > &subspace, num_t node_index) const {
 
-		// add subspace for a leaf
-		if (the_nodes[node_index].is_a_leaf())
-			the_partition.push_back(subspace);
-		else{
-			// compute subspaces of children
-			auto subs = the_nodes[node_index].compute_subspaces(subspace);
-			// recursively go trough the tree
-			for (auto i=0u; i<k; i++){
-				partition_recursor(the_partition, subs[i], the_nodes[node_index].get_child_index(i));
-			}
-		}
-	}
-	*/
-
-
-	/* \brief computes the partitioning of the input space induced by the tree */
-	/*
-	std::vector<std::vector< std::vector<num_t> > > partition( std::vector<std::vector<num_t> > pcs) const {
-	
-		std::vector<std::vector< std::vector<num_t> > > the_partition;
-		the_partition.reserve(num_leafs);
-		
-		partition_recursor(the_partition, pcs, 0);
-	
-	return(the_partition);
+	// below are functions manly for testing as they expose the internal variables
+	num_t get_subspace_size(index_t node_index) {
+		return subspace_sizes[node_index];
 	}
 
-	*/
+	num_t get_marginal_prediction(index_t node_index) {
+		return marginal_prediction[node_index];
+	}
+  
+	const std::vector<bool>& get_active_variables(index_t node_index) {
+		return active_variables[node_index];
+	}
 
+	const std::vector<rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>>& get_nodes() {
+		return super::the_nodes;
+	}
 
 };
 

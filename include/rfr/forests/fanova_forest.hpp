@@ -69,9 +69,10 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 		for (auto i=0u; i<super::types.size(); ++i){
 			if (super::types[i] == 0)
 				pcs.emplace_back(std::begin(super::bounds[i]), std::end(super::bounds[i]));
-			else
+			else{
 				pcs.emplace_back(super::types[i], 0);
 				std::iota(pcs.back().begin(), pcs.back().end(), 0);
+			}
 		}
 				
 		for (auto &t: super::the_trees)

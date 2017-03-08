@@ -52,9 +52,6 @@ data_container_type load_toy_data(){
 }
 
 
-
-
-
 template <typename node_type>
 void test_make_internal_node_and_make_leaf_node(){
 	auto data = load_toy_data();
@@ -148,7 +145,7 @@ void test_make_internal_node_and_make_leaf_node(){
 	BOOST_CHECK_CLOSE(info1.mean(), ((num_t) 5)/3, 1e-10);
 	BOOST_CHECK_CLOSE(info1.variance_unbiased_frequency(), ((num_t) 40)/177, 1e-10);
     BOOST_REQUIRE_EQUAL(info1.sum_of_weights(), 60);
-    BOOST_REQUIRE(nodes[1].is_a_leaf());   
+    BOOST_REQUIRE(nodes[1].is_a_leaf());  
     
 
     auto info2 = nodes[2].leaf_statistic();
@@ -156,6 +153,17 @@ void test_make_internal_node_and_make_leaf_node(){
 	BOOST_CHECK_CLOSE(info2.variance_unbiased_frequency(), ((num_t) 10)/39, 1e-10);
 	BOOST_REQUIRE_EQUAL(info2.sum_of_weights(), 40);
 	BOOST_REQUIRE(nodes[2].is_a_leaf());
+
+
+	// add and remove an additional sample to a node and check that this works
+	nodes[2].push_response_value(1,1);
+	nodes[2].pop_response_value(1,1);
+	info2 = nodes[2].leaf_statistic();
+	BOOST_CHECK_CLOSE(info2.mean(), ((num_t) 7)/2, 1e-10);
+	BOOST_CHECK_CLOSE(info2.variance_unbiased_frequency(), ((num_t) 10)/39, 1e-10);
+	BOOST_REQUIRE_EQUAL(info2.sum_of_weights(), 40);
+	BOOST_REQUIRE(nodes[2].is_a_leaf());
+
 	
 	// test serializability
 	{
@@ -172,9 +180,11 @@ void test_make_internal_node_and_make_leaf_node(){
 		iarchive(nodes2);
 	}
 
-	nodes2[0].print_info();
-	nodes2[1].print_info();
-	nodes2[2].print_info();
+	// just for the coverage :)
+	for (auto &n: nodes)
+		n.print_info();
+	
+
 }
 
 

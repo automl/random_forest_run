@@ -161,7 +161,6 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 			else
 				bounds[index] = std::pair<num_t,num_t>(-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity());
 		}
-		std::cout<<bounds[index].first<<"," << bounds[index].second<<std::endl;
 	}
 
 	virtual index_t num_features() const {return(feature_values.size());}
