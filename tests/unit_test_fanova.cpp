@@ -45,6 +45,8 @@ data_container_type load_toy_data(){
 }
 
 
+
+/* TODO: add test for the mean and total_variance of the tree*/
 BOOST_AUTO_TEST_CASE (fanova_test) {
 	auto data = load_toy_data();
 	data.set_type_of_feature(1, 3);

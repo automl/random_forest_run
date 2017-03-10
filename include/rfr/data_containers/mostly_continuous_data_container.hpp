@@ -182,8 +182,8 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max){
-		if (std::isnan(bound.at(feature_index).second))
-			throw std::runtime_error("You are trying to set bounds for a categorical feature! This is not supported!")
+		if (std::isnan(bounds.at(feature_index).second))
+			throw std::runtime_error("You are trying to set bounds for a categorical feature! This is not supported!");
 		bounds.at(feature_index).first = min;
 		bounds.at(feature_index).second = max;
 	}

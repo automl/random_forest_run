@@ -42,8 +42,11 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	std::vector<num_t> marginal_prediction;				// prediction of the subtree below a node
 	std::vector<std::vector<bool>  > active_variables;	// note: vector<bool> uses bitwise operations, so it might be too slow
 
-	
 	std::vector<std::vector<num_t> > split_values;
+	
+	num_t mean;
+	num_t total_variance;
+	
 	
   public:
   
@@ -51,7 +54,9 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 
 	virtual ~binary_fANOVA_tree() {}
 	
-    /* serialize function for saving forests */
+    /* serialize function for saving forests
+     * TODO: actually implement and test
+     * */
   	template<class Archive>
   	void serialize(Archive & archive){
 		super::serialize();
@@ -73,6 +78,9 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 			subspace_sizes.clear();
 			active_variables.clear();
 			marginal_prediction.clear();
+			
+			mean = NAN;
+			total_variance = NAN;
 	}
 
 	/* \brief function to precompute the marginalized predictions
@@ -149,8 +157,6 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		}
 		size_t num_features = types.size();
 
-
-	
 		if (subspace_sizes.size() == 0){
 			/* Compute the size of the subspace for each node and the active variables
 			 * in the subtree below it. This is can be done in a top-down fashion.
@@ -172,16 +178,16 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 
 
 			// simple down pass
-			for (index_t i = 0; i < super::the_nodes.size(); ++i) {
-				auto & n = super::the_nodes[i];
-				subspace_sizes[i] = rfr::util::subspace_cardinality(subspaces[i], types);
+			for (index_t node_index = 0; node_index < super::the_nodes.size(); ++node_index) {
+				auto & n = super::the_nodes[node_index];
+				subspace_sizes[node_index] = rfr::util::subspace_cardinality(subspaces[node_index], types);
 				
-				auto subss = n.compute_subspaces(subspaces[i]);
+				auto subss = n.compute_subspaces(subspaces[node_index]);
 				subspaces[n.get_child_index(0)] = subss[0];
 				subspaces[n.get_child_index(1)] = subss[1];
 				
 				// delete no longer needed subspaces right away
-				subspaces[i].clear();
+				subspaces[node_index].clear();
 			}
 		}
 
@@ -189,6 +195,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		active_variables = std::vector<std::vector<bool> >(super::the_nodes.size(), std::vector<bool>(num_features, false));
 
 
+		rfr::util::weighted_running_statistics<double> total_stat;
 		// node_index needs to be an int so it can be smaller than 0
 		for (int node_index = super::the_nodes.size() - 1; node_index >= 0; --node_index) {
 			auto & the_node = super::the_nodes[node_index];
@@ -198,6 +205,9 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 				// apply cutoffs
 				if ((marginal_prediction[node_index] < lower_cutoff) || (marginal_prediction[node_index] > upper_cutoff)){
 					marginal_prediction[node_index] = NAN;
+				}
+				else{
+					total_stat.push(marginal_prediction[node_index], subspace_sizes[node_index]);
 				}
 			}
 			else{
@@ -215,6 +225,8 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 				marginal_prediction[node_index] = stat.mean();
 			}
 		}
+		mean = total_stat.mean();
+		total_variance = total_stat.variance_unbiased_importance();
 	}
 
 
@@ -251,20 +263,25 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	}
 
 
-	// below are functions manly for testing as they expose the internal variables
-	num_t get_subspace_size(index_t node_index) {
+	// below are functions mainly for testing as they expose the internal variables
+	num_t get_mean() const { return(mean);}
+	
+	num_t get_total_variance() const {return(total_variance);}
+	
+	
+	num_t get_subspace_size(index_t node_index) const {
 		return subspace_sizes[node_index];
 	}
 
-	num_t get_marginal_prediction(index_t node_index) {
+	num_t get_marginal_prediction(index_t node_index) const {
 		return marginal_prediction[node_index];
 	}
   
-	const std::vector<bool>& get_active_variables(index_t node_index) {
+	const std::vector<bool>& get_active_variables(index_t node_index) const {
 		return active_variables[node_index];
 	}
 
-	const std::vector<rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>>& get_nodes() {
+	const std::vector<rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>>& get_nodes() const {
 		return super::the_nodes;
 	}
 

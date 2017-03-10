@@ -85,21 +85,54 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 	 * this function implements equation 1 of
 	 * "An efficient Approach for Assessing Hyperparameter Importance"
 	 * by Hutter et al.
+	 * 
+	 * \returns mean of all trees' mean predictions
 	 */
 
 	num_t marginal_mean_prediction( const std::vector<num_t> & feature_vector){
-		if (std::isnan(lower_cutoff)){
-			lower_cutoff = -std::numeric_limits<num_t>::infinity();
-			upper_cutoff = std::numeric_limits<num_t>::infinity();
-			precompute_marginals();
-		}
-		return(0);
+		if (std::isnan(lower_cutoff))
+			set_cutoffs(	-std::numeric_limits<num_t>::infinity(),
+							 std::numeric_limits<num_t>::infinity());
+		rfr::util::running_statistics<num_t> stat;
+		
+		for (auto &t: super::the_trees)
+			auto m = t.marginalized_mean_prediction(feature_vector);
+			if (! std::isnan(m))
+				stat.push()
+		
+		return(stat.mean());
 	}
+
+	std::pair<num_t, num_t> marginal_mean_variance_prediction(const std::vector<num_t> & feature_vector){
+		rfr::util::running_statistics<num_t> stat;
+		
+		for (auto &t: super::the_trees)
+			stat.push(t.marginalized_mean_prediction(feature_vector));
+			
+		return(std::pair<num_t, num_t> (stat.mean(), stat.variance_sample()));
+	}
+
+
+	num_t marginal_mean_prediction_of_tree( index_t tree_index, const std::vector<num_t> & feature_vector){
+		if (std::isnan(lower_cutoff))
+			set_cutoffs(	-std::numeric_limits<num_t>::infinity(),
+							 std::numeric_limits<num_t>::infinity());
+
+		auto &t = super::the_trees.at(tree_index);
+		return(t.marginalized_mean_prediction(feature_vector));
+	}
+
+	std::vector<num_t> get_trees_total_variances (){
+		std::vector<num_t> r; r.reserve(super::the_trees.size());
+		for (auto &t: super::the_trees)
+			r.push_back(t.get_total_variance());
+		return(r);
+	}
+
 
 
 	/* \brief aggregates all used split values for all features in each tree
 	 *
-	 * TODO: move to fANOVA forest
 	 */
 	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
 		std::vector<std::vector<std::vector<num_t> > > rv;
