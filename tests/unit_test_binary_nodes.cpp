@@ -30,8 +30,6 @@ typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t>
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_type> split_type;
 typedef rfr::nodes::temporary_node<num_t, response_t, index_t> tmp_node_type;
 
-
-
 typedef rfr::nodes::k_ary_node_minimal<2, split_type, num_t, response_t, index_t, rng_type> minimal_node_type;
 typedef rfr::nodes::k_ary_node_full<2, split_type, num_t, response_t, index_t, rng_type> full_node_type;
 
@@ -167,7 +165,7 @@ void test_make_internal_node_and_make_leaf_node(){
 	
 	// test serializability
 	{
-		std::ofstream ofs("test_binary_nodes.xml");
+		std::ofstream ofs("/tmp/rfr_test_binary_nodes.xml");
 		cereal::XMLOutputArchive oarchive(ofs);
 		oarchive(nodes);
 	}
@@ -175,7 +173,7 @@ void test_make_internal_node_and_make_leaf_node(){
 		
 	std::vector<node_type> nodes2;
 	{
-		std::ifstream ifs("test_binary_nodes.xml");
+		std::ifstream ifs("/tmp/rfr_test_binary_nodes.xml");
 		cereal::XMLInputArchive iarchive(ifs);
 		iarchive(nodes2);
 	}
@@ -184,7 +182,15 @@ void test_make_internal_node_and_make_leaf_node(){
 	for (auto &n: nodes)
 		n.print_info();
 	
+	// check the predictions of the leaf nodes (skip root note!)
+	for (auto i=1u; i< nodes.size(); ++i){
+		auto stat1 = nodes[i].leaf_statistic();
+		auto stat2 = nodes2[i].leaf_statistic();
 
+		BOOST_REQUIRE_EQUAL(stat1.mean(), stat2.mean());
+		BOOST_REQUIRE(stat1.numerically_equal(stat2, 1e-6));
+		
+	}
 }
 
 

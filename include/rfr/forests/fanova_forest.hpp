@@ -4,15 +4,14 @@
 #include "rfr/forests/regression_forest.hpp"
 #include "rfr/trees/binary_fanova_tree.hpp"
 
-//#include "rfr/util.hpp"
 
 namespace rfr{ namespace forests{
 
 template <typename split_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int,  typename rng_t=std::default_random_engine>
-class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> {
+class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees::binary_fANOVA_tree<split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> {
   private:
 
-	typedef regression_forest<rfr::trees::binary_fANOVA_tree<split_t, num_t, response_t, index_t, rng_t> , num_t, response_t, index_t, rng_t> super;
+	typedef rfr::forests::regression_forest<rfr::trees::binary_fANOVA_tree<split_t, num_t, response_t, index_t, rng_t> , num_t, response_t, index_t, rng_t> super;
 
   protected:
 	// to compute 'improvement over default' and such...
@@ -21,11 +20,17 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 
   public:
 
-	fANOVA_forest() : super() {}
+	fANOVA_forest() : 	super(),
+						lower_cutoff (-std::numeric_limits<num_t>::infinity()),
+						upper_cutoff (std::numeric_limits<num_t>::infinity()) {}
+						
 	fANOVA_forest (forest_options<num_t, response_t, index_t> forest_opts): super(forest_opts),
 						lower_cutoff (-std::numeric_limits<num_t>::infinity()),
 						upper_cutoff (std::numeric_limits<num_t>::infinity())
 						{};
+
+	virtual ~fANOVA_forest()	{};
+
 
   	/** \brief serialize function for saving forests with cerial*/
   	template<class Archive>

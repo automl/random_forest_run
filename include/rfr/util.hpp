@@ -6,6 +6,13 @@
 #include <iostream>
 #include <stdexcept>
 
+
+#include "cereal/cereal.hpp"
+#include <cereal/types/vector.hpp>
+#include <cereal/types/array.hpp>
+
+
+
 namespace rfr{ namespace util{
 
 
@@ -76,6 +83,14 @@ class running_statistics{
 
 
   public:
+
+  	/* serialize function */
+  	template<class Archive>
+	void serialize(Archive & archive) {
+		archive( N, avg, sdm); 
+	}
+
+  
 	running_statistics(): N(0), avg(0), sdm(0) {}
 
 	running_statistics( long unsigned int n, num_t a, num_t s): N(n), avg(a), sdm(s) {}
@@ -267,6 +282,13 @@ class weighted_running_statistics{
 	weighted_running_statistics(): avg(0), sdm(0), weight_stat() {}
 	weighted_running_statistics( num_t m, num_t s, running_statistics<num_t> w_stat):
 		avg(m), sdm(s), weight_stat(w_stat) {}
+
+
+  	/* serialize function */
+  	template<class Archive>
+	void serialize(Archive & archive) {
+		archive( avg, sdm, weight_stat); 
+	}
 
 	void push (num_t x, num_t weight){
 		if (weight <= 0)

@@ -57,7 +57,7 @@ data_container_type load_diabetes_data(){
     return(data);
 }
 
-BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
+BOOST_AUTO_TEST_CASE( regression_forest_serialize_test ){
     
     
     auto data = load_diabetes_data();
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	
 	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
-	forest_opts.num_data_points_per_tree = 12; //data.num_data_points();
+	forest_opts.num_data_points_per_tree = data.num_data_points()/2;
 	forest_opts.num_trees = 8;
 	forest_opts.do_bootstrapping = true;
 	forest_opts.compute_oob_error= true;
@@ -106,6 +106,19 @@ BOOST_AUTO_TEST_CASE( regression_forest_compile_tests ){
 	
 	forest_type the_forest3;
 	the_forest3.load_from_binary_file("regression_forest_test.bin");
+
+
+	for (auto i=0u; i < data.num_data_points(); ++i){
+		auto v1 = the_forest.predict(data.retrieve_data_point(i));
+		auto v2 = the_forest2.predict(data.retrieve_data_point(i));
+		auto v3 = the_forest3.predict(data.retrieve_data_point(i));
+
+		BOOST_REQUIRE_EQUAL(v1,v2);
+		BOOST_REQUIRE_EQUAL(v1,v3);
+	}
+
+
+	
 
 }
 
@@ -150,10 +163,6 @@ BOOST_AUTO_TEST_CASE( regression_forest_exceptions_tests ){
 	the_forest.options.num_data_points_per_tree = 128;
 	the_forest.options.tree_opts.max_features = 0;
 	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
-
-
-	
-
 }
 
 BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
@@ -263,7 +272,6 @@ BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
 
 	BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {0,-0.5,1}) ,std::runtime_error);
 	BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {1.1,0.5}) ,std::runtime_error);
-
 }
 
 
@@ -283,19 +291,31 @@ BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
 	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 16;
+	forest_opts.num_trees = 23;
 	forest_opts.do_bootstrapping = false;
-
 
 
 	fANOVAf_type the_forest(forest_opts);
 
 	//fit forest
 	the_forest.fit(data, rng);
+
+	BOOST_REQUIRE_EQUAL(the_forest.num_trees(), 23);
+	BOOST_REQUIRE_EQUAL(the_forest.options.num_trees, 23);
+	BOOST_REQUIRE_EQUAL(the_forest.options.do_bootstrapping, false);
+
+
+	the_forest.options.num_trees = 24;
+	the_forest.options.do_bootstrapping = true;
+	//refit forest
+	the_forest.fit(data, rng);
+	BOOST_REQUIRE_EQUAL(the_forest.num_trees(), 24);
+	BOOST_REQUIRE_EQUAL(the_forest.options.do_bootstrapping, true);
+
+
 	
 	// 10th and 90th percentile of the response values
 	the_forest.set_cutoffs(60,265);
-	
 
 }
 */
