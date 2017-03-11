@@ -95,10 +95,11 @@ class fANOVA_forest: public	regression_forest< rfr::trees::binary_fANOVA_tree<sp
 							 std::numeric_limits<num_t>::infinity());
 		rfr::util::running_statistics<num_t> stat;
 		
-		for (auto &t: super::the_trees)
+		for (auto &t: super::the_trees){
 			auto m = t.marginalized_mean_prediction(feature_vector);
 			if (! std::isnan(m))
-				stat.push()
+				stat.push(m);
+		}
 		
 		return(stat.mean());
 	}

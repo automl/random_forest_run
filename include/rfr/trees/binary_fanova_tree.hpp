@@ -59,7 +59,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
      * */
   	template<class Archive>
   	void serialize(Archive & archive){
-		super::serialize();
+		super::serialize(archive);
 		
 	}
 
