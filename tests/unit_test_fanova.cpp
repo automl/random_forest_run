@@ -31,7 +31,7 @@ typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_
 typedef rfr::trees::binary_fANOVA_tree<split_type, num_type, response_t, index_t, rng_t>		fANOVA_tree_type;
 
 data_container_type load_toy_data(){
-  data_container_type data;
+  data_container_type data(2);
 
   std::string feature_file, response_file;
   feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "toy_data_set_features.csv";
@@ -109,13 +109,12 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
 		BOOST_REQUIRE( the_tree.get_active_variables(2)[1]);
 
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3),                1,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4),                2,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_56), 3.6666666666666,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345),1.9114295757429,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346),2.3929475797473,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_6),                4,1e-6);
-
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3  , pcs, types),              1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4  , pcs, types),              2,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_56 , pcs, types), 3.666666666666,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345, pcs, types), 2.205072866904,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346, pcs, types), 2.609699822522,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_6  , pcs, types),              4,1e-6);
 
 		// now let's exclude exactly one leaf
 		the_tree.precompute_marginals(-inf, 3.5, pcs, types);
@@ -142,13 +141,14 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
 		BOOST_REQUIRE( the_tree.get_active_variables(2)[1]);
 
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3),                1,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4),                2,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_56),               3,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345),1.9114295757429,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346),1.6648251199885,1e-6);
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6)));
-
+		
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3  , pcs, types),             1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4  , pcs, types),             2,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_56 , pcs, types),             3,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345, pcs, types),2.205072866904,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346, pcs, types),1.664825119989,1e-6);
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6, pcs, types)));
+		
 
 		// now let's exclude exactly two leaves that belong to the same internal node
 		the_tree.precompute_marginals(-inf, 2.5, pcs, types);
@@ -175,15 +175,12 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[1]);
 
-
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3),                1,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4),                2,1e-6);
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_56)));
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345),1.6648251199885,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346),1.6648251199885,1e-6);
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6)));
-
-
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3  , pcs, types),                1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4  , pcs, types),                2,1e-6);
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_56, pcs, types)));
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345, pcs, types),1.6648251199885,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346, pcs, types),1.6648251199885,1e-6);
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6, pcs, types)));
 
 		// now let's exclude all leaves, just to see what happens
 		the_tree.precompute_marginals(2.25, 2.75, pcs, types);
@@ -210,16 +207,13 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[1]);
 
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_3)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_4)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_56)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_345)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_346)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6)));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_3  , pcs, types)));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_4  , pcs, types)));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_56 , pcs, types)));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_345, pcs, types)));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_346, pcs, types)));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6  , pcs, types)));
 		
-
-		
-
 /*
       for (index_t node_index = 0; node_index < nodes.size(); ++node_index) {
         index_t parent_index = nodes[node_index].parent();

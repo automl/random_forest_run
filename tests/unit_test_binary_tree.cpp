@@ -32,7 +32,7 @@ typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_
 typedef rfr::trees::binary_fANOVA_tree<split_type, num_type, response_t, index_t, rng_t>		fANOVA_tree_type;
 
 data_container_type load_toy_data(){
-	data_container_type data;
+	data_container_type data(2);
 	
     std::string feature_file, response_file;
     
@@ -50,7 +50,7 @@ data_container_type load_toy_data(){
 
 
 data_container_type load_diabetes_data(){
-	data_container_type data;
+	data_container_type data(10);
 	
     std::string feature_file, response_file;
     

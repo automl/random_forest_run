@@ -171,7 +171,7 @@ class k_ary_node_minimal{
 	std::array<num_t, k> get_split_fractions() const {return(split_fractions);}
 	num_t get_split_fraction (index_t idx) const {return(split_fractions[idx]);};
 
-	split_type get_split() const {return(split);}
+	const split_type & get_split() const {return(split);}
 
 	/** \brief prints out some basic information about the node*/
 	virtual void print_info() const {

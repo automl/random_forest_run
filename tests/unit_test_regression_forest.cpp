@@ -46,7 +46,7 @@ typedef rfr::forests::fANOVA_forest<split_type, num_t, response_t, index_t, rng_
 
 
 data_container_type load_diabetes_data(){
-	data_container_type data;
+	data_container_type data(10);
 	
     std::string feature_file, response_file;
     

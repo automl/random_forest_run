@@ -239,7 +239,7 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 		throw std::runtime_error("Function not supported by this data container! Use set_bounds_of_configuration_feature or set_bounds_of_instance_feature instead!");
 	}
 
-	 virtual std::pair<num_t,num_t> get_bounds_of_feature(index_t feature_index){
+	 virtual std::pair<num_t,num_t> get_bounds_of_feature(index_t feature_index) const{
 		std::pair<num_t,num_t> r(NAN, NAN);
 		return(r);
 	 }

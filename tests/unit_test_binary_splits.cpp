@@ -42,7 +42,7 @@ void print_pcs (std::vector<std::vector<num_t> > pcs){
 
 
 data_container_type load_toy_data(){
-	data_container_type data;
+	data_container_type data(2);
 	
     std::string feature_file, response_file;
     

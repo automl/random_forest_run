@@ -36,7 +36,7 @@ typedef rfr::nodes::k_ary_node_full<2, split_type, num_t, response_t, index_t, r
 
 
 data_container_type load_toy_data(){
-	data_container_type data;
+	data_container_type data(2);
 	
     std::string feature_file, response_file;
     

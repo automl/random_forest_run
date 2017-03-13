@@ -37,7 +37,6 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 	typedef rfr::trees::k_ary_random_tree<2, rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> super;
   protected:
 
-
 	std::vector<num_t> subspace_sizes;					// size of the subspace in node's subtree -> for leaves it's the actual size but for the internal nodes it's the 'active size considering the cutoffs
 	std::vector<num_t> marginal_prediction;				// prediction of the subtree below a node
 	std::vector<std::vector<bool>  > active_variables;	// note: vector<bool> uses bitwise operations, so it might be too slow
@@ -98,9 +97,23 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
      * \returns the mean prediction marginalized over the desired inputs, NAN if the cutoffs exclude all potential leaves the feature vector would fall in
 	 * */
 
-	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector) const{
+	num_t marginalized_mean_prediction(const std::vector<num_t> &feature_vector,  std::vector<std::vector<num_t> > pcs, std::vector<index_t> types) const{
 
 		auto active_features = rfr::util::get_non_NAN_indices(feature_vector);
+		
+		// change pcs for inactive variables to recycle subspace cardinality
+		for (auto i=0u; i< pcs.size(); ++i){
+			if (std::find(active_features.begin(), active_features.end(), i) != active_features.end())
+				continue;
+			if (types[i] == 0)
+				pcs[i] = {0,1}; // interval of size 1
+			else
+				pcs[i] = {0};	// exactly one categorical value
+		}
+		
+		std::deque< std::vector<std::vector<num_t> > > pcss;
+		pcss.push_back(pcs);
+
 		std::deque<index_t> active_nodes;
 		active_nodes.push_back(0);
 
@@ -110,6 +123,9 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		while (active_nodes.size() > 0){
 			index_t node_index = active_nodes.back();
 			active_nodes.pop_back();
+
+			auto current_pcs = pcss.back();
+			pcss.pop_back();
 			
 			// four cases
 			// 1. active node has no weight (predicts NAN) -> skip
@@ -118,19 +134,24 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 			// 2. node itself splits on an active variable -> add corresponding child to active nodes
 			if (super::the_nodes[node_index].can_be_split(feature_vector)){
 				active_nodes.push_back(super::the_nodes[node_index].falls_into_child(feature_vector));
+				auto &s = super::the_nodes[node_index].get_split();
+				// let the split compute the new pcs
+				pcss.push_back(s.compute_subspaces(current_pcs)[s(feature_vector)]);
 				continue;
 			}
 
-			// 3. node's subtree split on any active varialble and 
+			// 3. node's subtree split on any active varialble further down
 			if (rfr::util::any_true(active_variables[node_index], active_features)){
 				for (auto &c: super::the_nodes[node_index].get_children()){
 					active_nodes.push_back(c);
+					pcss.push_back(current_pcs);
 				}
 				continue;
 			}
 			
 			// 4. node's subtree does not split on any of the active variables (this includes leaves) -> add to statistics
-			stats.push( marginal_prediction[node_index], subspace_sizes[node_index]);
+			auto size_correction = rfr::util::subspace_cardinality(current_pcs, types);
+			stats.push( marginal_prediction[node_index], subspace_sizes[node_index]/size_correction);
 		}
 		return stats.mean();
 	}
@@ -150,6 +171,8 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		 * During this step the active variables should also be stored, such that it can
 		 * be checked if the subtree's prediction depends on any of the 'active' variables
 		 */
+		 
+		std::cout<<pcs.size() <<" ?= "<< types.size()<<std::endl; 
 		assert(pcs.size() == types.size());
 
 		if (super::the_nodes.size() == 0){
