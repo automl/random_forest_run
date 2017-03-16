@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 	rfr::trees::tree_options<num_type, response_t, index_t> tree_opts;
 	tree_opts.max_features = 2;
 	tree_opts.max_depth = 3;
-	rng_t rng_engine;
+	rng_t rng_engine(0);
 
 	for (auto i = 0; i <1; i++){
 		fANOVA_tree_type the_tree;
@@ -81,7 +81,6 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		std::vector<num_type> feature_346({NAN, 1});
 
 		std::vector<num_type> feature_6({90., 1});
-
 
 		// check subspace sizes without cutoffs
 		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(0), 300, 1e-6);

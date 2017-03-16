@@ -38,6 +38,8 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
   protected:
 
 	std::vector<num_t> subspace_sizes;					// size of the subspace in node's subtree -> for leaves it's the actual size but for the internal nodes it's the 'active size considering the cutoffs
+	
+	// needs to be a weighted stat to also store the variances!
 	std::vector<num_t> marginal_prediction;				// prediction of the subtree below a node
 	std::vector<std::vector<bool>  > active_variables;	// note: vector<bool> uses bitwise operations, so it might be too slow
 
@@ -172,7 +174,6 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		 * be checked if the subtree's prediction depends on any of the 'active' variables
 		 */
 		 
-		std::cout<<pcs.size() <<" ?= "<< types.size()<<std::endl; 
 		assert(pcs.size() == types.size());
 
 		if (super::the_nodes.size() == 0){
@@ -273,8 +274,11 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 				if((types[fi] > 0) && (split_values[fi].size() == 0)){
 					split_values[fi].resize(types[fi]);
 					std::iota(split_values[fi].begin(), split_values[fi].end(), 0);
+					for (auto &v: split_values[fi])
+						std::cout<<v<<" ";
+					std::cout<<std::endl;
 				}
-				else{
+				if (types[fi] == 0) {
 					split_values[fi].emplace_back(s.get_num_split_value());
 				}
 			}
