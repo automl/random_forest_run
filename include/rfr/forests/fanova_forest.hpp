@@ -99,7 +99,7 @@ class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees::binary_
 		rfr::util::running_statistics<num_t> stat;
 		
 		for (auto &t: super::the_trees){
-			auto m = t.marginalized_mean_prediction(feature_vector, pcs, super::types);
+			auto m = t.marginalized_prediction_stat(feature_vector, pcs, super::types).mean();
 			if (! std::isnan(m))
 				stat.push(m);
 		}
@@ -110,20 +110,23 @@ class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees::binary_
 	std::pair<num_t, num_t> marginal_mean_variance_prediction(const std::vector<num_t> & feature_vector){
 		rfr::util::running_statistics<num_t> stat;
 		
-		for (auto &t: super::the_trees)
-			stat.push(t.marginalized_mean_prediction(feature_vector, pcs, super::types));
+		for (auto &t: super::the_trees){
+			num_t v = t.marginalized_prediction_stat(feature_vector, pcs, super::types).mean();
+			if (!std::isnan(v))
+				stat.push(v);
+		}
 			
 		return(std::pair<num_t, num_t> (stat.mean(), stat.variance_sample()));
 	}
 
 
-	num_t marginal_mean_prediction_of_tree( index_t tree_index, const std::vector<num_t> & feature_vector){
+	rfr::util::weighted_running_statistics<num_t> marginal_prediction_stat_of_tree( index_t tree_index, const std::vector<num_t> & feature_vector){
 		if (std::isnan(lower_cutoff))
 			set_cutoffs(	-std::numeric_limits<num_t>::infinity(),
 							 std::numeric_limits<num_t>::infinity());
 
 		auto &t = super::the_trees.at(tree_index);
-		return(t.marginalized_mean_prediction(feature_vector, pcs, super::types));
+		return(t.marginalized_prediction_stat(feature_vector, pcs, super::types));
 	}
 
 	std::vector<num_t> get_trees_total_variances (){

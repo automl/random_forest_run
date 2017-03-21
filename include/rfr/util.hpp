@@ -233,6 +233,22 @@ class running_statistics{
 
 		return(running_statistics( N1, avg1, sdm1));
 	}
+	
+	/** \brief operator to multiply all values by a number */
+	running_statistics operator* (const num_t &a) const{
+		return(running_statistics(N, a*avg, a*a*sdm));
+	}
+
+	/** \brief operator to add a number to all values*/
+	running_statistics operator+ (const num_t &a) const{
+		return(running_statistics(N, avg+a, sdm));
+	}
+
+	/** \brief operator to subtract a number from all values*/
+	running_statistics operator- (const num_t &a) const{
+		return(running_statistics(N, avg-a, sdm));
+	}
+	
 	/**\brief convenience operator for inplace subtraction*/
 	running_statistics &operator-= ( const running_statistics &other) {
 
@@ -253,6 +269,7 @@ class running_statistics{
 		sdm = sdm1;
 		return(*this);
 	}
+	
 	/**\brief method to check for numerical equivalency
 	 * \param other the other running statistic to compare against
 	 * \param rel_error relative tolerance for the mean and variance*/
@@ -370,8 +387,6 @@ class weighted_running_statistics{
 		return(*this);
 	}
 
-
-
 	weighted_running_statistics operator-  ( const weighted_running_statistics &other) const{
 
 		if (other.weight_stat.sum() >= weight_stat.sum())
@@ -412,8 +427,17 @@ class weighted_running_statistics{
 		return(*this);
 	}
 
+	weighted_running_statistics operator* (const num_t a) const{
+		return(weighted_running_statistics(a*avg, a*a*sdm, weight_stat));
+	}
 
+	weighted_running_statistics operator+ (const num_t a) const{
+		return(weighted_running_statistics(a+avg, sdm, weight_stat));
+	}
 
+	weighted_running_statistics multiply_weights_by ( const num_t a) const{
+		return(weighted_running_statistics(avg, a*sdm, weight_stat*a));
+	}
 
 	bool numerically_equal (weighted_running_statistics other, num_t rel_error){
 
@@ -427,10 +451,10 @@ class weighted_running_statistics{
 		// finally compare the weight statistics
 		return( weight_stat.numerically_equal(other.weight_stat, rel_error));
 	}
+	
+	running_statistics<num_t> get_weight_statistics() const { return(weight_stat);}
+	
 };
-
-
-
 
 template <typename num_t>
 class running_covariance{
