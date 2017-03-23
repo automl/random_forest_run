@@ -108,12 +108,12 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
 		BOOST_REQUIRE( the_tree.get_active_variables(2)[1]);
 
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3  , pcs, types),              1,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4  , pcs, types),              2,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_56 , pcs, types), 3.666666666666,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345, pcs, types), 2.205072866904,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346, pcs, types), 2.609699822522,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_6  , pcs, types),              4,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean(),              1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean(),              2,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_56 , pcs, types).mean(), 3.666666666666,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(), 2.205072866904,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(), 2.609699822522,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_6  , pcs, types).mean(),              4,1e-6);
 
 		// now let's exclude exactly one leaf
 		the_tree.precompute_marginals(-inf, 3.5, pcs, types);
@@ -141,12 +141,12 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE( the_tree.get_active_variables(2)[1]);
 
 		
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3  , pcs, types),             1,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4  , pcs, types),             2,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_56 , pcs, types),             3,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345, pcs, types),2.205072866904,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346, pcs, types),1.664825119989,1e-6);
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6, pcs, types)));
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean(),             1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean(),             2,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_56 , pcs, types).mean(),             3,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(),2.205072866904,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(),1.664825119989,1e-6);
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_6, pcs, types).mean()));
 		
 
 		// now let's exclude exactly two leaves that belong to the same internal node
@@ -174,12 +174,12 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[1]);
 
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_3  , pcs, types),                1,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_4  , pcs, types),                2,1e-6);
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_56, pcs, types)));
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_345, pcs, types),1.6648251199885,1e-6);
-		BOOST_REQUIRE_CLOSE( the_tree.marginalized_mean_prediction(feature_346, pcs, types),1.6648251199885,1e-6);
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6, pcs, types)));
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean(),                1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean(),                2,1e-6);
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_56, pcs, types).mean()));
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(),  1.6648251199885,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(),  1.6648251199885,1e-6);
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_6, pcs, types).mean()));
 
 		// now let's exclude all leaves, just to see what happens
 		the_tree.precompute_marginals(2.25, 2.75, pcs, types);
@@ -206,12 +206,12 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
 		BOOST_REQUIRE(!the_tree.get_active_variables(2)[1]);
 
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_3  , pcs, types)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_4  , pcs, types)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_56 , pcs, types)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_345, pcs, types)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_346, pcs, types)));
-		BOOST_REQUIRE( std::isnan(the_tree.marginalized_mean_prediction(feature_6  , pcs, types)));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean()));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean()));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_56 , pcs, types).mean()));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean()));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean()));
+		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_6  , pcs, types).mean()));
 		
 /*
       for (index_t node_index = 0; node_index < nodes.size(); ++node_index) {
