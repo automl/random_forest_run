@@ -110,7 +110,10 @@ class k_ary_node_minimal{
 	}	
 
 	/* \brief function to check if a feature vector can be splitted */
-	bool can_be_split(const std::vector<num_t> &feature_vector) const {return(split.can_be_split(feature_vector));}
+	bool can_be_split(const std::vector<num_t> &feature_vector) const {
+		if (is_a_leaf()) return(false);
+		return(split.can_be_split(feature_vector));
+	}
 
 	/** \brief returns the index of the child into which the provided sample falls
 	 * 
@@ -138,7 +141,7 @@ class k_ary_node_minimal{
 	 * This function can be used for pseudo updates of a tree by
 	 * simply removing observations from the corresponding leaf
 	 */
-	virtual void pop_repsonse_value (response_t r, num_t w){
+	virtual void pop_response_value (response_t r, num_t w){
 		response_stat.pop(r,w);
 	}
 
@@ -146,7 +149,7 @@ class k_ary_node_minimal{
 	 *
 	 * 	See description of rfr::splits::binary_split_one_feature_rss_loss::compute_subspace.
 	 */
-	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace) const {
+	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( const std::vector< std::vector<num_t> > &subspace) const {
 		return(split.compute_subspaces(subspace));
 	}
 
@@ -168,7 +171,7 @@ class k_ary_node_minimal{
 	std::array<num_t, k> get_split_fractions() const {return(split_fractions);}
 	num_t get_split_fraction (index_t idx) const {return(split_fractions[idx]);};
 
-	split_type get_split() const {return(split);}
+	const split_type & get_split() const {return(split);}
 
 	/** \brief prints out some basic information about the node*/
 	virtual void print_info() const {
@@ -257,8 +260,7 @@ class k_ary_node_full: public k_ary_node_minimal<k, split_type, num_t, response_
 	 */
 	virtual void pop_response_value (response_t r, num_t w){
 
-		
-		super::push_response_value(response_values.back(), response_weights.back());
+		super::pop_response_value(response_values.back(), response_weights.back());
 		response_values.pop_back();
 		response_weights.pop_back();
 	}

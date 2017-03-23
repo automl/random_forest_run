@@ -42,7 +42,7 @@ void print_pcs (std::vector<std::vector<num_t> > pcs){
 
 
 data_container_type load_toy_data(){
-	data_container_type data;
+	data_container_type data(2);
 	
     std::string feature_file, response_file;
     
@@ -160,9 +160,9 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	auto split_set = split2.get_cat_split_set();
 	std::cout<< split2.get_num_split_value()<<std::endl;
 	std::cout<< split_set<<std::endl;
+	BOOST_REQUIRE(split_set[0]);
 	BOOST_REQUIRE(split_set[1]);
-	BOOST_REQUIRE(split_set[2]);
-	BOOST_REQUIRE(!split_set[3]);
+	BOOST_REQUIRE(!split_set[2]);
 	
 	
 	// test the () operator for the trainings data
@@ -182,13 +182,13 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	BOOST_REQUIRE( pcss[0][0][0] == pcs[0][0]);BOOST_REQUIRE( pcss[0][0][1] == pcs[0][1]);
 	BOOST_REQUIRE( pcss[1][0][0] == pcs[0][0]);BOOST_REQUIRE( pcss[0][0][1] == pcs[0][1]);
 	
+	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 0) != pcss[0][1].end());
 	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 1) != pcss[0][1].end());
-	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 2) != pcss[0][1].end());
-	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 3) == pcss[0][1].end());
+	BOOST_REQUIRE(std::find(pcss[0][1].begin(), pcss[0][1].end(), 2) == pcss[0][1].end());
 	
+	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 0) == pcss[1][1].end());
 	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 1) == pcss[1][1].end());
-	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 2) == pcss[1][1].end());
-	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 3) != pcss[1][1].end());
+	BOOST_REQUIRE(std::find(pcss[1][1].begin(), pcss[1][1].end(), 2) != pcss[1][1].end());
 
 
 	// test the can_be_split_function

@@ -13,6 +13,8 @@ class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees::binary_
 
 	typedef rfr::forests::regression_forest<rfr::trees::binary_fANOVA_tree<split_t, num_t, response_t, index_t, rng_t> , num_t, response_t, index_t, rng_t> super;
 
+	std::vector<std::vector<num_t> > pcs;
+	
   protected:
 	// to compute 'improvement over default' and such...
 	num_t lower_cutoff;
@@ -43,9 +45,17 @@ class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees::binary_
 	virtual void fit(const rfr::data_containers::base<num_t, response_t, index_t> &data, rng_t &rng){
 		// fit the forest normaly
 		super::fit(data, rng);
-
-		// compute all the other stuff specific to the fANOVA here
 		
+		pcs.reserve(super::types.size());
+		
+		for (auto i=0u; i<super::types.size(); ++i){
+			if (super::types[i] == 0)
+				pcs.emplace_back(std::begin(super::bounds[i]), std::end(super::bounds[i]));
+			else{
+				pcs.emplace_back(super::types[i], 0);
+				std::iota(pcs.back().begin(), pcs.back().end(), 0);
+			}
+		}
 	}
 
 	/* \brief sets the cutoff to perform fANOVA on subspaces with bounded predictions
@@ -67,19 +77,7 @@ class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees::binary_
 
 	/* \brief just calls the precompute marginals function of every tree */
 	void precompute_marginals(){
-		
-		std::vector<std::vector<num_t> > pcs;
-		pcs.reserve(super::types.size());
-		
-		for (auto i=0u; i<super::types.size(); ++i){
-			if (super::types[i] == 0)
-				pcs.emplace_back(std::begin(super::bounds[i]), std::end(super::bounds[i]));
-			else{
-				pcs.emplace_back(super::types[i], 0);
-				std::iota(pcs.back().begin(), pcs.back().end(), 0);
-			}
-		}
-				
+			
 		for (auto &t: super::the_trees)
 			t.precompute_marginals(lower_cutoff, upper_cutoff, pcs, super::types);
 	}
@@ -90,28 +88,65 @@ class fANOVA_forest: public	rfr::forests::regression_forest< rfr::trees::binary_
 	 * this function implements equation 1 of
 	 * "An efficient Approach for Assessing Hyperparameter Importance"
 	 * by Hutter et al.
+	 * 
+	 * \returns mean of all trees' mean predictions
 	 */
 
 	num_t marginal_mean_prediction( const std::vector<num_t> & feature_vector){
-		if (std::isnan(lower_cutoff)){
-			lower_cutoff = -std::numeric_limits<num_t>::infinity();
-			upper_cutoff = std::numeric_limits<num_t>::infinity();
-			precompute_marginals();
+		if (std::isnan(lower_cutoff))
+			set_cutoffs(	-std::numeric_limits<num_t>::infinity(),
+							 std::numeric_limits<num_t>::infinity());
+		rfr::util::running_statistics<num_t> stat;
+		
+		for (auto &t: super::the_trees){
+			auto m = t.marginalized_prediction_stat(feature_vector, pcs, super::types).mean();
+			if (! std::isnan(m))
+				stat.push(m);
 		}
-		return(0);
+		
+		return(stat.mean());
 	}
+
+	std::pair<num_t, num_t> marginal_mean_variance_prediction(const std::vector<num_t> & feature_vector){
+		rfr::util::running_statistics<num_t> stat;
+		
+		for (auto &t: super::the_trees){
+			num_t v = t.marginalized_prediction_stat(feature_vector, pcs, super::types).mean();
+			if (!std::isnan(v))
+				stat.push(v);
+		}
+			
+		return(std::pair<num_t, num_t> (stat.mean(), stat.variance_sample()));
+	}
+
+
+	rfr::util::weighted_running_statistics<num_t> marginal_prediction_stat_of_tree( index_t tree_index, const std::vector<num_t> & feature_vector){
+		if (std::isnan(lower_cutoff))
+			set_cutoffs(	-std::numeric_limits<num_t>::infinity(),
+							 std::numeric_limits<num_t>::infinity());
+
+		auto &t = super::the_trees.at(tree_index);
+		return(t.marginalized_prediction_stat(feature_vector, pcs, super::types));
+	}
+
+	std::vector<num_t> get_trees_total_variances (){
+		std::vector<num_t> r; r.reserve(super::the_trees.size());
+		for (auto &t: super::the_trees)
+			r.push_back(t.get_total_variance());
+		return(r);
+	}
+
 
 
 	/* \brief aggregates all used split values for all features in each tree
 	 *
-	 * TODO: move to fANOVA forest
 	 */
-	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
+	std::vector<std::vector<std::vector<num_t> > > all_split_values(){
 		std::vector<std::vector<std::vector<num_t> > > rv;
 		rv.reserve(super::the_trees.size());
 			
 		for (auto &t: super::the_trees)
-			rv.emplace_back(t.all_split_values(types));
+			rv.emplace_back(t.all_split_values(super::types));
 		return(rv);
 	}
 

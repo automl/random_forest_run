@@ -1,7 +1,7 @@
 #ifndef RFR_UTIL_HPP
 #define RFR_UTIL_HPP
 
-
+#include <vector>
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -14,6 +14,51 @@
 
 
 namespace rfr{ namespace util{
+
+
+/* Compute (pairwise) disjunction of 2 boolean vectors and store the result in dest.*/
+inline void disjunction(const std::vector<bool> &source, std::vector<bool> &dest) {
+	if (source.size() > dest.size()) {
+		dest.resize(source.size());
+	}
+	for (size_t idx = 0; idx < dest.size(); ++idx) {
+		dest[idx] = source[idx] || dest[idx];
+	}
+}
+
+
+template <typename num_t>
+std::vector<unsigned int> get_non_NAN_indices(const std::vector<num_t> &vector){
+	std::vector<unsigned int> indices;
+	for (auto i = 0u; i < vector.size(); ++i)
+		if (! std::isnan(vector[i]))
+			indices.push_back(i);
+	return(indices);
+}
+
+
+bool any_true( const std::vector<bool> & b_vector, const std::vector<unsigned int> indices){
+	for (auto &i: indices)
+		if (b_vector[i])
+			return(true);
+	return(false);
+}
+
+
+/* Compute the cardinality of a space given the subspaces. */
+template <typename num_t, typename index_t>
+inline num_t subspace_cardinality(const std::vector< std::vector<num_t> > &subspace, std::vector<index_t> types) {
+	num_t result = 1;
+	for (auto i=0u; i < types.size(); ++i){
+		if (types[i] == 0){ // numerical feature
+			result *= subspace[i][1] - subspace[i][0];
+		}
+		else{ // categorical feature
+			result *= subspace[i].size();
+		}
+	}
+	return result;
+}
 
 /* Merges f1 and f2 into dest without copying NaNs. This allows for easy marginalization */
 template <typename num_t, typename index_type>
@@ -188,6 +233,22 @@ class running_statistics{
 
 		return(running_statistics( N1, avg1, sdm1));
 	}
+	
+	/** \brief operator to multiply all values by a number */
+	running_statistics operator* (const num_t &a) const{
+		return(running_statistics(N, a*avg, a*a*sdm));
+	}
+
+	/** \brief operator to add a number to all values*/
+	running_statistics operator+ (const num_t &a) const{
+		return(running_statistics(N, avg+a, sdm));
+	}
+
+	/** \brief operator to subtract a number from all values*/
+	running_statistics operator- (const num_t &a) const{
+		return(running_statistics(N, avg-a, sdm));
+	}
+	
 	/**\brief convenience operator for inplace subtraction*/
 	running_statistics &operator-= ( const running_statistics &other) {
 
@@ -208,6 +269,7 @@ class running_statistics{
 		sdm = sdm1;
 		return(*this);
 	}
+	
 	/**\brief method to check for numerical equivalency
 	 * \param other the other running statistic to compare against
 	 * \param rel_error relative tolerance for the mean and variance*/
@@ -325,8 +387,6 @@ class weighted_running_statistics{
 		return(*this);
 	}
 
-
-
 	weighted_running_statistics operator-  ( const weighted_running_statistics &other) const{
 
 		if (other.weight_stat.sum() >= weight_stat.sum())
@@ -367,8 +427,17 @@ class weighted_running_statistics{
 		return(*this);
 	}
 
+	weighted_running_statistics operator* (const num_t a) const{
+		return(weighted_running_statistics(a*avg, a*a*sdm, weight_stat));
+	}
 
+	weighted_running_statistics operator+ (const num_t a) const{
+		return(weighted_running_statistics(a+avg, sdm, weight_stat));
+	}
 
+	weighted_running_statistics multiply_weights_by ( const num_t a) const{
+		return(weighted_running_statistics(avg, a*sdm, weight_stat*a));
+	}
 
 	bool numerically_equal (weighted_running_statistics other, num_t rel_error){
 
@@ -382,10 +451,10 @@ class weighted_running_statistics{
 		// finally compare the weight statistics
 		return( weight_stat.numerically_equal(other.weight_stat, rel_error));
 	}
+	
+	running_statistics<num_t> get_weight_statistics() const { return(weight_stat);}
+	
 };
-
-
-
 
 template <typename num_t>
 class running_covariance{

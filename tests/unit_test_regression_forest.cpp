@@ -46,7 +46,7 @@ typedef rfr::forests::fANOVA_forest<split_type, num_t, response_t, index_t, rng_
 
 
 data_container_type load_diabetes_data(){
-	data_container_type data;
+	data_container_type data(10);
 	
     std::string feature_file, response_file;
     
@@ -274,6 +274,8 @@ BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
 	BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {1.1,0.5}) ,std::runtime_error);
 }
 
+
+/*
 BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 	
 	auto data = load_diabetes_data();
@@ -315,6 +317,5 @@ BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 	// 10th and 90th percentile of the response values
 	the_forest.set_cutoffs(60,265);
 
-
 }
-
+*/

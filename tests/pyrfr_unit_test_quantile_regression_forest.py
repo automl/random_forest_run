@@ -13,7 +13,7 @@ class TestQuantileRegressionForest(unittest.TestCase):
 
 	def setUp(self):
 		data_set_prefix = '${CMAKE_SOURCE_DIR}/test_data_sets/'
-		self.data = reg.data_container()
+		self.data = reg.data_container(64)
 		self.data.import_csv_files(data_set_prefix+'features13.csv', data_set_prefix+'responses13.csv')
 		
 		self.rng = reg.default_random_engine(1)

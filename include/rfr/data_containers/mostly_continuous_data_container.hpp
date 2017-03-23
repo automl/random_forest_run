@@ -27,18 +27,10 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	std::vector< std::vector<num_t> > feature_values;	//!< 2d vector to store the feature values
 	std::vector<response_t> response_values;			//!< the associated responses
 	std::vector<num_t> weights;							//!< the associated weights
-		response_t response_type;							//!< to discriminate between regression and classification
+	response_t response_type;							//!< to discriminate between regression and classification
 	std::vector<std::pair<num_t, num_t> > bounds;		//!< stores the intervals for all continuous variables, stores the number of categories for categoricals
 	std::vector<std::pair<num_t, num_t> > min_max;		//!< if no bounds are know, they can be imputed by the min/max values
   public:
-
-	// empty constructor. Use this only if you read the data from a file!
-	// the private vectors are not properly initialized! Adding data
-	// points via 'add_data_point' may or may not fail!
-	mostly_continuous_data() {}
-
-	// if you plan on filling the container with single data points one at a time
-	// use this constructor to specify the number of features 
 
 	mostly_continuous_data(index_t num_f) { init_protected(num_f); }
 
@@ -161,7 +153,6 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 			else
 				bounds[index] = std::pair<num_t,num_t>(-std::numeric_limits<num_t>::infinity(), std::numeric_limits<num_t>::infinity());
 		}
-		std::cout<<bounds[index].first<<"," << bounds[index].second<<std::endl;
 	}
 
 	virtual index_t num_features() const {return(feature_values.size());}
@@ -183,32 +174,44 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	}
 
 	virtual void set_bounds_of_feature(index_t feature_index, num_t min, num_t max){
+		if (std::isnan(bounds.at(feature_index).second))
+			throw std::runtime_error("You are trying to set bounds for a categorical feature! This is not supported!");
 		bounds.at(feature_index).first = min;
 		bounds.at(feature_index).second = max;
 	}
 	
-	virtual std::pair<num_t, num_t> get_bounds_of_feature(index_t feature_index){
+	virtual std::pair<num_t, num_t> get_bounds_of_feature(index_t feature_index) const {
 		return(bounds.at(feature_index));
 	}
 
-	virtual std::pair<num_t, num_t> get_min_max_of_feature(index_t feature_index){
+	virtual std::pair<num_t, num_t> get_min_max_of_feature(index_t feature_index) const{
 		return(min_max.at(feature_index));
 	}
 
 	void guess_bounds_from_data(){
-		bounds = min_max;
+		for (auto i=0u; i<min_max.size(); ++i){
+			if (std::isnan(bounds.at(i).second)) continue;
+			bounds[i] = min_max[i];
+		}
 	}
 
 
 	// some helper functions
 	int import_csv_files (const std::string &feature_file, const std::string &response_file, std::string weight_file=""){
-		feature_values =  rfr::read_csv_file<num_t>(feature_file);
-        response_values = (read_csv_file<response_t>(response_file))[0];
+		auto tmp_feature_values =  rfr::read_csv_file<num_t>(feature_file);
+        auto tmp_response_values = (read_csv_file<response_t>(response_file))[0];
 
-		index_t num_f = feature_values.size();
-		index_t num_d = feature_values[0].size();
+		index_t num_f = tmp_feature_values.size();
+		index_t num_d = tmp_feature_values[0].size();
 
-		if (num_d != response_values.size()){
+		if (num_f != num_features()){
+			std::stringstream errMsg;
+			errMsg << "Number of features in the file ("<<num_d <<") != expected number of features ("<<num_features() << ")!";
+			throw std::runtime_error(errMsg.str().c_str());
+		}
+
+
+		if (num_d != tmp_response_values.size()){
 			std::stringstream errMsg;
 			errMsg << "Number of datapoints in feature and response file differ: "<<num_d <<" != "<<response_values.size() << " !";
 			throw std::runtime_error(errMsg.str().c_str());
@@ -225,9 +228,11 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 			throw std::runtime_error(errMsg.str().c_str());
 		}
 
+		feature_values.swap(tmp_feature_values);
+		response_values.swap(tmp_response_values);
+
 		min_max.clear();
-		min_max.reserve(num_f);
-		
+
 		for (auto &f: feature_values){
 			auto pikachu = std::minmax_element(f.begin(), f.end());
 			min_max.emplace_back(*pikachu.first, *pikachu.second);
@@ -252,6 +257,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 
 
 		for (auto it = feature_values.begin(); it != feature_values.end(); it ++){
+			std::cout<<num_data_points()<<" ?= "<<it->size()<<std::endl;
 			if (num_data_points() != it->size())
 				return(false);
 		}

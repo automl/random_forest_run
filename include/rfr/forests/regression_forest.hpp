@@ -86,14 +86,21 @@ class regression_forest{
 		if ((!options.do_bootstrapping) && (data.num_data_points() < options.num_data_points_per_tree))
 			throw std::runtime_error("You cannot use more data points per tree than actual data point present without bootstrapping!");
 
+
+		types.resize(data.num_features());
+		bounds.resize(data.num_features());
+		for (auto i=0u; i<data.num_features(); ++i){
+			types[i] = data.get_type_of_feature(i);
+			auto p = data.get_bounds_of_feature(i);
+			bounds[i][0] = p.first;
+			bounds[i][1] = p.second;
+		}
+
 		the_trees.resize(options.num_trees);
 
 
 		std::vector<index_t> data_indices( data.num_data_points());
 		std::iota(data_indices.begin(), data_indices.end(), 0);
-
-		types.resize(data.num_features());
-		bounds.resize(data.num_features());
 
 		num_features = data.num_features();
 		
@@ -329,13 +336,13 @@ class regression_forest{
 	 * 
 	 * \param feature_vector non-specfied values (NaN) will be marginalized over according to the training data
 	 */
-	std::vector<num_t> marginalized_mean_predictions(const std::vector<num_t> &feature_vector) const {
-		std::vector<num_t> rv;
-		rv.reserve(the_trees.size());
-		for (auto &t : the_trees)
-			rv.emplace_back(t.marginalized_mean_prediction(feature_vector));
-		return(rv);
-	}
+	//std::vector<num_t> marginalized_mean_predictions(const std::vector<num_t> &feature_vector) const {
+	//	std::vector<num_t> rv;
+	//	rv.reserve(the_trees.size());
+	//	for (auto &t : the_trees)
+	//		rv.emplace_back(t.marginalized_mean_prediction(feature_vector));
+	//	return(rv);
+	//}
 
 
 

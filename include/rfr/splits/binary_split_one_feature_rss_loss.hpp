@@ -42,6 +42,12 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 		archive( feature_index, num_split_value, cat_split_set); 
 	}
   	
+	/* get the number of split categories.
+	 * 
+	 * SF: that is definitely wrong .. 
+	 * 
+	*/
+	index_t get_num_categories() const { return max_num_categories; }//return cat_split_set.size(); }
   	
 	/** \brief the implementation to find the best binary split using only one feature minimizing the RSS loss
 	 *
@@ -349,7 +355,7 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	 * This is an essential function for the fANOVA. Every split
 	 * constraints one of the parameters in each of the children.
 	 */
-	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces( std::vector< std::vector<num_t> > &subspace) const {
+	std::array<std::vector< std::vector<num_t> >, 2> compute_subspaces(const std::vector< std::vector<num_t> > &subspace) const {
 		
 	
 		std::array<std::vector<std::vector<num_t> >, 2> subspaces = {subspace, subspace};
