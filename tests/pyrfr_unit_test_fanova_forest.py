@@ -13,7 +13,7 @@ class TestfANOVAForest(unittest.TestCase):
 
 	def setUp(self):
 		data_set_prefix = '${CMAKE_SOURCE_DIR}/test_data_sets/'
-		self.data = reg.data_container(3)
+		self.data = reg.default_data_container(3)
 		self.data.import_csv_files(data_set_prefix+'online_lda_features.csv', data_set_prefix+'online_lda_responses.csv')
 		
 		self.rng = reg.default_random_engine(1)

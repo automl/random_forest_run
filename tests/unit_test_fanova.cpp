@@ -11,7 +11,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/data_containers/default_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
 #include "rfr/trees/tree_options.hpp"
@@ -24,7 +24,7 @@ typedef double response_t;
 typedef unsigned int index_t;
 typedef std::default_random_engine rng_t;
 
-typedef rfr::data_containers::mostly_continuous_data<num_type, response_t, index_t> 			data_container_type;
+typedef rfr::data_containers::default_container<num_type, response_t, index_t> 			data_container_type;
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_type, response_t, index_t, rng_t>	split_type;
 typedef rfr::nodes::k_ary_node_full<2, split_type, num_type, response_t, index_t, rng_t> 		node_type;
 typedef rfr::trees::k_ary_random_tree<2, node_type, num_type, response_t, index_t, rng_t>		tree_type;

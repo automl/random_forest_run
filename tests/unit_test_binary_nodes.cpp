@@ -12,7 +12,7 @@
 #include <cereal/archives/xml.hpp>
 #include <fstream>
 
-#include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/data_containers/default_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
@@ -25,7 +25,7 @@ typedef std::default_random_engine rng_type;
 typedef rfr::splits::data_info_t<num_t, num_t, index_t> info_t;
 
 
-typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t> data_container_type;
+typedef rfr::data_containers::default_container<num_t, response_t, index_t> data_container_type;
 
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_type> split_type;
 typedef rfr::nodes::temporary_node<num_t, response_t, index_t> tmp_node_type;
