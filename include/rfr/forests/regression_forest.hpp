@@ -118,9 +118,9 @@ class regression_forest{
 			// prepare the data(sub)set
 			if (options.do_bootstrapping){
                 std::uniform_int_distribution<index_t> dist (0,data.num_data_points()-1);
-                auto die = std::bind(dist, rng);
-                for (auto i=0u; i < options.num_data_points_per_tree; ++i)
-                    ++bssf[die()];
+                for (auto i=0u; i < options.num_data_points_per_tree; ++i){
+					++bssf[dist(rng)]+=1;
+				}
 			}
 			else{
 				std::shuffle(data_indices.begin(), data_indices.end(), rng);
