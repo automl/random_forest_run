@@ -1,5 +1,5 @@
-#ifndef RFR_MOSTLY_CONTINUOUS_DATA_CONTAINER_HPP
-#define RFR_MOSTLY_CONTINUOUS_DATA_CONTAINER_HPP
+#ifndef RFR_DEFAULT_CONTAINER_HPP
+#define RFR_DEFAULT_CONTAINER_HPP
 
 
 #include <vector>
@@ -22,7 +22,7 @@ namespace rfr{ namespace data_containers{
  *  Instead, this data_container only stores the non-continuous ones in a hash-map.
  */
 template<typename num_t = float, typename response_t = float, typename index_t = unsigned int>
-class mostly_continuous_data : public rfr::data_containers::base<num_t, response_t, index_t>{
+class default_container : public rfr::data_containers::base<num_t, response_t, index_t>{
   protected:
 	std::vector< std::vector<num_t> > feature_values;	//!< 2d vector to store the feature values
 	std::vector<response_t> response_values;			//!< the associated responses
@@ -32,7 +32,7 @@ class mostly_continuous_data : public rfr::data_containers::base<num_t, response
 	std::vector<std::pair<num_t, num_t> > min_max;		//!< if no bounds are know, they can be imputed by the min/max values
   public:
 
-	mostly_continuous_data(index_t num_f) { init_protected(num_f); }
+	default_container(index_t num_f) { init_protected(num_f); }
 
 	void init_protected (index_t num_f){
 		feature_values = std::vector<std::vector<num_t> > (num_f, std::vector<num_t>(0));

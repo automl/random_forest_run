@@ -1,5 +1,5 @@
-#ifndef RFR_MOSTLY_CONTINUOUS_DATA_CONTAINER_WITH_INSTANCES_HPP
-#define RFR_MOSTLY_CONTINUOUS_DATA_CONTAINER_WITH_INSTANCES_HPP
+#ifndef RFR_DEFAULT_CONTAINER_WITH_INSTANCES_HPP
+#define RFR_DEFAULT_CONTAINER_WITH_INSTANCES_HPP
 
 
 #include <vector>
@@ -18,7 +18,7 @@ namespace rfr{ namespace data_containers{
  * to handle instance features.
  */
 template<typename num_t = float, typename response_t = float, typename index_t = unsigned int>
-class mostly_continuous_data_with_instances : public rfr::data_containers::base<num_t, response_t, index_t>{
+class default_container_with_instances : public rfr::data_containers::base<num_t, response_t, index_t>{
   protected:
 
 	std::vector< std::vector<num_t> > configurations;//!< 2d vector to store the feature values of all configurations
@@ -34,11 +34,11 @@ class mostly_continuous_data_with_instances : public rfr::data_containers::base<
 	// empty constructor. Use this only if you read the data from a file!
 	// the private vectors are not properly initialized! Adding data
 	// points via 'add_data_point' may or may not fail!
-	mostly_continuous_data_with_instances() { throw std::runtime_error("The empty constructor is not supported by this container.");}
+	default_container_with_instances() { throw std::runtime_error("The empty constructor is not supported by this container.");}
 
 	// if you plan on filling the container with single data points one at a time
 	// use this constructor to specify the number of features for configurations and instances
-	mostly_continuous_data_with_instances (index_t num_config_f, index_t num_instance_f):
+	default_container_with_instances (index_t num_config_f, index_t num_instance_f):
 		configurations(num_config_f, std::vector<num_t>(0)),
 		instances(num_instance_f, std::vector<num_t>(0)),
 		response_values(), weights(), response_type(0){}

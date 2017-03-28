@@ -3,7 +3,7 @@
 #include <random>
 
 
-#include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/data_containers/default_data_container.hpp"
 #include "rfr/splits/classification_split.hpp"
 #include "rfr/nodes/temporary_node.hpp"
 #include "rfr/nodes/k_ary_node.hpp"
@@ -17,7 +17,7 @@ typedef unsigned int response_type;
 typedef unsigned int index_type;
 typedef std::default_random_engine rng_type;
 
-typedef rfr::data_containers::mostly_contiuous_data<num_type, response_type, index_type> data_container_type;
+typedef rfr::data_containers::default_container<num_type, response_type, index_type> data_container_type;
 
 typedef rfr::splits::classification_split<rng_type, num_type, response_type, index_type> split_type;
 typedef rfr::nodes::k_ary_node<2, split_type, rng_type, num_type, response_type, index_type> node_type;

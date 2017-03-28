@@ -4,16 +4,16 @@
 #include <cstring>
 #include <random>
 
-#include "rfr/data_containers/mostly_continuous_data_container.hpp"
-#include "rfr/data_containers/mostly_continuous_data_with_instances_container.hpp"
+#include "rfr/data_containers/default_data_container.hpp"
+#include "rfr/data_containers/default_data_container_with_instances.hpp"
 
 typedef double num_t;
 typedef double response_t;
 typedef unsigned int index_t;
 typedef std::default_random_engine rng_t;
 
-typedef rfr::data_containers::mostly_continuous_data<num_t, response_t, index_t> data_container_type;
-typedef rfr::data_containers::mostly_continuous_data_with_instances<num_t, response_t, index_t> data_container_type2;
+typedef rfr::data_containers::default_container<num_t, response_t, index_t> data_container_type;
+typedef rfr::data_containers::default_container_with_instances<num_t, response_t, index_t> data_container_type2;
 
 
 

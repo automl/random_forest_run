@@ -14,14 +14,14 @@
 
 #include <sstream>
 
-#include "rfr/data_containers/mostly_continuous_data_container.hpp"
+#include "rfr/data_containers/default_data_container.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 
 typedef double num_t;
 typedef unsigned int index_t;
 typedef std::default_random_engine rng_type;
 
-typedef rfr::data_containers::mostly_continuous_data<num_t, num_t, index_t> data_container_type;
+typedef rfr::data_containers::default_container<num_t, num_t, index_t> data_container_type;
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, num_t, index_t,rng_type,128> split_type;
 typedef rfr::splits::data_info_t<num_t, num_t, index_t> info_t;
 

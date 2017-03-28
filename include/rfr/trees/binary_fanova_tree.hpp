@@ -3,12 +3,8 @@
 
 #include <vector>
 #include <deque>
-#include <stack>
-#include <utility>       // std::pair
-#include <algorithm>     // std::shuffle
-#include <numeric>       // std::iota
-#include <cmath>         // std::abs
-#include <iterator>      // std::advance
+//#include <stack>
+#include <numeric>
 #include <fstream>
 #include <random>
 
@@ -97,11 +93,6 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 
 		auto active_features = rfr::util::get_non_NAN_indices(feature_vector);
 		
-		std::cout<<"------------------------------------------------------\n";
-		for (auto &f: feature_vector)
-			std::cout<<f<<" ";
-		std::cout<<std::endl;
-		
 		// change pcs for inactive variables to recycle subspace cardinality
 		for (auto i=0u; i< pcs.size(); ++i){
 			if (std::find(active_features.begin(), active_features.end(), i) != active_features.end())
@@ -153,13 +144,24 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 			// this includes leaves  -> add to statistics if within the cutoffs
 			
 			auto size_correction = rfr::util::subspace_cardinality(current_pcs, types);
-			if ((marginal_prediction_stats[node_index].mean() > lower_cutoff) &&
-			    (marginal_prediction_stats[node_index].mean() < upper_cutoff)){
-				std::cout<<"1/size_correction = "<<1./size_correction<<"\n";
-				stat += marginal_prediction_stats[node_index].multiply_weights_by(1./size_correction);
-				auto mew = marginal_prediction_stats[node_index].multiply_weights_by(1./size_correction);
-				std::cout<<node_index<<" : "<<mew.mean()<<";"<<mew.variance_population()<<"..."<<mew.sum_of_weights()<<std::endl;
+			
+			if (marginal_prediction_stats[node_index].mean() < lower_cutoff){
+				rfr::util::weighted_running_statistics<num_t> mew;
+				mew.push( lower_cutoff, marginal_prediction_stats[node_index].sum_of_weights()/size_correction);
+				stat += mew;
+				continue;
 			}
+
+			if (marginal_prediction_stats[node_index].mean() > upper_cutoff){
+				rfr::util::weighted_running_statistics<num_t> mew;
+				mew.push( upper_cutoff, marginal_prediction_stats[node_index].sum_of_weights()/size_correction);
+				stat += mew;
+				continue;
+			}			
+			
+			// @ this point, the nodes statistic can just be added to the final statistic
+			stat += marginal_prediction_stats[node_index].multiply_weights_by(1./size_correction);
+			
 		}
 		return stat;
 	}
@@ -237,16 +239,28 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 			marginal_prediction_stats[node_index] = rfr::util::weighted_running_statistics<num_t> ();
 
 			for (index_t child_index : super::the_nodes[node_index].get_children()) {
-				if ( !(std::isnan(marginal_prediction_stats[child_index].mean())) &&
-					 (marginal_prediction_stats[child_index].mean() > lower_cutoff) &&
-					 (marginal_prediction_stats[child_index].mean() < upper_cutoff) ){
-					std::cout<<node_index<<"::"<<child_index<<"--"<<marginal_prediction_stats[child_index].mean()<<">>"<<marginal_prediction_stats[child_index].sum_of_weights()<<std::endl;
+				// only consider children with a 'legal' subtree 
+				if (!std::isnan(marginal_prediction_stats[child_index].mean())){
+					
+					if (marginal_prediction_stats[child_index].mean() <= lower_cutoff){
+						rfr::util::weighted_running_statistics<num_t> stat;
+						stat.push(lower_cutoff, marginal_prediction_stats[child_index].sum_of_weights());
+						marginal_prediction_stats[node_index] += stat;
+						continue;
+					}
+				
+					if (marginal_prediction_stats[child_index].mean() >= upper_cutoff){
+						rfr::util::weighted_running_statistics<num_t> stat;
+						stat.push(upper_cutoff, marginal_prediction_stats[child_index].sum_of_weights());
+						marginal_prediction_stats[node_index] += stat;
+						continue;
+					}
+
 					marginal_prediction_stats[node_index] += marginal_prediction_stats[child_index];
 					active_variables[node_index][the_node.get_split().get_feature_index()] = true;
 				}
+				
 			}
-			std::cout<<marginal_prediction_stats[node_index].mean()<<">>"<<marginal_prediction_stats[node_index].sum_of_weights()<<"||"<<marginal_prediction_stats[node_index].variance_population()<<std::endl;
-			std::cout<<"===========================================================================\n";
 			rfr::util::disjunction(active_variables[node_index], active_variables[the_node.parent()]);
 		}
 	}
