@@ -47,7 +47,8 @@ data_container_type load_toy_data(){
 
 
 /* TODO: add test for the mean and total_variance of the tree*/
-BOOST_AUTO_TEST_CASE (fanova_test) {
+/*
+BOOST_AUTO_TEST_CASE (hooker_fanova_test) {
 	auto data = load_toy_data();
 	data.set_type_of_feature(1, 3);
 
@@ -212,30 +213,207 @@ BOOST_AUTO_TEST_CASE (fanova_test) {
 		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean()));
 		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean()));
 		BOOST_REQUIRE( std::isnan(the_tree.marginalized_prediction_stat(feature_6  , pcs, types).mean()));
+    }
+}
+*/
+
+
+BOOST_AUTO_TEST_CASE (legacy_fanova_test) {
+	auto data = load_toy_data();
+	data.set_type_of_feature(1, 3);
+
+	rfr::trees::tree_options<num_type, response_t, index_t> tree_opts;
+	tree_opts.max_features = 2;
+	tree_opts.max_depth = 3;
+	rng_t rng_engine(0);
+
+	for (auto i = 0; i <1; i++){
+		fANOVA_tree_type the_tree;
+		std::vector<std::vector<num_type>> pcs = {{0, 100}, {0, 1, 2}};
+		std::vector<index_t> types = {0, 3};
+		num_type inf = std::numeric_limits<num_type>::infinity();
+
+
+		// an unfit tree should throw an exception if you try to precompute the marginals!
+		BOOST_REQUIRE_THROW(the_tree.precompute_marginals(-inf, inf, pcs, types),std::runtime_error);
+
+
+		the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
+
+		the_tree.save_latex_representation("/tmp/rfr_test.tex");
+		the_tree.precompute_marginals(-inf, inf, pcs, types);
+
+
+		std::vector<num_type> feature_3({10., NAN});
+		std::vector<num_type> feature_4({50, NAN});
+		std::vector<num_type> feature_56({90., NAN});
+
+		std::vector<num_type> feature_345({NAN, 0});
+		std::vector<num_type> feature_346({NAN, 1});
+
+		std::vector<num_type> feature_6({90., 1});
+
+
+		num_type s0 = 300;
+		num_type s1 = 178.61191331472548;
+		num_type s2 = 121.38808668527452;
+		num_type s3 =  59.86622661388443;
+		num_type s4 = 118.74568670084104;
+		num_type s5 =  40.46269556175817;
+		num_type s6 =  80.92539112351633;
 		
-/*
-      for (index_t node_index = 0; node_index < nodes.size(); ++node_index) {
-        index_t parent_index = nodes[node_index].parent();
-        bool any_variable = false;
-        for (index_t var_index = 0; var_index < the_tree.get_vars(node_index).size(); ++var_index) {
-          any_variable |= the_tree.get_vars(node_index)[var_index];
-          BOOST_ASSERT(!the_tree.get_vars(node_index)[var_index] || the_tree.get_vars(parent_index)[var_index]);
-          // not active in node or active in parent <==> active in node implies active in parent
-        }
-        BOOST_ASSERT(any_variable); // TODO: Remove later, just ensuring the test is not trivial
-        num_type subspace = 1;
-        for (index_t child_index : nodes[node_index].get_children()) {
-          subspace *= the_tree.get_subspace_size(child_index);
-        }
-        BOOST_REQUIRE_EQUAL(subspace, the_tree.get_subspace_size(node_index));
-        BOOST_ASSERT(nodes[node_index].get_children().empty() || subspace > 1.001); // TODO: Remove later, just ensuring the test is not trivial
-      }
 
-      // 
 
-      char filename[100];
-      sprintf(filename, "/tmp/tree_%i.tex", i);
-      // the_tree.save_latex_representation(filename); // FIXME(mostafa): error here
-    */
+		// check subspace sizes without cutoffs
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(0), s0, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(1), s1, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(2), s2, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(3), s3, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(4), s4, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(5), s5, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(6), s6, 1e-6);
+
+		// the correpsonding marginal predictions
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(0), 2.4748241706496, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(1), 1.6648251199885, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(2), 3.6666666666666, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(3),               1, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(4),               2, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(5),               3, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(6),               4, 1e-6);
+
+		// and the active variables
+		BOOST_REQUIRE( the_tree.get_active_variables(0)[0]);
+		BOOST_REQUIRE( the_tree.get_active_variables(0)[1]);
+		BOOST_REQUIRE( the_tree.get_active_variables(1)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(1)[1]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
+		BOOST_REQUIRE( the_tree.get_active_variables(2)[1]);
+
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean(),              1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean(),              2,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_56 , pcs, types).mean(), 3.666666666666,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(), 2.205072866904,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(), 2.609699822522,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_6  , pcs, types).mean(),              4,1e-6);
+		
+		{
+			double m = (1*s3 + 2*s4+ 3*s5 + 4*s6)/(s3+s4+s5+s6);
+			double v = ((1.-m)*(1.-m)*s3 + (2.-m)*(2.-m)*s4+ (3.-m)*(3.-m)*s5 + (4.-m)*(4.-m)*s6)/(s3+s4+s5+s6);
+			BOOST_REQUIRE_CLOSE( the_tree.get_total_variance(), v, 1e-6);
+		}
+		
+
+		// now let's exclude exactly one leaf
+		the_tree.precompute_marginals(-inf, 3.5, pcs, types);
+		// subspace don't change with cutoffs
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(0), s0, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(1), s1, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(2), s2, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(3), s3, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(4), s4, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(5), s5, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_subspace_size(6), s6, 1e-6);
+
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(0), (s3*1 + s4*2 + s5*3+s6*3.5)/(s3+s4+s5+s6), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(1), (s3*1 + s4*2)/(s3+s4), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(2),  (s5*3+s6*3.5)/(s5+s6), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(3),                  1, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(4),                  2, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(5),                  3 , 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(6),                  4 , 1e-6);
+
+		BOOST_REQUIRE( the_tree.get_active_variables(0)[0]);
+		BOOST_REQUIRE( the_tree.get_active_variables(0)[1]);
+		BOOST_REQUIRE( the_tree.get_active_variables(1)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(1)[1]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
+		BOOST_REQUIRE( the_tree.get_active_variables(2)[1]);
+		
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean(),             1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean(),             2,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_56 , pcs, types).mean(),(s5*3+s6*3.5)/(s5+s6),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(),(s3*1./3.+s4*2./3.+s5*3)/(s3/3.+s4/3.+s5),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(),(s3*1./3.+s4*2./3.+s6*3.5/2.)/(s3/3.+s4/3.+s6/2.),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_6  , pcs, types).mean(),           3.5,1e-6);
+		
+
+		{
+			double m = (1*s3 + 2*s4+ 3*s5 + 3.5*s6)/(s3+s4+s5+s6);
+			double v = ((1.-m)*(1.-m)*s3 + (2.-m)*(2.-m)*s4+ (3.-m)*(3.-m)*s5 + (3.5-m)*(3.5-m)*s6)/(s3+s4+s5+s6);
+			BOOST_REQUIRE_CLOSE( the_tree.get_total_variance(), v, 1e-6);
+		}
+
+
+
+		// now let's exclude exactly two leaves that belong to the same internal node
+		the_tree.precompute_marginals(-inf, 2.5, pcs, types);
+
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(0), (s3*1 + s4*2 + s5*2.5+s6*2.5)/(s3+s4+s5+s6), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(1), (s3*1 + s4*2)/(s3+s4), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(2),  (s5*2.5+s6*2.5)/(s5+s6), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(3),                  1, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(4),                  2, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(5),                  3 , 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(6),                  4 , 1e-6);
+
+
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean(),             1,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean(),             2,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_56 , pcs, types).mean(),(s5*2.5+s6*2.5)/(s5+s6),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(),(s3*1./3.+s4*2./3.+s5*2.5)/(s3/3.+s4/3.+s5),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(),(s3*1./3.+s4*2./3.+s6*2.5/2.)/(s3/3.+s4/3.+s6/2.),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_6  , pcs, types).mean(),           2.5,1e-6);
+
+
+		BOOST_REQUIRE( the_tree.get_active_variables(0)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(0)[1]);
+		BOOST_REQUIRE( the_tree.get_active_variables(1)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(1)[1]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(2)[1]);
+
+		{
+			double m = (1*s3 + 2*s4+ 2.5*s5 + 2.5*s6)/(s3+s4+s5+s6);
+			double v = ((1.-m)*(1.-m)*s3 + (2.-m)*(2.-m)*s4+ (2.5-m)*(2.5-m)*s5 + (2.5-m)*(2.5-m)*s6)/(s3+s4+s5+s6);
+			BOOST_REQUIRE_CLOSE( the_tree.get_total_variance(), v, 1e-6);
+		}
+
+
+
+		// now let's exclude all leaves, just to see what happens
+		the_tree.precompute_marginals(2.25, 2.75, pcs, types);
+
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(0), ((s3+s4)*2.25 + (s5+s6)*2.75)/(s3+s4+s5+s6), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(0), (s1*2.25 + s2*2.75)/(s1+s2), 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(1),               2.25, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(2),               2.75, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(3),                  1, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(4),                  2, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(5),                  3, 1e-6);
+		BOOST_REQUIRE_CLOSE(the_tree.get_marginal_prediction(6),                  4, 1e-6);
+
+		BOOST_REQUIRE(!the_tree.get_active_variables(0)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(0)[1]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(1)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(1)[1]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(2)[0]);
+		BOOST_REQUIRE(!the_tree.get_active_variables(2)[1]);
+
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_3  , pcs, types).mean(),               2.25,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_4  , pcs, types).mean(),               2.25,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_56 , pcs, types).mean(),               2.75,1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(),(s3*2.25/3.+s4*2.25/3.+s5*2.75)/(s3/3.+s4/3.+s5),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_345, pcs, types).mean(),(s1*2.25/3.+s5*2.75)/(s1/3.+s5),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(),(s3*2.25/3.+s4*2.25/3.+s6*2.75/2.)/(s3/3.+s4/3.+s6/2.),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_346, pcs, types).mean(),(s1*2.25/3.+s6*2.75/2.)/(s1/3.+s6/2.),1e-6);
+		BOOST_REQUIRE_CLOSE( the_tree.marginalized_prediction_stat(feature_6  , pcs, types).mean(),               2.75,1e-6);
+
+		{
+			double m = (2.25*s3 + 2.25*s4+ 2.75*s5 + 2.75*s6)/(s3+s4+s5+s6);
+			double v = ((2.25-m)*(2.25-m)*s3 + (2.25-m)*(2.25-m)*s4+ (2.75-m)*(2.75-m)*s5 + (2.75-m)*(2.75-m)*s6)/(s3+s4+s5+s6);
+			BOOST_REQUIRE_CLOSE( the_tree.get_total_variance(), v, 1e-6);
+		}
+
     }
 }
