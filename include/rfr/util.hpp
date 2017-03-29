@@ -218,7 +218,6 @@ class running_statistics{
 	 * statistics are almost the same. Use with caution!
 	 */
 	running_statistics operator- ( const running_statistics &other) const{
-
 		if (other.N >= N)
 			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
@@ -230,7 +229,9 @@ class running_statistics{
 		num_t avg1 = avg * (nt/n1) - other.avg * (n2/n1);
 		// the sdm looks a bit tricky, but is straight forward to derive
 		num_t sdm1 = sdm - other.sdm - n2*std::pow(other.avg - avg, 2) - n1*std::pow(avg1-avg,2);
-
+		
+		if (N1 == 1) sdm1 = 0;
+		
 		return(running_statistics( N1, avg1, sdm1));
 	}
 	
@@ -252,7 +253,7 @@ class running_statistics{
 	/**\brief convenience operator for inplace subtraction*/
 	running_statistics &operator-= ( const running_statistics &other) {
 
-		if (other.N >= N-1)
+		if (other.N >= N)
 			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
 		// new number of points is trivial
@@ -267,6 +268,8 @@ class running_statistics{
 		N = N1;
 		avg = avg1;
 		sdm = sdm1;
+		if (N == 1) sdm = 0;
+		
 		return(*this);
 	}
 	

@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(test_running_statistics_operators){
 	}
 
 	{
-		rfr::util::running_statistics<double> stat1, stat2, stat3, stat4;
+		rfr::util::running_statistics<double> stat1, stat2, stat3, stat4, stat5;
 		
 		double factor = 1.2345;
 		double offset = 6.7890;
@@ -99,11 +99,13 @@ BOOST_AUTO_TEST_CASE(test_running_statistics_operators){
 			stat2.push(factor*values[i]);
 			stat3.push(values[i]+offset);
 			stat4.push(factor*values[i]+offset);
+			stat5.push(values[i]-offset);
 		}
 		
 		BOOST_REQUIRE(stat2.numerically_equal(stat1*factor, 1e-4));
 		BOOST_REQUIRE(stat3.numerically_equal(stat1+offset, 1e-4));
 		BOOST_REQUIRE(stat4.numerically_equal(stat1*factor+offset, 1e-4));
+		BOOST_REQUIRE(stat5.numerically_equal(stat1-offset, 1e-4));
 	}
 }
 
@@ -351,7 +353,12 @@ BOOST_AUTO_TEST_CASE(test_boolean_vector_helper){
 
 	bit_vector[2] = true;
 	BOOST_REQUIRE_EQUAL(true, rfr::util::any_true(bit_vector, indices));
+
+	std::vector<bool> another_bit_vector(6,false);
+	rfr::util::disjunction(bit_vector, another_bit_vector);
 	
+	BOOST_REQUIRE_EQUAL(bit_vector.size(), another_bit_vector.size());
+	BOOST_REQUIRE(bit_vector == another_bit_vector);
 	
 }
 
