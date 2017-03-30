@@ -6,29 +6,11 @@ from subprocess import call
 
 
 
-include_dirs = ['${CMAKE_SOURCE_DIR}/include']
-#extra_compile_args = ['-O2', '-std=c++11']
-extra_compile_args = ['-g', '-std=c++11', '-O0']
+include_dirs = ['${CMAKE_SOURCE_DIR}/include', './include']
+extra_compile_args = ['-O2', '-std=c++11']
+#extra_compile_args = ['-g', '-std=c++11', '-O0']
 
 
-"""
-extensions = cythonize(
-					[
-						Extension('pyrfr.regression',
-						sources=['pyrfr/regression.pyx'],
-						language="c++",
-						include_dirs=include_dirs,
-						extra_compile_args = extra_compile_args
-						),
-						
-						Extension('pyrfr.regression32',
-						sources=['pyrfr/regression32.pyx'],
-						language="c++",
-						include_dirs=include_dirs,
-						extra_compile_args = extra_compile_args
-						)
-					])
-"""
 
 extensions = [	Extension(
 					name = '_regression',
@@ -49,7 +31,7 @@ extensions = [	Extension(
 
 setup(
 	name='pyrfr',
-	version='0.2.1',
+	version='0.3.0',
 	author='Stefan Falkner',
 	author_email='sfalkner@cs.uni-freiburg.de',
 	license='Use as you wish. No guarantees whatsoever.',
