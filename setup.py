@@ -32,7 +32,7 @@ extensions = [Extension(
 
 setup(
 	name='pyrfr',
-	version='0.3.0',
+	version='0.4.0',
 	author='Stefan Falkner',
 	author_email='sfalkner@cs.uni-freiburg.de',
 	license='Use as you wish. No guarantees whatsoever.',
