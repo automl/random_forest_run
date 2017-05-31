@@ -1,5 +1,6 @@
 %module regression
 
+%pythonnondynamic;
 
 %{
 #include <random>
@@ -104,6 +105,7 @@ typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss
 
 // TREES
 %include "rfr/trees/tree_options.hpp"
+
 %template(tree_opts) rfr::trees::tree_options<num_t, response_t, index_t>;
 
 %include "rfr/trees/tree_base.hpp"

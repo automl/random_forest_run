@@ -16,14 +16,14 @@ extensions = [	Extension(
 					name = '_regression',
 					sources=['pyrfr/regression.i'],
 					include_dirs = include_dirs,
-					swig_opts=['-c++'] + ['-I{}'.format(s) for s in include_dirs],
+					swig_opts=['-c++', '-modern', '-features', 'nondynamic'] + ['-I{}'.format(s) for s in include_dirs],
 					extra_compile_args = extra_compile_args
 				),
 				Extension(
 					name = '_util',
 					sources=['pyrfr/util.i'],
 					include_dirs = include_dirs,
-					swig_opts=['-c++'] + ['-I{}'.format(s) for s in include_dirs],
+					swig_opts=['-c++', '-modern', '-features', 'nondynamic'] + ['-I{}'.format(s) for s in include_dirs],
 					extra_compile_args = extra_compile_args
 				)
 			]

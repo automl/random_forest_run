@@ -5,6 +5,7 @@ import os
 import pickle
 import tempfile
 import unittest
+import math
 
 import pyrfr.regression as reg
 
@@ -16,41 +17,65 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		self.data = reg.default_data_container(64)
 		self.data.import_csv_files(data_set_prefix+'features13.csv', data_set_prefix+'responses13.csv')
 		
+
+		self.forest = reg.binary_rss_forest()
+		self.forest.options.num_trees = 64
+		self.forest.options.do_bootstrapping = True
+		self.forest.options.num_data_points_per_tree = 200
+
+		self.assertEqual(self.forest.options.num_trees, 64)
+		self.assertTrue (self.forest.options.do_bootstrapping)
+		self.assertEqual(self.forest.options.num_data_points_per_tree, 200)
+
 		self.rng = reg.default_random_engine(1)
 	
 	def tearDown(self):
 		self.data = None
+		self.forest = None
 	
 	def test_prediction(self):
-		the_forest = reg.binary_rss_forest()
-
-		the_forest.options.num_trees = 64
-		the_forest.options.do_bootstrapping = True
-		the_forest.options.num_data_points_per_tree = 200
+		# doesn't really do anything, but calling the fit and predict methods
+		self.forest.fit(self.data, self.rng)
+		self.forest.predict( self.data.retrieve_data_point(0))
 		
-		self.assertEqual(the_forest.options.num_trees, 64)
-		self.assertTrue (the_forest.options.do_bootstrapping)
-		self.assertEqual(the_forest.options.num_data_points_per_tree, 200)
-		
-		the_forest.fit(self.data, self.rng)
-		
-		the_forest.predict( self.data.retrieve_data_point(0))
 	
 	def test_first_nearest_neightbor(self):
 		# if no bootstrapping is done, the tree gets all the data points,
 		# all features are used for every split and all datapoints are unique,
 		# a single tree will perfectly recall the datapoints
-		the_forest = reg.binary_rss_forest()
-		the_forest.options.num_trees = 1
-		the_forest.options.do_bootstrapping = False
-		the_forest.options.num_data_points_per_tree = self.data.num_data_points()
-		the_forest.options.tree_opts.max_features = self.data.num_features()
+		self.forest.options.num_trees = 1
+		self.forest.options.do_bootstrapping = False
+		self.forest.options.num_data_points_per_tree = self.data.num_data_points()
+		self.forest.options.tree_opts.max_features = self.data.num_features()
 
-		the_forest.fit(self.data, self.rng)
+		self.forest.fit(self.data, self.rng)
 
-		self.assertEqual(the_forest.num_trees(), 1)
+		self.assertEqual(self.forest.num_trees(), 1)
 		for i in range(self.data.num_data_points()):
-			self.assertEqual( the_forest.predict( self.data.retrieve_data_point(i)), self.data.response(i))
+			self.assertEqual( self.forest.predict( self.data.retrieve_data_point(i)), self.data.response(i))
+
+
+	def test_oob_error(self):
+		self.forest.options.compute_oob_error=True
+		self.forest.fit(self.data, self.rng)
+
+		self.assertTrue(self.forest.compute_oob_error)
+
+
+		ps, ts = [], []
+
+		for i in range(self.data.num_data_points()):
+			x = self.data.retrieve_data_point(i)
+			ps.append(self.forest.predict(x))
+			ts.append(self.data.response(i))
+
+		SE = [(p-t)**2 for p,t in zip(ps, ts)]
+
+		RMSE = math.sqrt(sum(SE)/len(SE))
+		oob = self.forest.out_of_bag_error()
+		print(oob)
+		self.assertAlmostEqual(RMSE,oob)
+		
 
 	def test_pickling(self):
 		
@@ -75,7 +100,6 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		for i in range(self.data.num_data_points()):
 			d = self.data.retrieve_data_point(i)
 			self.assertEqual( the_forest.predict(d), a_second_forest.predict(d))
-
 
 
 if __name__ == '__main__':

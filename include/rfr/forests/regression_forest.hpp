@@ -136,6 +136,7 @@ class regression_forest{
 		}
 		
 		oob_error = NAN;
+		std::cout<<"should I compute OOB?"<< options.compute_oob_error<<std::endl;
 		
 		if (options.compute_oob_error){
 			
@@ -346,7 +347,7 @@ class regression_forest{
 
 
 
-	/* \brief updates the forest by adding all provided datapoints without a complete retraining
+	/* \brief updates the forest by adding the provided datapoint without a complete retraining
 	 * 
 	 * 
 	 * As retraining can be quite expensive, this function can be used to quickly update the forest
