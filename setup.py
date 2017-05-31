@@ -29,6 +29,7 @@ extensions = [	Extension(
 					swig_opts=['-c++', '-modern', '-features', 'nondynamic'] + ['-I{}'.format(s) for s in include_dirs],
 					extra_compile_args = extra_compile_args
 				)
+			]
 
 setup(
 	name='pyrfr',

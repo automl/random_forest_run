@@ -136,7 +136,6 @@ class regression_forest{
 		}
 		
 		oob_error = NAN;
-		std::cout<<"should I compute OOB?"<< options.compute_oob_error<<std::endl;
 		
 		if (options.compute_oob_error){
 			
