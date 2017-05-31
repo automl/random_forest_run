@@ -1,6 +1,7 @@
 #ifndef RFR_UTIL_HPP
 #define RFR_UTIL_HPP
 
+#include <cmath>
 #include <vector>
 #include <algorithm>
 #include <iostream>

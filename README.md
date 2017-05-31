@@ -34,7 +34,7 @@ After the installation finishes (hopefully) sucessfully, you can use the library
 
 The above commands work for Python 3.4 and 3.5 on Gentoo and ArchLinux. With Python 2.7, there have been problems reported. Contact me if you experience any irregularities.
 
-##USAGE
+## USAGE
 
 For now, the file `./tests/pyrfr_example.py` inside the repository serves as the
 only real documentation of the Python bindings besides the docstrings.

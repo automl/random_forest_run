@@ -6,5 +6,6 @@ recursive-include include *.html
 recursive-include pyrfr *.pxd
 recursive-include pyrfr *.cpp
 recursive-include pyrfr *.pyx
+recursive-include pyrfr *.i
 
-CMakeList.txt
+CMakeLists.txt
