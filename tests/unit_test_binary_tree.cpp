@@ -127,6 +127,7 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
 
 // Test does not actually check the correctness of the split or anything.
 // It makes sure everything compiles and runs
+// TODO: add tests for the partitions and marginalized predictions
 BOOST_AUTO_TEST_CASE( binary_fANOVA_tree_test ){
 
 	auto data = load_toy_data();
@@ -145,8 +146,7 @@ BOOST_AUTO_TEST_CASE( binary_fANOVA_tree_test ){
 	fANOVA_tree_type the_tree;
 	the_tree.fit(data, tree_opts, std::vector<num_type>(data.num_data_points(), 1), rng_engine);
 	
-	
-	std::cout<<the_tree.predict(data.retrieve_data_point(1))<<std::endl;
+	the_tree.predict(data.retrieve_data_point(1));
 	
 }
 
@@ -186,9 +186,8 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 	the_tree.save_latex_representation("/tmp/rfr.tex");
 
 
-	BOOST_REQUIRE_EQUAL(the_tree.depth(), 4);
-	BOOST_REQUIRE_EQUAL(the_tree.number_of_leafs(), 16);
-	BOOST_REQUIRE_EQUAL(the_tree.number_of_nodes(), 31);
+	BOOST_TEST(the_tree.number_of_leafs() <= 16);
+	BOOST_TEST(the_tree.number_of_nodes() <= 31);
 
 
 	tree_opts.max_num_leaves = 1024;

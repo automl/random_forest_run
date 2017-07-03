@@ -279,43 +279,55 @@ class regression_forest{
 
 	/* \brief estimates the covariance of two feature vectors
 	 * 
-	 * TODO uncomment and test
 	 * 
 	 * The covariance between to input vectors contains information about the
 	 * feature space. For other models, like GPs, this is a natural quantity
 	 * (e.g., property of the kernel). Here, we try to estimate it using the
-	 * total covariance of the individual tree's prediction and the assumption
-	 * that cov(X,Y) = 0, if X and Y fall into different leafs, and cov(X,Y) = var(X) = var(Y)
-	 * otherwise.
+	 * emprical covariance of the individual tree's predictions.
 	 * 
 	 * \param f1 a valid feature vector (no sanity checks are performed!)
 	 * \param f2 a second feature vector (no sanity checks are performed!)
 	 */
     
-    /*
-	num_t covariance (num_t* f1, num_t* f2){
-		rfr::util::running_statistics<num_t> cov_stats;
-		rfr::util::running_covariance<num_t> run_cov_of_means;
-		
-		for (auto &t: the_trees){
-			auto l1 = t.find_leaf(f1);
-			auto l2 = t.find_leaf(f2);
-		
-			num_t m1 , v1;	index_t n;
-			std::tie(m1, v1, n) = t.predict_mean_var_N(f1);
+	num_t covariance (const std::vector<num_t> &f1, const std::vector<num_t> &f2){
 
-			num_t m2 , v2;
-			std::tie(m2, v2, n) = t.predict_mean_var_N(f2);
-			
-			// assumption here: cov = 0 if the leafs are different, and cov = var if both feature vectors fall into the same leaf
-			if (l1 == l2) cov_stats(v2);
-			else cov_stats(0);
-			
-			run_cov_of_means(m1,m2);
-		}
-		return(cov_stats.mean() + run_cov_of_means.covariance());
+		rfr::util::running_covariance<num_t> run_cov_of_means;
+
+		for (auto &t: the_trees)
+			run_cov_of_means.push(t.predict(f1),t.predict(f2));
+
+		return(run_cov_of_means.covariance());
 	}
-	*/
+
+
+
+	/* \brief computes the kernel of a 'Kernel Random Forest'
+	 *
+	 * Source: "Random forests and kernel methods" by Erwan Scornet
+	 * 
+	 * The covariance between to input vectors contains information about the
+	 * feature space. For other models, like GPs, this is a natural quantity
+	 * (e.g., property of the kernel). Here, we try to estimate it using the
+	 * emprical covariance of the individual tree's predictions.
+	 * 
+	 * \param f1 a valid feature vector (no sanity checks are performed!)
+	 * \param f2 a second feature vector (no sanity checks are performed!)
+	 */
+    
+	num_t kernel (const std::vector<num_t> &f1, const std::vector<num_t> &f2){
+
+		rfr::util::running_statistics<num_t> stat;
+
+		for (auto &t: the_trees){
+			auto l1 = t.find_leaf_index(f1);
+			auto l2 = t.find_leaf_index(f2);
+
+			stat.push(l1==l2);
+		}
+		return(stat.mean());
+	}
+
+
 
     
 	std::vector< std::vector<num_t> > all_leaf_values (const std::vector<num_t> &feature_vector) const {

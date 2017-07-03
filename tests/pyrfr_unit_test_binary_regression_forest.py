@@ -39,7 +39,7 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		self.forest.predict( self.data.retrieve_data_point(0))
 		
 	
-	def test_first_nearest_neightbor(self):
+	def test_first_nearest_neighbor(self):
 		# if no bootstrapping is done, the tree gets all the data points,
 		# all features are used for every split and all datapoints are unique,
 		# a single tree will perfectly recall the datapoints
@@ -64,6 +64,24 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		# small to get reliable OOB and test errors
 		self.assertFalse(math.isnan(self.forest.out_of_bag_error()))
 		
+
+	def test_covariance(self):
+		self.forest.options.compute_oob_error=False
+		self.forest.options.num_data_points_per_tree = self.data.num_data_points()
+		self.forest.fit(self.data, self.rng)
+
+		for i in range(self.data.num_data_points()):	
+			datum =  self.data.retrieve_data_point(i)
+			m, v = self.forest.predict_mean_var(datum)
+			cov = self.forest.covariance(datum, datum)
+			# need to round to get Greater or Allmost equal
+			self.assertGreaterEqual( round(v, 5), round(cov,5))
+
+			kernel = self.forest.kernel(datum, datum)
+			self.assertEqual(kernel, 1)
+	
+
+
 
 	def test_pickling(self):
 		
