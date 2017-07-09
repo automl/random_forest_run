@@ -9,13 +9,13 @@ A extensible C++ library for random forests with Python bindings.
 
 For the C++ library itself, you need no additional libaries, only a C++11 capable compiler.
 Technically, you need Boost if you want to compile the unit tests.
-The development is done using GCC 4.8 and 6.2.
+The development is done using GCC 5.4 and 6.2.
 You probably have to set CMAKE\_CXX\_FLAGS to -std=c++11 when using older compilers.
 
 ```
 CMAKE
 DOXYGEN (if you want docstrings, which you probably do)
-SWIG
+SWIG > 3.0
 ```
 
 
@@ -32,7 +32,7 @@ python setup.py install --user
 ```
 After the installation finishes (hopefully) sucessfully, you can use the library with the pyrfr module.
 
-The above commands work for Python 3.4 and 3.5 on Gentoo and ArchLinux. With Python 2.7, there have been problems reported. Contact me if you experience any irregularities.
+The above commands work for Python 3.4 and 3.6 on Gentoo and ArchLinux. With Python 2.7, there have been problems reported. Contact me if you experience any irregularities.
 
 ## USAGE
 
