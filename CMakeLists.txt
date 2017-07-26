@@ -3,7 +3,7 @@ project (RFR CXX)
 
 # add a version number
 set (RFR_VERSION_MAJOR 0)
-set (RFR_VERSION_MINOR 1)
+set (RFR_VERSION_MINOR 4)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
@@ -19,7 +19,7 @@ ENDIF()
 # required libaries
 find_package(Boost COMPONENTS unit_test_framework REQUIRED)
 find_package(Doxygen)
-find_package(PythonInterp)
+find_package(PythonInterp 3)
 find_package(SWIG)
 
 enable_testing()
