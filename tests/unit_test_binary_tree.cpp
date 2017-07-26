@@ -186,8 +186,8 @@ BOOST_AUTO_TEST_CASE( binary_tree_constraints_test ){
 	the_tree.save_latex_representation("/tmp/rfr.tex");
 
 
-	BOOST_TEST(the_tree.number_of_leafs() <= 16);
-	BOOST_TEST(the_tree.number_of_nodes() <= 31);
+	BOOST_REQUIRE(the_tree.number_of_leafs() <= 16);
+	BOOST_REQUIRE(the_tree.number_of_nodes() <= 31);
 
 
 	tree_opts.max_num_leaves = 1024;
