@@ -82,7 +82,6 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 	
 
 
-
 	def test_pickling(self):
 		
 		the_forest = reg.binary_rss_forest()

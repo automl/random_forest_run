@@ -26,7 +26,6 @@ rng = reg.default_random_engine()
 
 # create an instance of a regerssion forest using binary splits and the RSS loss
 
-
 the_forest = reg.binary_rss_forest()
 the_forest.options.num_trees = 64
 the_forest.options.num_data_points_per_tree = 200

@@ -6,6 +6,7 @@
 #include <random>
 #include "rfr/data_containers/data_container.hpp"
 #include "rfr/data_containers/default_data_container.hpp"
+#include "rfr/data_containers/default_data_container_with_instances.hpp"
 #include "rfr/splits/split_base.hpp"
 #include "rfr/splits/binary_split_one_feature_rss_loss.hpp"
 #include "rfr/trees/k_ary_tree.hpp"
@@ -77,9 +78,11 @@ typedef std::default_random_engine rng_t;
 // DATA CONTAINERS
 %include "rfr/data_containers/data_container.hpp";
 %include "rfr/data_containers/default_data_container.hpp";
+%include "rfr/data_containers/default_data_container_with_instances.hpp";
 
 %template(data_base) rfr::data_containers::base<num_t, response_t, index_t>;
 %template(default_data_container) rfr::data_containers::default_container<num_t, response_t, index_t>;
+%template(default_data_container_with_instances) rfr::data_containers::default_container_with_instances<num_t, response_t, index_t>;
 
 
 // SPLITS

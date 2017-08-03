@@ -6,10 +6,10 @@ from operator import itemgetter
 import numpy as np
 import matplotlib.pyplot as plt
 
-sys.path.append("..")
+sys.path.append("../build")
 import pyrfr.regression
 
-
+print(pyrfr.regression.__file__)
 here = os.path.dirname(os.path.realpath(__file__))
 data_set_folder = '%(here)s/../test_data_sets/' % {"here":here}
 
@@ -66,40 +66,38 @@ for instance in common_instances:
 	i+=1
 
 
-data = pyrfr.regression.mostly_continuous_data_with_instances_container(configurations.shape[1], instances.shape[1])
+data = pyrfr.regression.default_data_container_with_instances(configurations.shape[1], instances.shape[1])
 
 
-data.import_configurations(configurations)
-data.import_instances(instances)
+for c in configurations:
+	data.add_configuration(c.tolist())
+
+for i in instances:
+	data.add_instance(i.tolist())
 
 
 
 
-for i in range(100000):
+for i in range(1000):
 	i = np.random.randint(performance_matrix.shape[0])
 	j = np.random.randint(performance_matrix.shape[1])
 	data.add_data_point(i,j, performance_matrix[i,j])
 
+
+#reset to reseed the rng for the next fit
+rng = pyrfr.regression.default_random_engine(42)
 # create an instance of a regerssion forest using binary splits and the RSS loss
-the_forest = pyrfr.regression.binary_rss()
+the_forest = pyrfr.regression.binary_rss_forest()
 
-the_forest.num_trees = 16
-
+the_forest.options.num_trees = 16
 # the forest's parameters
-the_forest.seed=12					# reset to reseed the rng for the next fit
-the_forest.do_bootstrapping=True	# default: false
-the_forest.num_data_points_per_tree=0 # means same number as data points
-the_forest.max_features = data.num_features()//2 # 0 would mean all the features
-the_forest.min_samples_to_split = 0	# 0 means split until pure
-the_forest.min_samples_in_leaf = 0	# 0 means no restriction 
-the_forest.max_depth=1024			# 0 means no restriction
-the_forest.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
+the_forest.options.do_bootstrapping=True	# default: false
+the_forest.options.num_data_points_per_tree=data.num_data_points() # means same number as data points
+the_forest.options.tree_opts.max_features = data.num_features()//2 # 0 would mean all the features
+the_forest.options.tree_opts.min_samples_to_split = 0	# 0 means split until pure
+the_forest.options.tree_opts.min_samples_in_leaf = 0	# 0 means no restriction 
+the_forest.options.tree_opts.max_depth=1024			# 0 means no restriction
+the_forest.options.tree_opts.epsilon_purity = 1e-8	# when checking for purity, the data points can differ by this epsilon
 
 
-the_forest.fit(data)
-
-
-# the forest now support marginalizing over instances given by a corresponding data container
-# here is an example
-print(the_forest.predict_marginalized_over_instances( np.array(data.retrieve_data_point(5)), data))
-
+the_forest.fit(data, rng)

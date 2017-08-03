@@ -33,7 +33,7 @@ extensions = [	Extension(
 
 setup(
 	name='pyrfr',
-	version='0.4.1',
+	version='${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}',
 	author='Stefan Falkner',
 	author_email='sfalkner@cs.uni-freiburg.de',
 	license='Use as you wish. No guarantees whatsoever.',

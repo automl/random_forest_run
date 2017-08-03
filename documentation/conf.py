@@ -71,7 +71,7 @@ copyright = u'2015, Stefan Falkner'
 # built documents.
 #
 # The short X.Y version.
-version = '0.1.0'
+version = '${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}'
 # The full version, including alpha/beta/rc tags.
 release = version
 

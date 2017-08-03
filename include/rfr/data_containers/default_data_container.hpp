@@ -206,7 +206,7 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
 
 		if (num_f != num_features()){
 			std::stringstream errMsg;
-			errMsg << "Number of features in the file ("<<num_d <<") != expected number of features ("<<num_features() << ")!";
+			errMsg << "Number of features in the file ("<<num_f <<") != expected number of features ("<<num_features() << ")!";
 			throw std::runtime_error(errMsg.str().c_str());
 		}
 

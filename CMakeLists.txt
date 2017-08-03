@@ -3,7 +3,7 @@ project (RFR CXX)
 
 # add a version number
 set (RFR_VERSION_MAJOR 0)
-set (RFR_VERSION_MINOR 4)
+set (RFR_VERSION_MINOR 5)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
@@ -54,6 +54,17 @@ if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 		COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/lib/doxy2swig/doxy2swig.py -a -t -f -q -c ${CMAKE_CURRENT_BINARY_DIR}/doc/xml/index.xml ${CMAKE_CURRENT_BINARY_DIR}/pyrfr/docstrings.i
 		DEPENDS doc
 		COMMENT "Generating Python Docstrings" VERBATIM
+	)
+
+	file(COPY documentation DESTINATION ${CMAKE_BINARY_DIR})
+	file(RENAME ${CMAKE_BINARY_DIR}/documentation ${CMAKE_BINARY_DIR}/github_docs)
+	
+	configure_file(${PROJECT_SOURCE_DIR}/documentation/conf.py ${CMAKE_CURRENT_BINARY_DIR}/github_docs/conf.py)
+	add_custom_target(github_documentation
+		COMMAND  make html
+		DEPENDS pyrfr_build
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/github_docs
+		COMMENT "Generating github pages"
 	)
 
 	add_custom_target(pyrfr_build ALL

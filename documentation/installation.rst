@@ -30,6 +30,6 @@ Usage
 *****
 For now, the file
  
-	:bash:`./tests/python_test.py`
+	:bash:`./examples/pyrfr_simple_examples.py`
 
-inside the repository serves as the only real documentation of the Python bindings.
+and the other python scritps inside the repository serves as the only real documentation of the Python bindings.
