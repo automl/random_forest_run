@@ -40,5 +40,8 @@ setup(
 	classifiers=['Development Status :: 3 - Alpha'],
 	packages=['pyrfr'],
 	ext_modules=extensions,
+	python_requires='>=3',
+	package_data = {'pyrfr': ['docstrings.i']},
+	data_files = [('include', ['include'])],
 	cmdclass={'install': CustomInstall}
 )
