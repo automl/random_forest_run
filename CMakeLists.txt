@@ -59,6 +59,8 @@ if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 	file(COPY documentation DESTINATION ${CMAKE_BINARY_DIR})
 	file(RENAME ${CMAKE_BINARY_DIR}/documentation ${CMAKE_BINARY_DIR}/github_docs)
 	
+	file(COPY include DESTINATION ${CMAKE_BINARY_DIR})
+	
 	configure_file(${PROJECT_SOURCE_DIR}/documentation/conf.py ${CMAKE_CURRENT_BINARY_DIR}/github_docs/conf.py)
 	add_custom_target(github_documentation
 		COMMAND  make html
