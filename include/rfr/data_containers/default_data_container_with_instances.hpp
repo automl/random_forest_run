@@ -197,14 +197,14 @@ class default_container_with_instances : public rfr::data_containers::base<num_t
 		for (auto f = 0u; f<num_features(); f++){
 			if (get_type_of_feature(f) == 0){
 				for (auto n = 0u; n < num_data_points(); n++){
-					if (isnan(feature(f,n)))
+					if (std::isnan(feature(f,n)))
 						throw std::runtime_error("Features contain a NaN!");
 				}
 			}
 			else{
 				index_t t = get_type_of_feature(f);
 				for (auto n = 0u; n < num_data_points(); n++){
-					if (isnan(feature(f,n)))
+					if (std::isnan(feature(f,n)))
 						throw std::runtime_error("Features contain a NaN!");
 
 					if ((feature(f,n) <0) || (feature(f,n) >= t))
@@ -215,7 +215,7 @@ class default_container_with_instances : public rfr::data_containers::base<num_t
 		
 		index_t t = get_type_of_response();
 		for (auto r: response_values){
-			if (isnan(r))
+			if (std::isnan(r))
 				throw std::runtime_error("Responses contain a NaN!");
 		}
 		
