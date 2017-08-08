@@ -2,6 +2,18 @@ from distutils.command.build import build
 from setuptools.command.install import install
 from distutils.core import setup, Extension
 
+import fnmatch
+import os
+
+
+
+
+include_files = []
+for root, dirnames, filenames in os.walk('include'):
+    for filename in filenames:
+        include_files.append(os.path.join(root, filename))
+
+
 
 class CustomInstall(install):
 	def run(self):
@@ -42,6 +54,6 @@ setup(
 	ext_modules=extensions,
 	python_requires='>=3',
 	package_data = {'pyrfr': ['docstrings.i']},
-	data_files = [('include', ['include'])],
+	data_files = [('include', include_files)],
 	cmdclass={'install': CustomInstall}
 )
