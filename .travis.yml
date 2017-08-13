@@ -28,7 +28,9 @@ before_script:
 
 script:
   - cd ${TRAVIS_BUILD_DIR}
-  - cmake . -DSWIG_EXECUTABLE=/usr/bin/swig3.0
+  - mkdir build
+  - cd build
+  - cmake .. -DSWIG_EXECUTABLE=/usr/bin/swig3.0
   - make
   - ctest --output-on-failure
 
