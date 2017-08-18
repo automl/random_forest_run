@@ -24,14 +24,16 @@ endforeach()
 
 
 if(PYTHONINTERP_FOUND AND SWIG_FOUND)
-	file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 	file(GLOB PYRFR_TESTS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyrfr_unit_test_*.py)
 
 	foreach(PYRFR_TEST ${PYRFR_TESTS})
-		configure_file(${PYRFR_TEST} ${CMAKE_CURRENT_BINARY_DIR}/${PYRFR_TEST})
+		configure_file(${PYRFR_TEST} ${CMAKE_CURRENT_BINARY_DIR}/../python_package/tests/${PYRFR_TEST})
 	endforeach()
 
-	add_test(pyrfr_test "${PYTHON_EXECUTABLE}" "-m" "unittest" "discover" "-p" "pyrfr_unit_test*.py")
+	add_test(NAME pyrfr_test
+			COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -p pyrfr_unit_test*.py -s tests
+			WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../python_package
+	)
 
 
 endif(PYTHONINTERP_FOUND AND SWIG_FOUND)

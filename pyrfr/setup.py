@@ -45,7 +45,7 @@ extensions = [	Extension(
 
 setup(
 	name='pyrfr',
-	version='${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}',
+	version='${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}.${RFR_VERSION_RELEASE}',
 	author='Stefan Falkner',
 	author_email='sfalkner@cs.uni-freiburg.de',
 	license='Use as you wish. No guarantees whatsoever.',
