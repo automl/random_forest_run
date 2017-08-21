@@ -213,7 +213,7 @@ class default_container_with_instances : public rfr::data_containers::base<num_t
 			}
 		}
 		
-		index_t t = get_type_of_response();
+		// index_t t = get_type_of_response();
 		for (auto r: response_values){
 			if (std::isnan(r))
 				throw std::runtime_error("Responses contain a NaN!");
