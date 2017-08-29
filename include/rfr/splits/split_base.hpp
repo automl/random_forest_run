@@ -43,6 +43,8 @@ class k_ary_split_base{
 	 * \param infos_begin iterator to the first data_info element to be considered
 	 * \param infos_end iterator beyond the last data_info element to be considered
 	 * \param info_split_its iterators into indices specifying where to split the data for the children. Number of iterators is k+1, for easier iteration
+	 * \param min_samples_in_child smallest acceptable number of samples in any of the children
+	 * \param min_weight_in_child smallest acceptable weight in any of the children
 	 * \param rng (pseudo) random number generator as a source for stochasticity
 	 * 
 	 * \return float the loss of the found split
@@ -53,6 +55,8 @@ class k_ary_split_base{
 									typename std::vector<data_info_t<num_t, response_t, index_t> >::iterator infos_begin,
 									typename std::vector<data_info_t<num_t, response_t, index_t> >::iterator infos_end,
 									std::array<typename std::vector<data_info_t<num_t, response_t, index_t> >::iterator, k+1> &info_split_its,
+									index_t min_samples_in_child,
+									num_t min_weight_in_child,
 									rng_t &rng) = 0;
 
 	/** \brief tells into which child a given feature vector falls

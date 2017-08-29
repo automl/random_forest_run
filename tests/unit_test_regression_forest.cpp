@@ -65,13 +65,15 @@ BOOST_AUTO_TEST_CASE( regression_forest_serialize_test ){
 	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
 	tree_opts.min_samples_to_split = 2;
 	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = data.num_data_points()*3/4;
+	tree_opts.max_features = data.num_features()*3/4;
+	tree_opts.max_depth=5;
+	tree_opts.max_num_nodes=2048;
 
 	
 	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
 	forest_opts.num_data_points_per_tree = data.num_data_points()/2;
-	forest_opts.num_trees = 8;
+	forest_opts.num_trees = 16;
 	forest_opts.do_bootstrapping = true;
 	forest_opts.compute_oob_error= true;
 	
@@ -82,8 +84,8 @@ BOOST_AUTO_TEST_CASE( regression_forest_serialize_test ){
 	BOOST_REQUIRE(std::isnan(the_forest.out_of_bag_error()));
 
 	the_forest.fit(data, rng);
-	BOOST_REQUIRE(!std::isnan(the_forest.out_of_bag_error()));
 
+	BOOST_REQUIRE(!std::isnan(the_forest.out_of_bag_error()));
 
     auto tmp = the_forest.predict(data.retrieve_data_point(5));
 
@@ -122,48 +124,8 @@ BOOST_AUTO_TEST_CASE( regression_forest_serialize_test ){
 
 }
 
-BOOST_AUTO_TEST_CASE( regression_forest_exceptions_tests ){
-    
-    auto data = load_diabetes_data();
 
-	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
-	tree_opts.min_samples_to_split = 2;
-	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = data.num_data_points()*3/4;
 
-	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
-
-	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 8;
-	forest_opts.do_bootstrapping = false;
-	forest_opts.compute_oob_error= true;
-	
-	forest_type the_forest(forest_opts);
-	
-	rng_t rng;
-
-	// no trees in the forest
-	the_forest.options.num_trees = 0;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
-
-	// no datapoints in any trees
-	the_forest.options.num_trees = 8;
-	the_forest.options.num_data_points_per_tree = 0;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
-
-	// not enough datapoints and no bootstrapping
-	the_forest.options.num_data_points_per_tree = 32768;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
-
-	// a successful training without bootstrapping for covarage
-	the_forest.options.num_data_points_per_tree = 128;
-	the_forest.fit(data, rng);
-
-	// no features to split
-	the_forest.options.num_data_points_per_tree = 128;
-	the_forest.options.tree_opts.max_features = 0;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
-}
 
 BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	
@@ -220,6 +182,53 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	auto m = the_forest.predict(data.retrieve_data_point(0));
 }
 
+
+BOOST_AUTO_TEST_CASE( regression_forest_exceptions_tests ){
+    
+    auto data = load_diabetes_data();
+
+	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+	tree_opts.min_samples_to_split = 2;
+	tree_opts.min_samples_in_leaf = 1;
+	tree_opts.max_features = data.num_data_points()*3/4;
+
+	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+	forest_opts.num_data_points_per_tree = data.num_data_points();
+	forest_opts.num_trees = 8;
+	forest_opts.do_bootstrapping = false;
+	forest_opts.compute_oob_error= true;
+	
+	forest_type the_forest(forest_opts);
+	
+	rng_t rng;
+
+	// no trees in the forest
+	the_forest.options.num_trees = 0;
+	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+
+	// no datapoints in any trees
+	the_forest.options.num_trees = 8;
+	the_forest.options.num_data_points_per_tree = 0;
+	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+
+	// not enough datapoints and no bootstrapping
+	the_forest.options.num_data_points_per_tree = 32768;
+	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+
+	// a successful training without bootstrapping for covarage
+	the_forest.options.num_data_points_per_tree = 128;
+	the_forest.fit(data, rng);
+
+	// no features to split
+	the_forest.options.num_data_points_per_tree = 128;
+	the_forest.options.tree_opts.max_features = 0;
+	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+}
+
+
+
+
 BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
 	
 	auto data = load_diabetes_data();
@@ -274,8 +283,7 @@ BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
 	BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {1.1,0.5}) ,std::runtime_error);
 }
 
-
-/*
+/* not interesting right now!
 BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 	
 	auto data = load_diabetes_data();
@@ -320,45 +328,3 @@ BOOST_AUTO_TEST_CASE( fANOVA_forest_test ){
 }
 */
 
-
-BOOST_AUTO_TEST_CASE( github_issue_12 ){
-	std::vector<num_t> y = { 0.170108248251, 0.930876679459, 
-	0.905099378138, 0.596442160851, -5.0, -5.0, 0.309617890025, 
-	0.487095030376, 1.35073047692, 0.318355093365};
-
-	std::vector<std::vector<num_t> > X = 
-    {{ 0., 0.10322601, 0.35714272},
-    {1., 0.48144905, 0.92857184},
-    {0., 0.02233043, 0.54761909},
-    {0., 0.21689149, 0.64285728},
-    {0., 0.47701299, 0.73809546},
-    {0., 0.16681381, 0.07142816},
-    {0., 0.72408484, 0.11904726},
-    {0., 0.97184578, 0.45238091},
-    {1., 0.32984456, 0.88095274},
-    {0., 0.89288871, 0.45238091}};
-
-	data_container_type data(3);
-	data.set_type_of_feature(0, 2);
-	data.set_bounds_of_feature(1, 0.0, 1.0);
-	data.set_bounds_of_feature(2, 0.0, 1.0);
-
-	for (auto i=0u; i<y.size(); ++i)
-		data.add_data_point(X[i], y[i]);
-
-	rng_t rng(12345);
-
-	forest_type forest;
-
-	forest.options.num_trees = 10;
-	forest.options.num_data_points_per_tree = 10;
-	forest.options.do_bootstrapping = true;
-	forest.options.tree_opts.max_features = 3;
-	forest.options.tree_opts.min_samples_to_split = 3;
-	forest.options.tree_opts.min_samples_in_leaf = 3;
-	forest.options.tree_opts.max_depth = 20;
-	forest.options.tree_opts.epsilon_purity = 1e-8;
-	forest.options.tree_opts.max_num_nodes = 1000;
-
-	forest.fit(data, rng);
-}

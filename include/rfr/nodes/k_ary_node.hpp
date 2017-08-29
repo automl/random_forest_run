@@ -59,6 +59,8 @@ class k_ary_node_minimal{
 	* \param features_to_try vector of allowed features to be used for this split
 	* \param num_nodes number of already created nodes
 	* \param tmp_nodes a deque instance containing all temporary nodes that still have to be checked
+	* \param min_samples_in_leaf sets the minimum number of distinct data points in a leaf
+	* \param min_weight_in_leaf sets the minimum sum of sample weights in a leaf
     * \param rng a RNG instance
 	*
 	* \return num_t the loss of the split
@@ -68,11 +70,12 @@ class k_ary_node_minimal{
 							 std::vector<index_t> &features_to_try,
 							 index_t num_nodes,
 							 std::deque<rfr::nodes::temporary_node<num_t, response_t, index_t> > &tmp_nodes,
+							 index_t min_samples_in_leaf,
+							 num_t min_weight_in_leaf,
 							 rng_t &rng){
 		parent_index = tmp_node.parent_index;
 		std::array<typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t> >::iterator, k+1> split_indices_it;
-		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.begin, tmp_node.end, split_indices_it,rng);
-	
+		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.begin, tmp_node.end, split_indices_it, min_samples_in_leaf, min_weight_in_leaf, rng);
 		//check if a split was found
 		// note: if the number of features to try is too small, there is a chance that the data cannot be split any further
 		if (best_loss <  std::numeric_limits<num_t>::infinity()){

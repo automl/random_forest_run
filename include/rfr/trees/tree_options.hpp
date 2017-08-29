@@ -13,24 +13,26 @@ namespace rfr{ namespace trees{
 
 template <typename num_type = float,typename response_type = float, typename index_type = unsigned int>
 struct tree_options{
-    index_type max_features; 		///< number of features to consider for each split 
-	index_type max_depth;			///< maximum depth for the tree
+    index_type	max_features; 			///< number of features to consider for each split 
+	index_type	max_depth;				///< maximum depth for the tree
     
-    index_type min_samples_to_split;///< minumum number of samples to try splitting
-    index_type min_samples_in_leaf;	///< minimum number of samples in a leaf
-    num_type   min_weight_in_leaf;	///< minimum total sample weights in a leaf
+    index_type	min_samples_to_split;	///< minumum number of samples to try splitting
+    num_type 	min_weight_to_split;	///< minumum weight of samples to try splitting
 
-    index_type max_num_nodes;		///< maxmimum total number of nodes in the tree
-    index_type max_num_leaves;		///< maxmimum total number of leaves in the tree
+    index_type	min_samples_in_leaf;	///< minimum total sample weights in a leaf
+    num_type	min_weight_in_leaf;		///< minimum total sample weights in a leaf
+
+    index_type	max_num_nodes;			///< maxmimum total number of nodes in the tree
+    index_type	max_num_leaves;			///< maxmimum total number of leaves in the tree
     
-    response_type epsilon_purity;	///< minimum difference between two response values to be considered different*/
+    response_type epsilon_purity;		///< minimum difference between two response values to be considered different*/
 
 
   	/** serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( max_features, max_depth, min_samples_to_split, min_samples_in_leaf, min_weight_in_leaf, max_num_nodes, epsilon_purity);
+		archive( max_features, max_depth, min_samples_to_split, min_weight_to_split, min_samples_in_leaf, min_weight_in_leaf, max_num_nodes, epsilon_purity);
 	}
 
     /** (Re)set to default values with no limits on the size of the tree
@@ -45,9 +47,10 @@ struct tree_options{
     void set_default_values(){
 		max_features =  std::numeric_limits<index_type>::max();
 		max_depth = std::numeric_limits<index_type>::max();
-	
+
 		min_samples_to_split = 2;
 		min_samples_in_leaf = 1;
+		min_weight_to_split = 2;
 		min_weight_in_leaf = 1;
 	
 		max_num_nodes = std::numeric_limits<index_type>::max();
@@ -73,6 +76,19 @@ struct tree_options{
     void adjust_limits_to_data (const rfr::data_containers::base<num_type, response_type, index_type> &data){
 		max_features = std::min(max_features, data.num_features());
     }
+
+
+    void print_info(){
+		std::cout<<"max_features        : "<< max_features <<std::endl;
+		std::cout<<"max_depth           : "<< max_depth <<std::endl;
+		std::cout<<"min_samples_to_split: "<< min_samples_to_split <<std::endl;
+		std::cout<<"min_weight_to_split : "<< min_weight_to_split <<std::endl;
+		std::cout<<"min_samples_in_leaf : "<< min_samples_in_leaf <<std::endl;
+		std::cout<<"min_weight_in_leaf  : "<< min_weight_in_leaf <<std::endl;
+		std::cout<<"max_num_nodes       : "<< max_num_nodes <<std::endl;
+		std::cout<<"max_num_leaves      : "<< max_num_leaves <<std::endl;
+		std::cout<<"epsilon_purity      : "<< epsilon_purity <<std::endl;
+	}
     
 };
 

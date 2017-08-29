@@ -95,6 +95,7 @@ class running_statistics{
 	running_statistics(): N(0), avg(0), sdm(0) {}
 
 	running_statistics( long unsigned int n, num_t a, num_t s): N(n), avg(a), sdm(s) {}
+
 	/** \brief adds a value to the statistic
 	 * 
 	 * \param x the value to add
@@ -344,6 +345,11 @@ class weighted_running_statistics{
 		if (sdm < 0)
 			throw std::runtime_error("Squared Distance from the mean is now negative; Abort!");
 	}
+
+	/** \brief returns the number of points
+	 *\returns the current number of points added*/
+	long unsigned int	number_of_points()		const	{return(weight_stat.number_of_points());}
+
 
 	num_t	squared_deviations_from_the_mean () 			const {return(divide_sdm_by(1,0));}
 

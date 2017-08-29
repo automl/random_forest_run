@@ -45,6 +45,7 @@ struct temporary_node{
 		std::cout<<"node_index = "<<node_index <<"\n";
 		std::cout<<"parent_index = "<<parent_index <<"\n";
 		std::cout<<"node_level = "<< node_level<<"\n";
+		std::cout<<"num data_indices: "<< std::distance(begin, end)<<"\n";
 		std::cout<<"data_indices: ";
         for (auto it = begin; it!=end; it++)
             std::cout<<(*it).index<<" ";

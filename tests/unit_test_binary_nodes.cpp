@@ -82,7 +82,7 @@ void test_make_internal_node_and_make_leaf_node(){
 	std::vector<index_t> features_to_try({0,1});	
 
     // actually split the data and remove the tmp_node
-	nodes[0].make_internal_node(tmp_nodes.front(), data, features_to_try, nodes.size(), tmp_nodes, rng);
+	nodes[0].make_internal_node(tmp_nodes.front(), data, features_to_try, nodes.size(), tmp_nodes, 1, 1, rng);
 	tmp_nodes.pop_front();
 
 	// turn the first child into a leaf

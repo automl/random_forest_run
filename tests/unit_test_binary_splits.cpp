@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_continuous_split_test){
 	rng_type rng;
 
 	split_type split1;
-	num_t loss = split1.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
+	num_t loss = split1.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it,1, 1, rng);
 
 	// actual loss independently computed in python
 	BOOST_REQUIRE_CLOSE(loss, 23.33333333, 1e-4);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	rng_type rng;
 
 	split_type split2;
-	num_t loss = split2.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
+	num_t loss = split2.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, 1, 1, rng);
 
     num_t total_weight = 0;
     for (auto it = infos_split_it[0]; it!=infos_split_it[1]; ++it)
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_find_best_split_test){
 	rng_type rng;
 
 	split_type split3;
-	num_t loss = split3.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
+	num_t loss = split3.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, 1, 1, rng);
 	BOOST_REQUIRE_CLOSE(loss, 23.33333333, 1e-4);
     
     num_t total_weight = 0;
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_serialization){
 
 
 	split_type split4;
-	num_t loss = split4.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
+	num_t loss = split4.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, 1, 1, rng);
 
     num_t total_weight = 0;
     for (auto it = infos_split_it[0]; it!=infos_split_it[1]; ++it)
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_binary_serialization){
 
 
 	split_type split4;
-	num_t loss = split4.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, rng);
+	num_t loss = split4.find_best_split(data, features_to_try,data_info.begin(), data_info.end(),infos_split_it, 1, 1, rng);
 
     num_t total_weight = 0;
     for (auto it = infos_split_it[0]; it!=infos_split_it[1]; ++it)
