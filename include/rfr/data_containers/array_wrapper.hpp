@@ -4,29 +4,30 @@
 
 #include <cmath>
 #include <stdexcept>
-#include <rfr/data_containers/data_container_base.hpp>
+//#include <rfr/data_containers/data_container_base.hpp>
+#include <rfr/data_containers/data_container.hpp>
 
 
 namespace rfr{ namespace data_containers{
 
-template <typename num_type, typename response_type, typename index_type>
-class array_data_container : public rfr::data_containers::data_container_base<num_type, response_type, index_type>{
+template <typename num_t, typename response_t, typename index_t>
+class array_data_container : public rfr::data_containers::data_containers::base<num_t, response_t, index_t>{
 
   private:
-	index_type n_data_points;
-	index_type n_features;
-	num_type * feature_array;
-	response_type * response_array;
-	index_type * type_array;
-	index_type response_t;
+	index_t n_data_points;
+	index_t n_features;
+	num_t * feature_array;
+	response_t * response_array;
+	index_t * type_array;
+	index_t response_t;
 
   public:
 
-	array_data_container( 	num_type      * features,
-							response_type * responses,
-							index_type    * types,
-							index_type      n_data_points,
-							index_type      n_features):
+	array_data_container( 	num_t      * features,
+							response_t * responses,
+							index_t    * types,
+							index_t      n_data_points,
+							index_t      n_features):
 
 								n_data_points(n_data_points),
 								n_features(n_features),
@@ -46,13 +47,13 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 
 	virtual ~array_data_container() {};
   
-	virtual num_type feature (index_type feature_index, index_type sample_index) const {
+	virtual num_t feature (index_t feature_index, index_t sample_index) const {
 		return (feature_array[sample_index*n_features + feature_index]);
 	}
 
 
-	virtual std::vector<num_type> features (index_type feature_index, std::vector<index_type> &sample_indices) const {
-		std::vector<num_type> rv;
+	virtual std::vector<num_t> features (index_t feature_index, std::vector<index_t> &sample_indices) const {
+		std::vector<num_t> rv;
 		rv.reserve(sample_indices.size());
 
 		for (auto i: sample_indices)
@@ -62,35 +63,35 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 	}
 
 	
-	virtual response_type response (index_type sample_index) const{
+	virtual response_t response (index_t sample_index) const{
 		return (response_array[sample_index]);
 	}
 	
-	virtual void add_data_point (num_type* features, index_type num_elements, response_type response){
+	virtual void add_data_point (num_t* features, index_t num_elements, response_t response){
 		throw std::runtime_error("Array data containers do not support adding new data points.");
 	}
 	
-	virtual std::vector<num_type> retrieve_data_point (index_type index) const{
-		std::vector<num_type> rv(n_features);
+	virtual std::vector<num_t> retrieve_data_point (index_t index) const{
+		std::vector<num_t> rv(n_features);
 		for (auto i = 0u; i < rv.size(); i++)
 			rv[i] = feature_array[index*n_features + i];
 		return(rv);
 	}
 	
-	virtual index_type get_type_of_feature (index_type feature_index) const{
+	virtual index_t get_type_of_feature (index_t feature_index) const{
 		return(type_array[feature_index]);		
 	}
 
-	virtual void set_type_of_feature (index_type feature_index, index_type feature_type){
+	virtual void set_type_of_feature (index_t feature_index, index_t feature_type){
 		throw std::runtime_error("Array data containers do not support changing a feature type.");
 	}
 
 
-	virtual index_type get_type_of_response () const{
+	virtual index_t get_type_of_response () const{
 		return(response_t);		
 	}
 
-	virtual void set_type_of_response (index_type resp_t){
+	virtual void set_type_of_response (index_t resp_t){
 		if (resp_t > 0){
 			for (auto i=0u; i < n_data_points; i++){
 				if (!(response_array[i] < resp_t))
@@ -103,8 +104,30 @@ class array_data_container : public rfr::data_containers::data_container_base<nu
 	}
 
 
-	virtual index_type num_features() const {return(n_features);}
-	virtual index_type num_data_points()  const {return(n_data_points);}
+	virtual index_t num_features() const {return(n_features);}
+	virtual index_t num_data_points()  const {return(n_data_points);}
+
+	virtual void normalize_data(){
+		std::vector<num_t> features;
+		num_t min = std::numeric_limits<num_t>::max();
+		num_t max = std::numeric_limits<num_t>::lowest();
+		for(int i = 0; i<n_features; i++){
+			if (types[i] > 0){
+				for(int j = 0; j<n_data_points; j++){
+					min = std::min(min, feature_array[j*n_features + i]);
+					max = std::max(max, feature_array[j*n_features + i]);
+				}
+			}
+		}
+
+		for(int i = 0; i<n_features; i++){
+			if (types[i] > 0){
+				for(int j = 0; j<n_data_points; j++){
+					feature_array[j*n_features + i] = (feature_array[j*n_features + i]-min)/(max-min);
+				}
+			}
+		}
+	}
 };
 
 }} // namespace rfr

@@ -117,12 +117,15 @@ class base{
 	 * \param feature_index the index of the feature
 	 * \return std::pair<num_t,num_t> interval of allowed values
 	 */
-	virtual std::pair<num_t,num_t> get_bounds_of_feature(index_t feature_index) const = 0;
+	virtual std::pair<num_t,num_t> get_bounds_of_feature(index_t feature_index) = 0;
 
 	/** \brief the number of features of every datapoint in the container */
 	virtual index_t num_features() const = 0;
 	/** \brief the number of data points in the container */
 	virtual index_t num_data_points()  const = 0;
+
+	
+	//virtual void normalize_data();
 };
 
 }} // namespace rfr::data_containers

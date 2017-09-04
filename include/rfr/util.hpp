@@ -1,65 +1,12 @@
 #ifndef RFR_UTIL_HPP
 #define RFR_UTIL_HPP
 
-#include <cmath>
-#include <vector>
+
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
 
-
-#include "cereal/cereal.hpp"
-#include <cereal/types/vector.hpp>
-#include <cereal/types/array.hpp>
-
-
-
 namespace rfr{ namespace util{
-
-
-/* Compute (pairwise) disjunction of 2 boolean vectors and store the result in dest.*/
-inline void disjunction(const std::vector<bool> &source, std::vector<bool> &dest) {
-	if (source.size() > dest.size()) {
-		dest.resize(source.size());
-	}
-	for (size_t idx = 0; idx < dest.size(); ++idx) {
-		dest[idx] = source[idx] || dest[idx];
-	}
-}
-
-
-template <typename num_t>
-std::vector<unsigned int> get_non_NAN_indices(const std::vector<num_t> &vector){
-	std::vector<unsigned int> indices;
-	for (auto i = 0u; i < vector.size(); ++i)
-		if (! std::isnan(vector[i]))
-			indices.push_back(i);
-	return(indices);
-}
-
-
-bool any_true( const std::vector<bool> & b_vector, const std::vector<unsigned int> indices){
-	for (auto &i: indices)
-		if (b_vector[i])
-			return(true);
-	return(false);
-}
-
-
-/* Compute the cardinality of a space given the subspaces. */
-template <typename num_t, typename index_t>
-inline num_t subspace_cardinality(const std::vector< std::vector<num_t> > &subspace, std::vector<index_t> types) {
-	num_t result = 1;
-	for (auto i=0u; i < types.size(); ++i){
-		if (types[i] == 0){ // numerical feature
-			result *= subspace[i][1] - subspace[i][0];
-		}
-		else{ // categorical feature
-			result *= subspace[i].size();
-		}
-	}
-	return result;
-}
 
 /* Merges f1 and f2 into dest without copying NaNs. This allows for easy marginalization */
 template <typename num_t, typename index_type>
@@ -84,18 +31,9 @@ class running_statistics{
 
 
   public:
-
-  	/* serialize function */
-  	template<class Archive>
-	void serialize(Archive & archive) {
-		archive( N, avg, sdm); 
-	}
-
-  
 	running_statistics(): N(0), avg(0), sdm(0) {}
 
 	running_statistics( long unsigned int n, num_t a, num_t s): N(n), avg(a), sdm(s) {}
-
 	/** \brief adds a value to the statistic
 	 * 
 	 * \param x the value to add
@@ -220,6 +158,7 @@ class running_statistics{
 	 * statistics are almost the same. Use with caution!
 	 */
 	running_statistics operator- ( const running_statistics &other) const{
+
 		if (other.N >= N)
 			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
@@ -231,31 +170,13 @@ class running_statistics{
 		num_t avg1 = avg * (nt/n1) - other.avg * (n2/n1);
 		// the sdm looks a bit tricky, but is straight forward to derive
 		num_t sdm1 = sdm - other.sdm - n2*std::pow(other.avg - avg, 2) - n1*std::pow(avg1-avg,2);
-		
-		if (N1 == 1) sdm1 = 0;
-		
+
 		return(running_statistics( N1, avg1, sdm1));
 	}
-	
-	/** \brief operator to multiply all values by a number */
-	running_statistics operator* (const num_t &a) const{
-		return(running_statistics(N, a*avg, a*a*sdm));
-	}
-
-	/** \brief operator to add a number to all values*/
-	running_statistics operator+ (const num_t &a) const{
-		return(running_statistics(N, avg+a, sdm));
-	}
-
-	/** \brief operator to subtract a number from all values*/
-	running_statistics operator- (const num_t &a) const{
-		return(running_statistics(N, avg-a, sdm));
-	}
-	
 	/**\brief convenience operator for inplace subtraction*/
 	running_statistics &operator-= ( const running_statistics &other) {
 
-		if (other.N >= N)
+		if (other.N >= N-1)
 			throw std::runtime_error("Second statistics must not contain as many points as first one!");
 
 		// new number of points is trivial
@@ -270,11 +191,8 @@ class running_statistics{
 		N = N1;
 		avg = avg1;
 		sdm = sdm1;
-		if (N == 1) sdm = 0;
-		
 		return(*this);
 	}
-	
 	/**\brief method to check for numerical equivalency
 	 * \param other the other running statistic to compare against
 	 * \param rel_error relative tolerance for the mean and variance*/
@@ -304,13 +222,6 @@ class weighted_running_statistics{
 	weighted_running_statistics(): avg(0), sdm(0), weight_stat() {}
 	weighted_running_statistics( num_t m, num_t s, running_statistics<num_t> w_stat):
 		avg(m), sdm(s), weight_stat(w_stat) {}
-
-
-  	/* serialize function */
-  	template<class Archive>
-	void serialize(Archive & archive) {
-		archive( avg, sdm, weight_stat); 
-	}
 
 	void push (num_t x, num_t weight){
 		if (weight <= 0)
@@ -345,11 +256,6 @@ class weighted_running_statistics{
 		if (sdm < 0)
 			throw std::runtime_error("Squared Distance from the mean is now negative; Abort!");
 	}
-
-	/** \brief returns the number of points
-	 *\returns the current number of points added*/
-	long unsigned int	number_of_points()		const	{return(weight_stat.number_of_points());}
-
 
 	num_t	squared_deviations_from_the_mean () 			const {return(divide_sdm_by(1,0));}
 
@@ -397,6 +303,8 @@ class weighted_running_statistics{
 		return(*this);
 	}
 
+
+
 	weighted_running_statistics operator-  ( const weighted_running_statistics &other) const{
 
 		if (other.weight_stat.sum() >= weight_stat.sum())
@@ -437,17 +345,8 @@ class weighted_running_statistics{
 		return(*this);
 	}
 
-	weighted_running_statistics operator* (const num_t a) const{
-		return(weighted_running_statistics(a*avg, a*a*sdm, weight_stat));
-	}
 
-	weighted_running_statistics operator+ (const num_t a) const{
-		return(weighted_running_statistics(a+avg, sdm, weight_stat));
-	}
 
-	weighted_running_statistics multiply_weights_by ( const num_t a) const{
-		return(weighted_running_statistics(avg, a*sdm, weight_stat*a));
-	}
 
 	bool numerically_equal (weighted_running_statistics other, num_t rel_error){
 
@@ -461,10 +360,10 @@ class weighted_running_statistics{
 		// finally compare the weight statistics
 		return( weight_stat.numerically_equal(other.weight_stat, rel_error));
 	}
-	
-	running_statistics<num_t> get_weight_statistics() const { return(weight_stat);}
-	
 };
+
+
+
 
 template <typename num_t>
 class running_covariance{
