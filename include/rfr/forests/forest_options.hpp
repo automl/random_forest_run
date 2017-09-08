@@ -60,6 +60,17 @@ struct forest_options{
 		tree_opts.set_default_values();
 		adjust_limits_to_data(data);
 	}
+
+	std::string to_string() const {
+		std::string str = "";
+		str += " number   of    trees :" + std::to_string(num_trees) + "\n";
+		str += "number of data points :" + std::to_string(num_data_points_per_tree) + "\n";
+		str += "   do_bootstrapping   :" + std::to_string(do_bootstrapping) + "\n";
+		str += " min samples in leaf  :" + std::to_string(tree_opts.min_samples_in_leaf) + "\n";
+		str += " min samples per node :" + std::to_string(tree_opts.min_samples_node) + "\n";
+		str += "       life time      :" + std::to_string(tree_opts.life_time) + "\n";
+		return str;
+	}
 };
 
 }}//namespace rfr::forests

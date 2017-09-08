@@ -195,6 +195,26 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
 		}
 	}
 
+	virtual void normalize_data(){
+		std::vector<num_t> features;
+		num_t min = std::numeric_limits<num_t>::max();
+		num_t max = std::numeric_limits<num_t>::lowest();
+		for(int i = 0; i<num_features(); i++){
+			for(int j = 0; j<num_data_points(); j++){
+				min = std::min(min, feature_values[i][j]);
+				max = std::max(max, feature_values[i][j]);
+			}
+			
+		}
+
+		for(int i = 0; i<num_features(); i++){
+			for(int j = 0; j<num_data_points(); j++){
+				feature_values[i][j] = (feature_values[i][j]-min)/(max-min);
+			}
+			
+		}
+	}
+
 
 	// some helper functions
 	int import_csv_files (const std::string &feature_file, const std::string &response_file, std::string weight_file=""){
