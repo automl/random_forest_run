@@ -100,7 +100,9 @@ data_container_type load_data(std::string file_name, std::string extra){
 
 num_t calculate_log_prob(response_t mean, response_t s_d, response_t true_value){
 	
-	response_t prob = 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(std::pow((true_value-mean),2)/(2*std::pow(s_d,2)));
+	response_t prob = 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2)));
+	//std::cout << "MONDRIAN_FOREST::exp1 : " << 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2))) << std::endl;
+	//std::cout << "MONDRIAN_FOREST::exp2 : " << 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(std::pow((true_value-mean),2)/(2*std::pow(s_d,2))) << std::endl;
 	return log(prob);
 }
 
@@ -131,9 +133,9 @@ response_t statistics(std::string name, index_t index, data_container_type data,
 		log_prob = calculate_log_prob(pred_mean, s_d, data.response(i));
 		log_prob_sum += log_prob;
 		//std::cout << "MONDRIAN_FOREST::: " << log_prob << std::endl;
-		std::cout << "MONDRIAN_FOREST::diff: " << pred_mean - data.response(i) << std::endl;
-		std::cout << "MONDRIAN_FOREST::standard_deviation: " << s_d << std::endl;
-		std::cout << "MONDRIAN_FOREST::log: " << log_prob << std::endl;
+		// std::cout << "MONDRIAN_FOREST::diff: " << pred_mean - data.response(i) << std::endl;
+		// std::cout << "MONDRIAN_FOREST::standard_deviation: " << s_d << std::endl;
+		// std::cout << "MONDRIAN_FOREST::log: " << log_prob << std::endl;
 		if(i>0){
 			prediction = prediction + "\n" + std::to_string(pred);
 			responses = responses + "\n" + std::to_string(data.response(i));
@@ -424,7 +426,8 @@ int main(int argc, char* argv[]){
 
 	//std::string dataset = "sinx_noise";
 	//std::string dataset = "arm";
-	std::string dataset = "sinxy";
+	//std::string dataset = "sinxy";
+	std::string dataset = "sinx";
 	bool partial_fit = false;
 	bool normalize_data = false;
 	std::cout << argv[0] << " " << argv[1] << std::endl;
