@@ -67,7 +67,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 	void set_tree_options(rfr::trees::tree_options<num_t, response_t, index_t> tree_opts){
 		life_time = tree_opts.life_time;
 		smooth_hierarchically = tree_opts.hierarchical_smoothing;
-		min_samples_node = tree_opts.min_samples_node;
+		min_samples_node = 1;//tree_opts.min_samples_node;
 		min_samples_to_split = tree_opts.min_samples_to_split;
 		sfactor = 2;
 	}
@@ -156,7 +156,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 						max = min_max[split_dimension].first;//scond
 					}
 					else {//imposible
-						std::getchar();
+						throw std::runtime_error("impossible partial fit");
 						min = min_max[split_dimension].first;
 						max = min_max[split_dimension].second;
 					}
@@ -228,6 +228,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 						}
 						else{
 							std::cout << "MONDRIAN_TREE::partial_fit::IMPOSIBLE" << std::endl;
+							throw std::runtime_error("partial fit, father doesn't have the correct children");
 							//std::getchar();
 						}
 					}
@@ -472,14 +473,14 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 				split_dimension = -1;
 				split_value = -1;
 				num_leafs++;
-				std::getchar();
+				throw std::runtime_error("probably bad set up in the min_samples_node");
+				//std::getchar();
 				tmp_node.set_child (0,0);
 			}
 			
 		} else{
 			if(time_parent + E < life_time){
 				time_node = time_parent + E;
-				std:getchar();
 			}
 			else{
 				time_node = life_time;
@@ -733,23 +734,16 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 	}
 
 	virtual response_t predict (const std::vector<num_t> &feature_vector) const {
-		//throw exception
-		std::cout <<"FALSE PREDICTION" << std::endl;
+		throw std::runtime_error("not available for mondrian trees, use the fuction with 4 parameters");
 		return 0;
 	}
     
     response_t predict (const std::vector<num_t> &feature_vector, response_t &standard_deviation, response_t &predicted_mean, rng_t &rng) {
-		//std::cout << std::endl << "MONDRIAN_TREE::PREDICT:: " << std::endl;
+		if(the_nodes.size() == 0){
+			throw std::runtime_error("cannot predict on an empty tree");
+		}
 		rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> tmp_node = the_nodes[0], old_node;
 
-		//std::cout << std::endl << "MONDRIAN_TREE::PREDICT::the_nodes_size" << the_nodes.size() << std::endl;
-		//std::cout << std::endl << "MONDRIAN_TREE::PREDICT::after_index" << std::endl;
-		//std::normal_distribution<num_t> distribution;
-		//std::cout << "MONDRIAN_TREE::PREDICT::starting prediction" << std::endl;
-
-		// for(int p=0; p<feature_vector.size();p++){
-		// 	std::cout << "MONDRIAN_TREE::PREDICT::k " << p << "::" << feature_vector[p] <<std::endl;
-		// }
 		num_t prediction_now, pred_variance, prob_not_separated_now, prob_separated_now, nu;
 		num_t prob_not_separated_yet = 1;
 		num_t delta_node = 0;
@@ -757,39 +751,21 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 		bool finished = false;
 		num_t w, mean = 0, variance = 0, second_moment = 0, pred_second_moment_temp, pred_mean_temp, expected_split_time, variance_from_mean, expected_cut_time;
 		num_t sum_W = 0;
-		// if(feature_vector[0] > 1.537 && feature_vector[0]<1.538){//first test case
-		// 	std::cout << "MONDRIAN_TREE::PREDICT::prediction" << prediction << std::endl;
-		// 	std::cout << "MONDRIAN_TREE::PREDICT::special_mean" << mean << std::endl;
-		// 	//std::getchar();
-		// }
 		while (!finished){//what ?
 			old_node = tmp_node;
 			delta_node = tmp_node.get_split_time() - get_parent_split_time(tmp_node);
-			// if(tmp_node.get_parent_index() != -1){
-			// 	 the_nodes[tmp_node.get_parent_index()].get_time_split();
-			// }
-			// else{//root of the tree
-			// //std::cout << "MONDRIAN_TREE::PREDICT::Else " << std::endl;
-			// 	delta_node = tmp_node.get_time_split();
-			// 	num_t time_parent = 0;
-			// }
-
+			
 			nu = calculate_nu(tmp_node, feature_vector);
 			prob_not_separated_now = exp(- delta_node * nu);
-			prob_separated_now = 1 - prob_not_separated_now;
-			// std::cout << "MONDRIAN_TREE::PREDICT::prob_separated_now" << prob_separated_now << std::endl;	
-			//std::getchar();	
+			prob_separated_now = 1 - prob_not_separated_now;	
 			if(prob_separated_now>0){
 				expected_cut_time = 1/ nu;
 				w = prob_not_separated_yet * prob_separated_now;
-				//if(!std::isinf(old_node.get_split_cost()) ){set_time_split
 				if(old_node.get_split_time()<life_time ){
 					expected_cut_time -= old_node.get_split_cost() * (1-prob_separated_now) / ( 1- exp(- delta_node * nu) );
 					//expected_cut_time -= old_node.get_time_split() * (1-prob_separated_now) / ( 1- exp(- delta_node * nu) );
 				}
 				if(smooth_hierarchically){
-					//std::cout << "hierchhical" << std::endl;		
-					//std::getchar();
 					pred_mean_temp = old_node.get_mean();
 					pred_second_moment_temp = old_node.get_variance();
 					expected_split_time = expected_cut_time + get_parent_split_time(old_node);
@@ -797,40 +773,20 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 						- sigmoid (sigmoid_coef * get_parent_split_time(old_node)) );
 						
 					pred_second_moment_temp += variance_from_mean;
-					// std::cout << "WAAASMONDRIAN_TREE::PREDICT::expected_split_time" << expected_split_time << std::endl;		
-					// std::cout << "WAAASMONDRIAN_TREE::PREDICT::variance_from_mean" << variance_from_mean << std::endl;	
-					// std::cout << "WAAASMONDRIAN_TREE::PREDICT::pred_second_moment_temp" << pred_second_moment_temp << std::endl;	
-					//std::getchar();
 				}
 				else{
 					pred_mean_temp = old_node.get_response_stat().mean();
 					pred_second_moment_temp = old_node.get_response_stat().sum_of_squares() / old_node.get_response_stat().sum_of_weights() + noise_variance;
-					// if(old_node.get_response_stat().sum_of_weights() != old_node.get_points().size()){
-					// 	std::cout << "MONDRIAN_TREE::PREDICT::weights" << old_node.get_response_stat().sum_of_weights() << " points " << old_node.get_points().size() << std::endl;
-					// 	std::getchar();
-					// }
-					//pred_variance = old_node.get_response_stat().variance_population();
 				}
 				pred_variance = pred_second_moment_temp - std::pow(pred_mean_temp,2);
-				//std::cout << "WAAASMONDRIAN_TREE::PREDICT::pred_variance" << pred_variance << std::endl;
-
-
 
 				mean += w * pred_mean_temp;
 				second_moment += w * pred_second_moment_temp;
 				std::normal_distribution<num_t> distribution(pred_mean_temp, pred_variance);
 				prediction_now = distribution(rng);
 				prediction += w * prediction_now;
-				// std::cout << "WAAASMONDRIAN_TREE::PREDICT::split_cost " << old_node.get_split_cost() << std::endl;
-				// std::cout << "WAAASMONDRIAN_TREE::PREDICT::W " << w << std::endl;
-				// std::cout << "WAAASMONDRIAN_TREE::PREDICT::prob_not_separated_yet " << prob_not_separated_yet << std::endl;
-				// std::cout << "WAAASMONDRIAN_TREE::PREDICT::pred_variance " << pred_variance << std::endl;
-				// std::cout << "WAAASMONDRIAN_TREE::PREDICT::mean " << mean << std::endl;
-				// std::cout << "WAAASMONDRIAN_TREE::PREDICT::prediction " << prediction << std::endl;
-				// std::cout << "WAAASMONDRIAN_TREE::PREDICT::noisevariance " << noise_variance << std::endl;
 				sum_W += w;		
-				//std::getchar();
-			}//extra trees
+			}
 			//else if (prob_separated_now == 0 && std::isinf(old_node.get_split_cost()) ){
 			else if (prob_separated_now == 0 && old_node.get_split_cost() >= life_time ){
 				if(smooth_hierarchically){
@@ -848,62 +804,26 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 				std::normal_distribution<num_t> distribution(pred_mean_temp, pred_variance);
 				prediction_now = distribution(rng);
 				prediction += prob_not_separated_yet * prediction_now;
-				// std::cout << "MONDRIAN_TREE::PREDICT::split_cost " << old_node.get_split_cost() << std::endl;
-				// std::cout << "MONDRIAN_TREE::PREDICT::W " << prob_not_separated_yet << std::endl;
-				// std::cout << "MONDRIAN_TREE::PREDICT::prob_not_separated_yet " << prob_not_separated_yet << std::endl;
-				// std::cout << "MONDRIAN_TREE::PREDICT::pred_variance " << pred_variance << std::endl;
-				// std::cout << "MONDRIAN_TREE::PREDICT::mean " << mean << std::endl;
-				// std::cout << "MONDRIAN_TREE::PREDICT::prediction " << prediction << std::endl;
-				// std::cout << "MONDRIAN_TREE::PREDICT::noisevariance " << noise_variance << std::endl;
-				
 				sum_W += prob_not_separated_yet;
-				//std::getchar();
 			}
 			if(tmp_node.is_a_leaf()){
 				finished = true;
 			}
 			else{
-				//std::cout << "MONDRIAN_TREE::PREDICT::NOT_LEAF " << std::endl;
 				prob_not_separated_yet = prob_not_separated_yet * (1-prob_separated_now);
-				//std::cout << "MONDRIAN_TREE::PREDICT::split_value " << tmp_node.get_split_dimension() << "::" << tmp_node.get_split_value() << std::endl;
-				//std::getchar();
 				if(feature_vector[tmp_node.get_split_dimension()]<tmp_node.get_split_value()){
-					//std::cout << "MONDRIAN_TREE::PREDICT::LEFT_CHILD " << tmp_node.get_child_index(0) << std::endl;
 					tmp_node = the_nodes[tmp_node.get_child_index(0)];
 				}
 				else{
-					//std::cout << "MONDRIAN_TREE::PREDICT::RIGHT_CHILD " << tmp_node.get_child_index(1) << std::endl;	
 					tmp_node = the_nodes[tmp_node.get_child_index(1)];
 				}
-			}
-			
-			//std::cout << "WAAASMONDRIAN_TREE::PREDICT::prediction" << prediction << std::endl;	
-			// if(feature_vector[0] < -1.458 && feature_vector[0]>-1.459){//first test case
-			// 	std::cout << "MONDRIAN_TREE::PREDICT::prediction" << prediction << std::endl;
-			// 	std::cout << "MONDRIAN_TREE::PREDICT::mean" << mean << std::endl;
-			// 	//std::getchar();
-			// }
-			//std::getchar();
-	
+			}	
 		}
 		variance = second_moment - std::pow(mean,2);
- 		// std::cout << "MONDRIAN_TREE::PREDICT::sum_w " << sum_W << std::endl;	
-		// std::cout << "MONDRIAN_TREE::PREDICT::MEAN " << mean << std::endl;	
-		 
-		// std::cout << "MONDRIAN_TREE::PREDICT::VARIANCE POPULATION" << variance << std::endl;		
-		// std::cout << "MONDRIAN_TREE::PREDICT::Prediction is " << prediction << std::endl;
 		last_mean = mean;
-		//last_variance = std::sqrt(variance);
 		standard_deviation = std::sqrt(variance);
 		predicted_mean = mean;
 		last_prediction = prediction;
-		// std::cout << "MONDRIAN_TREE::PREDICT::sum_W " << sum_W << std::endl;
-		// std::cout << "MONDRIAN_TREE::PREDICT::EEEEEEEEEEEEEEEEEENNNNNNDDDDDDDDDDDDDDD " << sum_W << std::endl;
-		// if(standard_deviation>0.1 && feature_vector[0]>0 && feature_vector[0]<3){
-		// 	std::cout << "MONDRIAN_TREE::PREDICT::checkit" << feature_vector[0] << std::endl;
-		// 	//std::getchar();
-		// }
-		//std::getchar();
 		return(prediction);
     }
 
@@ -927,14 +847,9 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 		auto min_max = tmp_node.get_min_max();
 		num_t nu = 0;
 		for(auto i = 0u; i< feature_vector.size(); i++){
-			//nu += std::max(min_max[i].second - feature_vector[i],(num_t)0) + std::max(feature_vector[i] - min_max[i].first,(num_t)0);
 			nu += std::max(feature_vector[i] - min_max[i].second,(num_t)0) + std::max(min_max[i].first - feature_vector[i],(num_t)0);
 		}
-		// std::cout << "MONDRIAN_TREE::CALCULATE_NU::nu " << nu <<std::endl;
-		// std::cout << "MONDRIAN_TREE::CALCULATE_NU::min " << min_max[0].first << " max " << min_max[0].second <<std::endl;
-
-		//std::getchar();
-
+		
 		return nu;
 	}
     
@@ -1010,7 +925,12 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 	virtual index_t number_of_leafs() const {return(num_leafs);}
 	virtual index_t depth()           const {return(max_depth);}
 
-	std::vector<index_t> get_used_points(){return the_nodes[0].get_points();}
+	std::vector<index_t> get_used_points(){
+		if(the_nodes.size()==0){
+			return std::vector<index_t>(0);
+		}
+		return the_nodes[0].get_points();
+	}
 	
 	
 
@@ -1175,153 +1095,3 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 }}//namespace rfr::trees
 #endif
 
-
-	// void addNewNode(rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> new_node,
-	//  int initial_position, bool update_parent){
-	// 	rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> aux, tmp_node, aux_parent;
-	// 	//aux = the_nodes[position]; 
-	// 	tmp_node = new_node;
-	// 	int position = initial_position, my_position;
-	// 	//tmp_node.print_info();
-	// 	//the_nodes[position] = tmp_node;
-	// 	the_nodes.resize( the_nodes.size()+1);
-	// 	std::cout << "MONDRIAN_TREE::ADDNEWNODE:before_while_position " << position << std::endl;
-	// 	while(position<the_nodes.size()){
-	// 		if(position<the_nodes.size()-1){
-	// 			std::cout << "MONDRIAN_TREE::ADDNEWNODE:adding" << std::endl;
-	// 			aux = the_nodes[position];
-	// 			int aux_parent_index = aux.get_parent_index();
-	// 			std::cout << "MONDRIAN_TREE::ADDNEWNODE:parent_index " << aux_parent_index << std::endl;
-	// 			std::cout << "MONDRIAN_TREE::ADDNEWNODE:position " << position << std::endl;
-	// 			if(update_parent || initial_position != position){
-	// 				aux_parent_index++;
-	// 				aux.set_parent_index(aux_parent_index);
-	// 			}
-	// 			if(update_parent && initial_position == position){
-	// 				my_position = 0;
-	// 			}
-	// 			else{
-	// 				my_position = position;
-	// 			}
-	// 			if(aux_parent_index >= 0){
-	// 				aux_parent = the_nodes[aux_parent_index];
-	// 				if(aux_parent.get_children()[0] == my_position){
-	// 					aux_parent.set_child(0, position+1);
-	// 				}
-	// 				else{
-	// 					if(aux_parent.get_children()[1] == my_position){
-	// 						aux_parent.set_child(1, position+1);
-	// 					}
-	// 					else{
-	// 						std::cout << "MONDRIAN_TREE::add_new_node::IMPOSIBLE" << std::endl;
-	// 					}
-	// 				}
-	// 				the_nodes[aux_parent_index] = aux_parent;
-	// 			}
-				
-	// 			if(aux.get_split_cost() == 0){
-	// 				//increase the split cost ?
-	// 			}
-	// 			aux.set_split_time(get_parent_split_time(aux) + aux.get_split_time());
-				
-	// 		}
-	// 		the_nodes[position] = tmp_node;
-	// 		//the_nodes[position].print_info();
-	// 		std::cout << "MONDRIAN_TREE::ADDNEWNODE:nodeinfo " << std::endl;
-	// 		tmp_node = aux;
-	// 		//tmp_node.print_info();
-	// 		std::cout << "MONDRIAN_TREE::ADDNEWNODE:newt " << std::endl;
-	// 		position++;
-	// 	}
-	// 	std::cout << "MONDRIAN_TREE::ADDNEWNODE:endAdd" << std::endl;
-	// 	//print_info();
-		
-	// }
-
-
-// response_t predict_without_likelihood (const std::vector<num_t> &feature_vector, rng_t &rng) {
-// 		//leaf_statistic(feature_vector).sum_of_weights();
-//         //return(leaf_statistic(feature_vector).mean());
-// 		//std::cout << std::endl << "MONDRIAN_TREE::PREDICT:: " << std::endl;
-// 		rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> tmp_node = the_nodes[0], old_node;
-
-// 		//std::cout << std::endl << "MONDRIAN_TREE::PREDICT::the_nodes_size" << the_nodes.size() << std::endl;
-
-// 		tmp_node.get_parent_index();
-// 		//std::cout << std::endl << "MONDRIAN_TREE::PREDICT::after_index" << std::endl;
-// 		//std::normal_distribution<num_t> distribution;
-// 		//std::cout << "MONDRIAN_TREE::PREDICT::starting prediction" << std::endl;
-
-// 		// for(int p=0; p<feature_vector.size();p++){
-// 		// 	std::cout << "MONDRIAN_TREE::PREDICT::k " << p << "::" << feature_vector[p] <<std::endl;
-// 		// }
-// 		num_t prediction_now, pred_variance;
-// 		num_t prob_not_separated_yet = 1;
-// 		num_t delta_node = 0;
-// 		response_t prediction = 0;
-// 		bool finished = false;
-// 		num_t w, mean = 0, variance = 0;
-// 		num_t sum_W = 0;
-// 		while (!finished){//what ?
-// 			old_node = tmp_node;
-// 			if(tmp_node.get_parent_index() != -1){
-// 				delta_node = tmp_node.get_time_split() - the_nodes[tmp_node.get_parent_index()].get_time_split();
-// 			}
-// 			else{//root of the tree
-// 			//std::cout << "MONDRIAN_TREE::PREDICT::Else " << std::endl;
-// 				delta_node = tmp_node.get_time_split();
-// 				num_t time_parent = 0;
-// 			}
-
-// 			num_t nu = calculate_nu(tmp_node, feature_vector);
-// 			num_t prob_separated_now = 1 - exp(- delta_node * nu);
-// 			if(prob_separated_now>0){
-// 				w = prob_not_separated_yet * prob_separated_now;
-// 			}
-// 			//std::cout << "MONDRIAN_TREE::PREDICT::POSTWhile " << std::endl;
-// 			if(tmp_node.is_a_leaf()){
-// 				//std::cout << "MONDRIAN_TREE::PREDICT::LEAF " << std::endl;
-// 				w = prob_not_separated_yet * (1-prob_separated_now);
-// 				finished = true;
-// 				//return;//return the normal to evaluate
-// 			}
-// 			else{
-// 				//std::cout << "MONDRIAN_TREE::PREDICT::NOT_LEAF " << std::endl;
-// 				prob_not_separated_yet = prob_not_separated_yet * (1-prob_separated_now);
-// 				//std::cout << "MONDRIAN_TREE::PREDICT::split_value " << tmp_node.get_split_dimension() << "::" << tmp_node.get_split_value() << std::endl;
-				
-// 				if(feature_vector[tmp_node.get_split_dimension()]<tmp_node.get_split_value()){
-// 					//std::cout << "MONDRIAN_TREE::PREDICT::LEFT_CHILD " << tmp_node.get_child_index(0) << std::endl;
-// 					tmp_node = the_nodes[tmp_node.get_child_index(0)];
-// 				}
-// 				else{
-// 					//std::cout << "MONDRIAN_TREE::PREDICT::RIGHT_CHILD " << tmp_node.get_child_index(1) << std::endl;	
-// 					tmp_node = the_nodes[tmp_node.get_child_index(1)];
-// 				}
-// 			}
-
-// 			pred_variance = old_node.get_response_stat().variance_population();// - pow(old_node.get_response_stat().mean(),2);
-// 			// if(pred_variance<0){
-// 			// 	std::cout << "WAAASMONDRIAN_TREE::PREDICT::intermediate variance" << pred_variance << std::endl;		
-// 			// 	std::getchar();
-// 			// }
-// 			mean += w * old_node.get_response_stat().mean();
-// 			variance += w * pred_variance;
-// 			std::normal_distribution<num_t> distribution(old_node.get_response_stat().mean(), old_node.get_response_stat().variance_population());
-// 			prediction_now = distribution(rng);
-// 			prediction += w * prediction_now;
-
-// 			sum_W += w;		
-// 		}
-		
-//  		// std::cout << "MONDRIAN_TREE::PREDICT::sum_w " << sum_W << std::endl;	
-// 		// std::cout << "MONDRIAN_TREE::PREDICT::MEAN " << mean << std::endl;	
-		 
-// 		// std::cout << "MONDRIAN_TREE::PREDICT::VARIANCE POPULATION" << variance << std::endl;		
-// 		// std::cout << "MONDRIAN_TREE::PREDICT::Prediction is " << prediction << std::endl;
-// 		last_mean = mean;
-// 		last_variance = variance;
-// 		last_prediction = prediction;
-// 		//std::getchar();
-// 		return(prediction);
-//     }

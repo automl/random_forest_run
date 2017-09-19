@@ -100,10 +100,15 @@ data_container_type load_data(std::string file_name, std::string extra){
 
 num_t calculate_log_prob(response_t mean, response_t s_d, response_t true_value){
 	
-	response_t prob = 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2)));
-	//std::cout << "MONDRIAN_FOREST::exp1 : " << 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2))) << std::endl;
+	//response_t prob = 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2)));
+	//response_t prob = 1/(s_d * std::sqrt(2*M_PI)) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2)));
+	response_t prob = -log(s_d) - 0.5 * log(2*M_PI) - std::pow((true_value-mean),2)/(2*std::pow(s_d,2));
+	// std::cout << "MONDRIAN_FOREST::exp1 : " << 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2))) << std::endl;
+	// std::cout << "MONDRIAN_FOREST::exp1 : " << 1/(s_d * std::sqrt(2*M_PI)) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2))) << std::endl;
 	//std::cout << "MONDRIAN_FOREST::exp2 : " << 1/(std::sqrt(2*M_PI*std::pow(s_d,2))) * exp(std::pow((true_value-mean),2)/(2*std::pow(s_d,2))) << std::endl;
-	return log(prob);
+	//std::cout << "MONDRIAN_FOREST::log1 : " << prob << std::endl;
+	//std::cout << "MONDRIAN_FOREST::log2 : " << log(1/(s_d * std::sqrt(2*M_PI)) * exp(-std::pow((true_value-mean),2)/(2*std::pow(s_d,2)))) << std::endl;
+	return prob;
 }
 
 response_t statistics(std::string name, index_t index, data_container_type data, forest_type forest, double time_diff, rng_t rng){
@@ -115,13 +120,14 @@ response_t statistics(std::string name, index_t index, data_container_type data,
 	auto trees = forest.get_trees();
 	response_t log_prob_sum = 0, log_prob;
 
-	int p = 0;
+	//int p = 0;
 	//for(int p = 0; p<trees.size(); p++){
-		points = trees[p].get_used_points();
+	if(trees.size()>0){
+		points = trees[0].get_used_points();
 		for (int i = 0; i<points.size(); i++){
 			training_points_per_tree = training_points_per_tree + std::to_string(points[i]) + "\n";
 		}
-	//}
+	}
 
 	std::chrono::high_resolution_clock::time_point beginning = std::chrono::high_resolution_clock::now(); 
 	std::cout << "MONDRIAN_FOREST::beginning prediction of : " << data.num_data_points() << " points" << std::endl;
@@ -129,13 +135,13 @@ response_t statistics(std::string name, index_t index, data_container_type data,
 
 		rfr::util::running_statistics<num_t> prediction_stat;
 		pred = forest.predict(data.retrieve_data_point(i), s_d, pred_mean, rng);
+		//pred = forest.predict_median(data.retrieve_data_point(i), s_d, pred_mean, rng);
 		prediction_stat.push(pred_mean);
 		log_prob = calculate_log_prob(pred_mean, s_d, data.response(i));
 		log_prob_sum += log_prob;
-		//std::cout << "MONDRIAN_FOREST::: " << log_prob << std::endl;
-		// std::cout << "MONDRIAN_FOREST::diff: " << pred_mean - data.response(i) << std::endl;
-		// std::cout << "MONDRIAN_FOREST::standard_deviation: " << s_d << std::endl;
-		// std::cout << "MONDRIAN_FOREST::log: " << log_prob << std::endl;
+		std::cout << "MONDRIAN_FOREST::diff: " << pred_mean - data.response(i) << std::endl;
+		std::cout << "MONDRIAN_FOREST::standard_deviation: " << s_d << std::endl;
+		std::cout << "MONDRIAN_FOREST::log: " << log_prob << std::endl;
 		if(i>0){
 			prediction = prediction + "\n" + std::to_string(pred);
 			responses = responses + "\n" + std::to_string(data.response(i));
@@ -320,14 +326,6 @@ void average_runs(std::string name, index_t max_i){
 	average_mean_var(name, "mean", max_i);
 }
 
-
-
-// show the number of leaves
-//average depth
-//mean non leaves
-//log prob
-//mse, rmse
-
 int getPoints() {
   std::string line;
   int points;
@@ -359,7 +357,7 @@ void execute_test(std::string name, index_t test_number, rng_t seed, bool partia
 	tree_opts.hierarchical_smoothing = false;
 	tree_opts.max_features = data.num_data_points()*3/4;
 	tree_opts.life_time = 1000;
-	tree_opts.min_samples_node = 1;
+	//tree_opts.min_samples_node = 1;
 	
 	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
@@ -383,12 +381,8 @@ void execute_test(std::string name, index_t test_number, rng_t seed, bool partia
 	the_forest.internal_index = test_number;
 	std::chrono::high_resolution_clock::time_point beginning = std::chrono::high_resolution_clock::now(); 
 	time_t start, end;
-  	// struct tm y2k = {0};
   	double seconds;
-  	// y2k.tm_hour = 0;y2k.tm_min = 0;y2k.tm_sec = 0;
-  	// y2k.tm_year = 100;y2k.tm_mon = 0;y2k.tm_mday = 1;
-  	 time(&start);
-	// seconds = difftime(timer,mktime(&y2k));
+  	time(&start);
 
 	if(partial_fit){
 		index_t last_data_point = data.num_data_points();

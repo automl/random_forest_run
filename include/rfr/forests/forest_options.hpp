@@ -67,7 +67,6 @@ struct forest_options{
 		str += "number of data points :" + std::to_string(num_data_points_per_tree) + "\n";
 		str += "   do_bootstrapping   :" + std::to_string(do_bootstrapping) + "\n";
 		str += " min samples in leaf  :" + std::to_string(tree_opts.min_samples_in_leaf) + "\n";
-		str += " min samples per node :" + std::to_string(tree_opts.min_samples_node) + "\n";
 		str += "       life time      :" + std::to_string(tree_opts.life_time) + "\n";
 		return str;
 	}
