@@ -296,12 +296,12 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 	 int initial_position, bool adding_parent){
 		rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> aux, tmp_node, aux_parent, child;
 		tmp_node = new_node;
-		int aux_parent_index = tmp_node.get_parent_index();
+		index_t aux_parent_index = tmp_node.get_parent_index();
 		
-		int position = initial_position, my_position;
+		index_t position = initial_position;
 		the_nodes.resize( the_nodes.size()+1);
 		std::vector<std::pair<index_t,index_t>> updated(the_nodes.size());
-		for(int i = 0; i<the_nodes.size();i++){
+		for(index_t i = 0; i<the_nodes.size();i++){
 			updated[i].first = 0;
 			updated[i].second = 0;
 		}
@@ -727,18 +727,8 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 		return(the_nodes[node_index]);
 	}
 
-	
-	virtual std::vector<response_t> const &leaf_entries (const std::vector<num_t> &feature_vector) const {
-		index_t i = find_leaf_index(feature_vector);
-		return(the_nodes[i].responses());
-	}
 
-	virtual response_t predict (const std::vector<num_t> &feature_vector) const {
-		throw std::runtime_error("not available for mondrian trees, use the fuction with 4 parameters");
-		return 0;
-	}
-    
-    response_t predict (const std::vector<num_t> &feature_vector, response_t &standard_deviation, response_t &predicted_mean, rng_t &rng) {
+    std::pair<num_t, num_t> predict_mean_var (const std::vector<num_t> &feature_vector){
 		if(the_nodes.size() == 0){
 			throw std::runtime_error("cannot predict on an empty tree");
 		}
@@ -782,9 +772,6 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 
 				mean += w * pred_mean_temp;
 				second_moment += w * pred_second_moment_temp;
-				std::normal_distribution<num_t> distribution(pred_mean_temp, pred_variance);
-				prediction_now = distribution(rng);
-				prediction += w * prediction_now;
 				sum_W += w;		
 			}
 			//else if (prob_separated_now == 0 && std::isinf(old_node.get_split_cost()) ){
@@ -801,9 +788,6 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 				pred_variance = pred_second_moment_temp - std::pow(pred_mean_temp,2);
 				mean += prob_not_separated_yet * pred_mean_temp;
 				second_moment += prob_not_separated_yet * pred_second_moment_temp;
-				std::normal_distribution<num_t> distribution(pred_mean_temp, pred_variance);
-				prediction_now = distribution(rng);
-				prediction += prob_not_separated_yet * prediction_now;
 				sum_W += prob_not_separated_yet;
 			}
 			if(tmp_node.is_a_leaf()){
@@ -821,13 +805,10 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 		}
 		variance = second_moment - std::pow(mean,2);
 		last_mean = mean;
-		standard_deviation = std::sqrt(variance);
-		predicted_mean = mean;
-		last_prediction = prediction;
-		return(prediction);
+		return(std::pair<num_t, num_t> (mean, variance));
     }
 
-	virtual response_t predict_deterministic(const std::vector<num_t> &feature_vector) const {
+	virtual response_t predict(const std::vector<num_t> &feature_vector) const {
 		rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> tmp_node = the_nodes[0];
 
 		while( !tmp_node.is_a_leaf()){
@@ -892,6 +873,9 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 		return(prediction);
 	}
 
+	virtual std::vector<response_t> const &leaf_entries (const std::vector<num_t> &feature_vector) const {
+		throw std::runtime_error("doesn't exists for this class");
+	}
 
 	/* \brief finds all the split points for each dimension of the input space
 	 * 

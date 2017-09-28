@@ -21,12 +21,15 @@ typedef double num_t;
 typedef double response_t;
 typedef unsigned int index_t;
 typedef std::default_random_engine rng_t;
+
 typedef rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128> binary_rss_split_t;
+
 typedef rfr::nodes::k_ary_node_minimal<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_minimal_node_rss_t;
 typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_full_node_rss_t;
+typedef rfr::nodes::k_ary_mondrian_node_full<2, num_t, response_t, index_t, rng_t> binary_mondrian_node_t;
 
 typedef rfr::trees::k_ary_random_tree<2, binary_full_node_rss_t, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t;
-typedef rfr::trees::k_ary_mondrian_tree<2, num_t,response_t,index_t,rng_t > binary_mondrian_tree_t;
+typedef rfr::trees::k_ary_mondrian_tree<2, binary_mondrian_node_t, num_t, response_t, index_t, rng_t> binary_mondrian_tree_t;
 typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,index_t,rng_t > binary_fanova_tree_t;
 
 %}
@@ -109,6 +112,10 @@ typedef std::default_random_engine rng_t;
 %include "rfr/nodes/k_ary_node.hpp"
 typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_full_node_rss_t;
 
+%include "rfr/nodes/k_ary_mondrian_node.hpp"
+typedef rfr::nodes::k_ary_mondrian_node_full<2, num_t, response_t, index_t, rng_t> binary_mondrian_node_t;
+
+
 // TREES
 %include "rfr/trees/tree_options.hpp"
 
@@ -125,8 +132,7 @@ typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rs
 typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,index_t,rng_t > binary_fanova_tree_t;
 
 %include "rfr/trees/k_ary_mondrian_tree.hpp"
-typedef rfr::trees::k_ary_mondrian_tree<2, num_t,response_t,index_t,rng_t > binary_mondrian_tree_t;
-
+typedef rfr::trees::k_ary_mondrian_tree<2, binary_mondrian_node_t, num_t, response_t, index_t, rng_t> binary_mondrian_tree_t;
 
 // FOREST(S)
 %include "rfr/forests/forest_options.hpp"
@@ -144,7 +150,7 @@ typedef rfr::trees::k_ary_mondrian_tree<2, num_t,response_t,index_t,rng_t > bina
 
 
 %include "rfr/forests/mondrian_forest.hpp"
-%template(binary_rss_forest) rfr::forests::regression_forest< binary_mondrian_tree_t, num_t, response_t, index_t, rng_t>;
+%template(binary_mondrian_forest) rfr::forests::mondrian_forest< binary_mondrian_tree_t, num_t, response_t, index_t, rng_t>;
 
 
 // adds required members to make the forests 'pickable'

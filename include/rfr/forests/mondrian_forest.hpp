@@ -134,7 +134,6 @@ class mondrian_forest{
 		}
 		
 		oob_error = NAN;
-		num_t predicted = 0;
 		index_t amount_obb_test = 0;
 		num_t pred,s_d, pred_mean;//
 		bool bootstrapable = false;
@@ -150,7 +149,7 @@ class mondrian_forest{
 					// only consider data points that were not part of that bootstrap sample
 					if (bootstrap_sample_weights[j][i] == 0){
 						amount_obb_test++;
-						pred = the_trees[j].predict( data.retrieve_data_point(i), s_d, pred_mean,rng);
+						pred = the_trees[j].predict( data.retrieve_data_point(i));
 						prediction_stat.push(pred);
 						bootstrapable = true;
 					}
@@ -167,62 +166,63 @@ class mondrian_forest{
 		}
 	}
 
-
-	/* \brief combines the prediction of all trees in the forest
-	 *
-	 * Every random tree makes an individual prediction which are averaged for the forest's prediction.
-	 *
-	 * \param feature_vector a valid vector containing the features
-	 * \return response_t the predicted value
-	 */
-    response_t predict( const std::vector<num_t> &feature_vector, response_t &standard_deviation, response_t &mean, rng_t &rng){
+   /* \brief makes a prediction for the mean and a variance estimation
+    *
+    *
+    * 
+    * Every tree returns the mean and the variance of the leaf the feature vector falls into.
+    * These are combined to the forests mean prediction (mean of the means) and a variance estimate
+    * (mean of the variance + variance of the means).
+    * 
+    * Use weighted_data = false if the weights assigned to each data point were frequencies, not importance weights.
+    * Use this if you haven't assigned any weigths, too.
+    * 
+	* \param feature_vector a valid feature vector
+	* \param weighted_data whether the data had importance weights
+	* \return std::pair<response_t, num_t> mean and variance prediction
+    */
+    std::pair<num_t, num_t> predict_mean_var( const std::vector<num_t> &feature_vector){
 
 		// collect the predictions of individual trees
-		rfr::util::running_statistics<num_t> pred_stats, s_d_stats, pred_mean_stats;
-
+		rfr::util::running_statistics<num_t> var_stats, mean_stats;
+		num_t standard_deviation, mean;
 		for (auto &tree: the_trees){
-			pred_stats.push(tree.predict(feature_vector, standard_deviation, mean, rng));
-			s_d_stats.push(standard_deviation);
-			pred_mean_stats.push(mean);
+			auto mv = tree.predict_mean_var(feature_vector);
+			mean_stats.push(mv.first);
+			var_stats.push(mv.second);
 		}
-		standard_deviation = s_d_stats.mean();
-		mean = pred_mean_stats.mean();
-		return(pred_stats.mean());
+
+		return(std::pair<num_t, num_t>(mean_stats.mean(), var_stats.mean()));
 	}
 
-	response_t predict_deterministic(const std::vector<num_t> &feature_vector) const{
+	response_t predict(const std::vector<num_t> &feature_vector) const{
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> mean_stats;
 		for (auto &tree: the_trees)
-			mean_stats.push(tree.predict_deterministic(feature_vector));
+			mean_stats.push(tree.predict(feature_vector));
 		return(mean_stats.mean());
 	}
     
-	response_t predict_median( const std::vector<num_t> &feature_vector, response_t &sd, response_t &mean, rng_t &rng) /*const*/{
+
+	response_t predict_median( const std::vector<num_t> &feature_vector){
 
 		// collect the predictions of individual trees
 		index_t top = the_trees.size();
 		response_t pred;
 		std::vector<response_t> preds, means, sds;
 		for (index_t i = 0; i<the_trees.size(); i++){
-			pred = the_trees[i].predict(feature_vector, sd, mean, rng);
+			pred = the_trees[i].predict(feature_vector);
 			preds.emplace_back(pred);
-			means.emplace_back(mean);
-			sds.emplace_back(sd);
+
 		}
 		std::sort (preds.begin(), preds.end()); 
-		std::sort (means.begin(), means.end()); 
-		std::sort (sds.begin(), sds.end()); 
+
 		if(the_trees.size()%2){
 			index_t first = the_trees.size()/2, second = the_trees.size()/2 + 1;
-			mean = (means[the_trees.size()/2] + means[the_trees.size()/2 + 1])/2 ;
-			sd = (sds[the_trees.size()/2] + sds[the_trees.size()/2 + 1])/2 ;
 			return(preds[the_trees.size()/2] + preds[the_trees.size()/2 + 1])/2;
 		}
 		else{
-			mean = means[the_trees.size()/2 + 1];
-			sd = sds[the_trees.size()/2 + 1];
 			return(preds[the_trees.size()/2 + 1]);
 		}
 	}
@@ -262,106 +262,9 @@ class mondrian_forest{
     
 
 	// check
-   /* \brief makes a prediction for the mean and a variance estimation
-    * 
-    * Every tree returns the mean and the variance of the leaf the feature vector falls into.
-    * These are combined to the forests mean prediction (mean of the means) and a variance estimate
-    * (mean of the variance + variance of the means).
-    * 
-    * Use weighted_data = false if the weights assigned to each data point were frequencies, not importance weights.
-    * Use this if you haven't assigned any weigths, too.
-    * 
-	* \param feature_vector a valid feature vector
-	* \param weighted_data whether the data had importance weights
-	* \return std::pair<response_t, num_t> mean and variance prediction
-    */
-    std::pair<num_t, num_t> predict_mean_var( const std::vector<num_t> &feature_vector, bool weighted_data = false){
-		///re do
-		// collect the predictions of individual trees
-		rfr::util::running_statistics<num_t> mean_stats, var_stats;
-		for (auto &tree: the_trees){
-			auto stat = tree.leaf_statistic(feature_vector);
-			mean_stats.push(stat.mean()); 
-			if (weighted_data) var_stats.push(stat.variance_unbiased_importance());
-			else var_stats.push(stat.variance_unbiased_frequency());
-		}
-		
-		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance_sample() + var_stats.mean()) ));
-	}
+
     
-	//check
-	std::vector< std::vector<num_t> > all_leaf_values (const std::vector<num_t> &feature_vector) const {
-		std::vector< std::vector<num_t> > rv;
-		rv.reserve(the_trees.size());
 
-		for (auto &t: the_trees){
-			rv.push_back(t.leaf_entries(feature_vector));
-		}
-		return(rv);
-	}
-
-
-	//check	
-	/* \brief returns the predictions of every tree marginalized over the NAN values in the feature_vector
-	 * 
-	 * TODO: more documentation over how the 'missing values' are handled
-	 * 
-	 * \param feature_vector non-specfied values (NaN) will be marginalized over according to the training data
-	 */
-	std::vector<num_t> marginalized_mean_predictions(const std::vector<num_t> &feature_vector) const {
-		std::vector<num_t> rv;
-		rv.reserve(the_trees.size());
-		for (auto &t : the_trees)
-			rv.emplace_back(t.marginalized_mean_prediction(feature_vector));
-		return(rv);
-	}
-
-	//check
-	/* \brief aggregates all used split values for all features in each tree
-	 *
-	 * TODO: move to fANOVA forest
-	 */
-	std::vector<std::vector<std::vector<num_t> > > all_split_values(const std::vector<index_t> &types){
-		std::vector<std::vector<std::vector<num_t> > > rv;
-		rv.reserve(the_trees.size());
-			
-		for (auto &t: the_trees)
-			rv.emplace_back(t.all_split_values(types));
-		return(rv);
-	}
-
-	//check
-	/* \brief updates the forest by adding all provided datapoints without a complete retraining
-	 * 
-	 * 
-	 * As retraining can be quite expensive, this function can be used to quickly update the forest
-	 * by finding the leafs the datapoints belong into and just inserting them. This is, of course,
-	 * not the right way to do it for many data points, but it should be a good approximation for a few.
-	 * 
-	 * \param features a valid feature vector
-	 * \param response the corresponding response value
-	 * \param weight the associated weight
-	 */
-	void pseudo_update (std::vector<num_t> features, response_t response, num_t weight){
-		for (auto &t: the_trees)
-			t.pseudo_update(features, response, weight);
-	}
-	
-	//check
-	/* \brief undoing a pseudo update by removing a point
-	 * 
-	 * This function removes one point from the corresponding leaves into
-	 * which the given feature vector falls
-	 * 
-	 * \param features a valid feature vector
-	 * \param response the corresponding response value
-	 * \param weight the associated weight
-	 */
-	void pseudo_downdate(std::vector<num_t> features, response_t response, num_t weight){
-		for (auto &t: the_trees)
-			t.pseudo_downdate(features, response, weight);
-	}
-	
 	num_t out_of_bag_error(){return(oob_error);}
 
 	/* \brief writes serialized representation into a binary file
@@ -424,7 +327,7 @@ class mondrian_forest{
 	}
 
 	void print_info(){
-		for (auto t: the_trees){
+		for (auto &t: the_trees){
 			t.print_info();
 		}
 	}

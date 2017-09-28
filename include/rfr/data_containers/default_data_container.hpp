@@ -199,16 +199,16 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
 		std::vector<num_t> features;
 		num_t min = std::numeric_limits<num_t>::max();
 		num_t max = std::numeric_limits<num_t>::lowest();
-		for(int i = 0; i<num_features(); i++){
-			for(int j = 0; j<num_data_points(); j++){
+		for(unsigned int i = 0; i<num_features(); i++){
+			for(unsigned int j = 0; j<num_data_points(); j++){
 				min = std::min(min, feature_values[i][j]);
 				max = std::max(max, feature_values[i][j]);
 			}
 			
 		}
 
-		for(int i = 0; i<num_features(); i++){
-			for(int j = 0; j<num_data_points(); j++){
+		for(unsigned int i = 0; i<num_features(); i++){
+			for(unsigned int j = 0; j<num_data_points(); j++){
 				feature_values[i][j] = (feature_values[i][j]-min)/(max-min);
 			}
 			
