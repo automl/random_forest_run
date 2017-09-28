@@ -296,9 +296,9 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 	 int initial_position, bool adding_parent){
 		rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> aux, tmp_node, aux_parent, child;
 		tmp_node = new_node;
-		index_t aux_parent_index = tmp_node.get_parent_index();
+		int aux_parent_index = tmp_node.get_parent_index();
 		
-		index_t position = initial_position;
+		int position = initial_position;
 		the_nodes.resize( the_nodes.size()+1);
 		std::vector<std::pair<index_t,index_t>> updated(the_nodes.size());
 		for(index_t i = 0; i<the_nodes.size();i++){
