@@ -136,8 +136,6 @@ class mondrian_forest{
 		oob_error = NAN;
 		num_t predicted = 0;
 		index_t amount_obb_test = 0;
-		std::string prediction = "";//
-		std::string responses = "";//
 		num_t pred,s_d, pred_mean;//
 		bool bootstrapable = false;
 		if (options.compute_oob_error){
@@ -154,8 +152,6 @@ class mondrian_forest{
 						amount_obb_test++;
 						pred = the_trees[j].predict( data.retrieve_data_point(i), s_d, pred_mean,rng);
 						prediction_stat.push(pred);
-						prediction = prediction + "\n" + std::to_string(pred);//
-						responses = responses + "\n" + std::to_string(data.response(i));//
 						bootstrapable = true;
 					}
 				}
@@ -167,12 +163,6 @@ class mondrian_forest{
 				bootstrapable = false;
 				
 			}
-			std::ofstream out_pred(name + "_obb_tree" + std::to_string(internal_index) + ".txt");//
-			std::ofstream out_resp(name +"_obb_resp" + std::to_string(internal_index) + ".txt");//
-    		out_pred << prediction;//
-			out_resp << responses;//
-    		out_pred.close();//
-			out_resp.close();//
 			oob_error = std::sqrt(oob_error_stat.mean());
 		}
 	}
@@ -185,7 +175,7 @@ class mondrian_forest{
 	 * \param feature_vector a valid vector containing the features
 	 * \return response_t the predicted value
 	 */
-    response_t predict( const std::vector<num_t> &feature_vector, response_t &standard_deviation, response_t &mean, rng_t &rng) /*const*/{
+    response_t predict( const std::vector<num_t> &feature_vector, response_t &standard_deviation, response_t &mean, rng_t &rng){
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> pred_stats, s_d_stats, pred_mean_stats;
@@ -209,21 +199,32 @@ class mondrian_forest{
 		return(mean_stats.mean());
 	}
     
-	response_t predict_median( const std::vector<num_t> &feature_vector, rng_t &rng) /*const*/{
+	response_t predict_median( const std::vector<num_t> &feature_vector, response_t &sd, response_t &mean, rng_t &rng) /*const*/{
 
 		// collect the predictions of individual trees
 		index_t top = the_trees.size();
-		std::vector<response_t> resps;
+		response_t pred;
+		std::vector<response_t> preds, means, sds;
 		for (index_t i = 0; i<the_trees.size(); i++){
-			resps.emplace_back(the_trees[i].predict(feature_vector, rng));
+			pred = the_trees[i].predict(feature_vector, sd, mean, rng);
+			preds.emplace_back(pred);
+			means.emplace_back(mean);
+			sds.emplace_back(sd);
 		}
-		std::sort (resps.begin(), resps.end()); 
+		std::sort (preds.begin(), preds.end()); 
+		std::sort (means.begin(), means.end()); 
+		std::sort (sds.begin(), sds.end()); 
 		if(the_trees.size()%2){
 			index_t first = the_trees.size()/2, second = the_trees.size()/2 + 1;
-			return(resps[the_trees.size()/2] + resps[the_trees.size()/2 + 1])/2 ;
+			mean = (means[the_trees.size()/2] + means[the_trees.size()/2 + 1])/2 ;
+			sd = (sds[the_trees.size()/2] + sds[the_trees.size()/2 + 1])/2 ;
+			return(preds[the_trees.size()/2] + preds[the_trees.size()/2 + 1])/2;
 		}
-		else
-			return(resps[the_trees.size()/2 + 1]);
+		else{
+			mean = means[the_trees.size()/2 + 1];
+			sd = sds[the_trees.size()/2 + 1];
+			return(preds[the_trees.size()/2 + 1]);
+		}
 	}
 
 

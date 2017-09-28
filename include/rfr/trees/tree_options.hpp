@@ -27,7 +27,6 @@ struct tree_options{
     
   response_t epsilon_purity;		///< minimum difference between two response values to be considered different*/
 
-  index_t min_samples_node; ///< minimum number of samples in a node
   num_t life_time; ///< life time of a mondrian tree
   bool hierarchical_smoothing;		///< flag to enable/disable hierachical smoothing for mondrian forests
 
@@ -36,7 +35,7 @@ struct tree_options{
   template<class Archive>
 	void serialize(Archive & archive)
 	{
-		archive( max_features, max_depth, min_samples_to_split, min_weight_to_split, min_samples_in_leaf, min_weight_in_leaf, max_num_nodes, epsilon_purity, min_samples_node, life_time, hierarchical_smoothing);
+		archive( max_features, max_depth, min_samples_to_split, min_weight_to_split, min_samples_in_leaf, min_weight_in_leaf, max_num_nodes, epsilon_purity, /*min_samples_node,*/ life_time, hierarchical_smoothing);
 	}
 
   /** (Re)set to default values with no limits on the size of the tree
@@ -62,7 +61,6 @@ struct tree_options{
   
     epsilon_purity = 1e-10;
     
-    min_samples_node = 1;
     life_time = 1000;
     hierarchical_smoothing = false;
   }
@@ -96,7 +94,6 @@ struct tree_options{
 		std::cout<<"max_num_nodes       : "<< max_num_nodes <<std::endl;
 		std::cout<<"max_num_leaves      : "<< max_num_leaves <<std::endl;
     std::cout<<"epsilon_purity      : "<< epsilon_purity <<std::endl;
-    std::cout<<"min_samples_node    : "<< min_samples_node <<std::endl;
     std::cout<<"life_time           : "<< life_time <<std::endl;
     std::cout<<"hierarchical_smoothing: "<< hierarchical_smoothing <<std::endl;
 	}

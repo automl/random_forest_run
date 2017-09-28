@@ -52,11 +52,11 @@ BOOST_AUTO_TEST_CASE( mondrian_forest_compile_tests ){
     auto data = load_diabetes_data();
 
 	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
-	tree_opts.min_samples_to_split = 2;
+	tree_opts.min_samples_to_split = 4;
 	tree_opts.min_samples_in_leaf = 1;
+	tree_opts.hierarchical_smoothing = false;
 	tree_opts.max_features = data.num_data_points()*3/4;
-	tree_opts.life_time = 5;
-	tree_opts.min_samples_node = 2;
+	tree_opts.life_time = 5;//1000
 
 	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
@@ -77,10 +77,8 @@ BOOST_AUTO_TEST_CASE( mondrian_forest_compile_tests ){
 
 	response_t s_d, pred_mean;
     auto tmp = the_forest.predict(data.retrieve_data_point(5), s_d, pred_mean, rng);
-	std::cout << "UNIT_TEST::Mondrian Forest prediccted" << std::endl;
 
 	std::ostringstream oss;
-	
 	{
 		oarch_type oarchive(oss);
 		oarchive(the_forest);
@@ -95,13 +93,124 @@ BOOST_AUTO_TEST_CASE( mondrian_forest_compile_tests ){
 
 	the_forest2.load_from_ascii_string(s);
 
-	
 	forest_type the_forest3;
 	the_forest3.load_from_binary_file("mondrian_forest_test.bin");
 
 }
 
-/*
+BOOST_AUTO_TEST_CASE( mondrian_forest_partial_fit ){
+        
+    auto data = load_diabetes_data();
+
+	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+	tree_opts.min_samples_to_split = 4;
+	tree_opts.min_samples_in_leaf = 1;
+	tree_opts.hierarchical_smoothing = false;
+	tree_opts.max_features = data.num_data_points()*3/4;
+	tree_opts.life_time = 5;//1000
+
+	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+
+	forest_opts.num_data_points_per_tree = data.num_data_points();
+	forest_opts.num_trees = 8;
+	forest_opts.do_bootstrapping = true;
+	forest_opts.compute_oob_error= true;
+	
+	forest_type the_forest(forest_opts);
+	
+	rng_t rng;
+	response_t s_d, pred_mean;
+	BOOST_REQUIRE(std::isnan(the_forest.out_of_bag_error()));
+	BOOST_REQUIRE(std::isnan(the_forest.predict(data.retrieve_data_point(5), s_d, pred_mean, rng)));
+
+	//response_t pre;
+	//pre = the_forest.predict(data.retrieve_data_point(5), s_d, pred_mean, rng);
+	
+	//std::cout << "UNIT_TEST:: " << pre << std::endl;
+
+	for(int i =0; i<data.num_data_points(); i++){
+		the_forest.partial_fit(data, rng, i);	
+		BOOST_REQUIRE(!std::isnan(the_forest.predict(data.retrieve_data_point(5), s_d, pred_mean, rng)));
+	}
+
+    auto tmp = the_forest.predict(data.retrieve_data_point(5), s_d, pred_mean, rng);
+
+	std::ostringstream oss;
+	{
+		oarch_type oarchive(oss);
+		oarchive(the_forest);
+	}
+
+	the_forest.save_to_binary_file("mondrian_forest_partial_fit_test.bin");
+	
+	forest_type the_forest2;
+
+	auto s = the_forest.ascii_string_representation();
+
+	the_forest2.load_from_ascii_string(s);
+
+	forest_type the_forest3;
+	the_forest3.load_from_binary_file("mondrian_forest_partial_fit_test.bin");
+
+}
+
+BOOST_AUTO_TEST_CASE( mondrian_forest_predict_median_test ){
+    
+    
+    auto data = load_diabetes_data();
+
+	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+	tree_opts.min_samples_to_split = 4;
+	tree_opts.min_samples_in_leaf = 1;
+	tree_opts.hierarchical_smoothing = false;
+	tree_opts.max_features = data.num_data_points()*3/4;
+	tree_opts.life_time = 5;//1000
+
+	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+
+	forest_opts.num_data_points_per_tree = data.num_data_points();
+	forest_opts.num_trees = 8;
+	forest_opts.do_bootstrapping = true;
+	forest_opts.compute_oob_error= true;
+	
+	forest_type the_forest(forest_opts);
+	
+	rng_t rng;
+
+	BOOST_REQUIRE(std::isnan(the_forest.out_of_bag_error()));
+
+	the_forest.fit(data, rng);
+	BOOST_REQUIRE(!std::isnan(the_forest.out_of_bag_error()));
+
+	response_t s_d, pred_mean;
+    auto tmp = the_forest.predict_median(data.retrieve_data_point(5), s_d, pred_mean, rng);
+
+	std::ostringstream oss;
+	{
+		oarch_type oarchive(oss);
+		oarchive(the_forest);
+	}
+
+	
+	the_forest.save_to_binary_file("mondrian_forest_test.bin");
+	
+	forest_type the_forest2;
+
+	auto s = the_forest.ascii_string_representation();
+
+	the_forest2.load_from_ascii_string(s);
+
+	forest_type the_forest3;
+	the_forest3.load_from_binary_file("mondrian_forest_test.bin");
+
+}
+
+
+
+
+
 BOOST_AUTO_TEST_CASE( mondrian_forest_exceptions_tests ){
     
     auto data = load_diabetes_data();
@@ -111,7 +220,6 @@ BOOST_AUTO_TEST_CASE( mondrian_forest_exceptions_tests ){
 	tree_opts.min_samples_in_leaf = 1;
 	tree_opts.max_features = data.num_data_points()*3/4;
 	tree_opts.life_time = 5;
-	tree_opts.min_samples_node = 2;
 
 	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
@@ -121,7 +229,6 @@ BOOST_AUTO_TEST_CASE( mondrian_forest_exceptions_tests ){
 	forest_opts.compute_oob_error= true;
 	
 	forest_type the_forest(forest_opts);
-	
 	rng_t rng;
 
 	// no trees in the forest
@@ -146,8 +253,4 @@ BOOST_AUTO_TEST_CASE( mondrian_forest_exceptions_tests ){
 	the_forest.options.tree_opts.max_features = 0;
 	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
 
-
-	
-
 }
-*/
