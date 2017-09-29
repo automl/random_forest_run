@@ -15,7 +15,7 @@ addons:
 
 before_install:
   - sudo apt-get -qq update
-  - sudo apt-get install -y python3 swig3.0
+  - sudo apt-get install -y python3 swig3.0 python3-pip
 
 install:
   - gem install coveralls-lcov
