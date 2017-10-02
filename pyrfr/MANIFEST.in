@@ -1,0 +1,3 @@
+recursive-include include *
+recursive-include pyrfr *.i
+include LICENSE_cereal-1.2.2

@@ -8,13 +8,6 @@ import os
 
 
 
-include_files = []
-for root, dirnames, filenames in os.walk('include'):
-    for filename in filenames:
-        include_files.append(os.path.join(root, filename))
-
-
-
 class CustomInstall(install):
 	def run(self):
 		self.run_command('build_ext')
@@ -54,6 +47,5 @@ setup(
 	ext_modules=extensions,
 	python_requires='>=3',
 	package_data = {'pyrfr': ['docstrings.i']},
-	data_files = [('include', include_files)],
 	cmdclass={'install': CustomInstall}
 )
