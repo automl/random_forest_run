@@ -150,9 +150,21 @@ class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, res
 	virtual ~k_ary_mondrian_node_full () {};
 	
 	k_ary_mondrian_node_full (){};
-	k_ary_mondrian_node_full (int parent, index_t depth, std::array<typename std::vector<index_t>::iterator, 3> info_split): parent_index(parent), info_split_its(info_split), k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::k_ary_mondrian_node_minimal(depth) {};
-	k_ary_mondrian_node_full (int parent, index_t depth, std::array<index_t, 3> info_split_index): parent_index(parent), info_split_its_index(info_split_index), k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::k_ary_mondrian_node_minimal(depth) {};
-	k_ary_mondrian_node_full (int parent, index_t depth): parent_index(parent), k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::k_ary_mondrian_node_minimal(depth) {};
+
+	k_ary_mondrian_node_full (int parent, index_t depth, std::array<typename std::vector<index_t>::iterator, 3> info_split):
+		k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::k_ary_mondrian_node_minimal(depth),
+		parent_index(parent), info_split_its(info_split)
+		{};
+
+	k_ary_mondrian_node_full (int parent, index_t depth, std::array<index_t, 3> info_split_index):
+		k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::k_ary_mondrian_node_minimal(depth),
+		parent_index(parent), info_split_its_index(info_split_index)
+		{};
+
+	k_ary_mondrian_node_full (int parent, index_t depth):
+		k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::k_ary_mondrian_node_minimal(depth),
+		parent_index(parent)
+		{};
 
   	/* serialize function for saving forests */
   	template<class Archive>
@@ -165,9 +177,8 @@ class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, res
 	std::vector<response_t> const &responses () const { return( (std::vector<response_t> const &) response_values);}
 	/** \brief get the sum of the mx-min intervals fo the node*/	
 	num_t const get_sum_of_Min_Max_intervals () const { return( sum_E);}
-	index_t const get_parent_index () const { return( parent_index);}
-	num_t const get_split_time () const { 
-		return( split_time);}
+	int const get_parent_index () const { return( parent_index);}
+	num_t const get_split_time () const { return( split_time);}
 	index_t const get_split_dimension () const { return( split_dimension);}
 	num_t const get_split_value () const { return( split_value);}
 	std::vector<std::pair<num_t,num_t>> const get_min_max () const { return( min_max);}

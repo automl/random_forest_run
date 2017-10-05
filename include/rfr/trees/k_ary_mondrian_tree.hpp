@@ -155,15 +155,12 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 						min = feature_vector[split_dimension];
 						max = min_max[split_dimension].first;//scond
 					}
-					else {//imposible
+					else {
 						throw std::runtime_error("impossible partial fit");
-						min = min_max[split_dimension].first;
-						max = min_max[split_dimension].second;
 					}
 				}
 				std::uniform_real_distribution<num_t> dist2 (min, max);
 				split_value = dist2(rng);
-				// std::cout << "MONDRIAN_TREE::PARTIAL_FIT:split_value" << split_value << std::endl;
 				rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> father_node(-1, tmp_node.get_depth());
 				rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> new_leaf_node(-1, tmp_node.get_depth()+1, info_split_its);
 				tmp_node.set_depth(tmp_node.get_depth()+1);
@@ -185,7 +182,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 				father_node.set_points(points);
 				std::vector<response_t> original_responses;
 				original_responses = tmp_node.get_responses();
-				for(int i = 0; i<original_responses.size(); i++){
+				for(auto i = 0u; i<original_responses.size(); i++){
 					father_node.add_response(original_responses[i], 1);
 				}
 				father_node.add_response(response, 1);
@@ -198,38 +195,32 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 				std::vector<response_t> responses;
 				responses.emplace_back(response);
 				new_leaf_node = Sample_Mondrian_Block(data, tmp_nodes, selected_elements, responses, position+1, rng);
-				// std::cout << "MONDRIAN_TREE::PARTIAL_FIT:child_created" << std::endl;
-				//std::getchar();
 				addNewNode(new_leaf_node, position+1,false);
-				//print_info();
-				// std::cout << "MONDRIAN_TREE::PARTIAL_FIT:child_added" << std::endl;
+
 				father_node = the_nodes[position];
 				if(feature_vector[split_dimension]<=split_value){
-					// std::cout << "MONDRIAN_TREE::PARTIAL_FIT:if1" << std::endl;
 					father_node.set_child(0, position+1);
 					father_node.set_child(1, position+2);
 				}
 				else{
-					// std::cout << "MONDRIAN_TREE::PARTIAL_FIT:if2" << std::endl;
 					father_node.set_child(0, position+2);
 					father_node.set_child(1, position+1);
 				}
 				int base_parent_index = the_nodes[position+2].get_parent_index();
 				if(base_parent_index>=0){
 					father_parent = the_nodes[base_parent_index];
-					if(father_parent.get_children()[0] == position+2){
+					if( (int) father_parent.get_children()[0] == position+2){
 						father_parent.set_child(0, position);
 						father_node.set_parent_index(base_parent_index);
 					}
 					else{
-						if(father_parent.get_children()[1] == position+2){
+						if( (int) father_parent.get_children()[1] == position+2){
 							father_parent.set_child(1, position);
 							father_node.set_parent_index(base_parent_index);
 						}
 						else{
 							std::cout << "MONDRIAN_TREE::partial_fit::IMPOSIBLE" << std::endl;
 							throw std::runtime_error("partial fit, father doesn't have the correct children");
-							//std::getchar();
 						}
 					}
 					the_nodes[base_parent_index] = father_parent;
@@ -305,8 +296,8 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 			updated[i].first = 0;
 			updated[i].second = 0;
 		}
-		while(position<the_nodes.size()){
-			if(position<the_nodes.size()-1){
+		while(position< (int) the_nodes.size()){
+			if(position< (int) the_nodes.size()-1){
 				aux = the_nodes[position];
 				if(aux.get_children()[0] != aux.get_children()[1]){
 					for(int i = 0; i<2; i++){
@@ -325,12 +316,12 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 						aux_parent = the_nodes[aux_parent_index];
 					}
 					
-					if(aux_parent.get_children()[0] == position && !updated[aux_parent_index].first){
+					if( (int) aux_parent.get_children()[0] == position && !updated[aux_parent_index].first){
 						aux_parent.set_child(0, position+1);
 						updated[aux_parent_index].first = 1;
 					}
 					else{
-						if(aux_parent.get_children()[1] == position && !updated[aux_parent_index].second){
+						if( (int) aux_parent.get_children()[1] == position && !updated[aux_parent_index].second){
 							aux_parent.set_child(1, position+1);
 							updated[aux_parent_index].second = 1;
 						}
@@ -514,7 +505,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 			 rfr::trees::tree_options<num_t, response_t, index_t> tree_opts,
 			 const std::vector<num_t> &sample_weights,
 			 rng_t &rng){
-		num_t E;
+
 		tree_opts.adjust_limits_to_data(data);
 		the_nodes.clear();
 		num_leafs = 0;
@@ -542,10 +533,6 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
             }
         }
 
-		num_t sum_E, time_node, time_parent, split_value;
-		index_t split_dimension;
-		
-		
 		rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> tmp_node;
 		std::vector<rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t>> tmp_nodes;
 
@@ -734,10 +721,9 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 		}
 		rfr::nodes::k_ary_mondrian_node_full<k, num_t, response_t, index_t, rng_t> tmp_node = the_nodes[0], old_node;
 
-		num_t prediction_now, pred_variance, prob_not_separated_now, prob_separated_now, nu;
+		num_t prob_not_separated_now, prob_separated_now, nu;
 		num_t prob_not_separated_yet = 1;
 		num_t delta_node = 0;
-		response_t prediction = 0;
 		bool finished = false;
 		num_t w, mean = 0, variance = 0, second_moment = 0, pred_second_moment_temp, pred_mean_temp, expected_split_time, variance_from_mean, expected_cut_time;
 		num_t sum_W = 0;
@@ -768,7 +754,6 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 					pred_mean_temp = old_node.get_response_stat().mean();
 					pred_second_moment_temp = old_node.get_response_stat().sum_of_squares() / old_node.get_response_stat().sum_of_weights() + noise_variance;
 				}
-				pred_variance = pred_second_moment_temp - std::pow(pred_mean_temp,2);
 
 				mean += w * pred_mean_temp;
 				second_moment += w * pred_second_moment_temp;
@@ -785,7 +770,6 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 					pred_second_moment_temp = old_node.get_response_stat().sum_of_squares() / old_node.get_response_stat().sum_of_weights() + noise_variance;
 				}
 				
-				pred_variance = pred_second_moment_temp - std::pow(pred_mean_temp,2);
 				mean += prob_not_separated_yet * pred_mean_temp;
 				second_moment += prob_not_separated_yet * pred_second_moment_temp;
 				sum_W += prob_not_separated_yet;

@@ -32,7 +32,7 @@ class TestfANOVAForest(unittest.TestCase):
 		the_forest.fit(self.data, self.rng)
 
 		self.assertEqual(the_forest.num_trees(), 16)
-		
+		the_forest.predict( self.data.retrieve_data_point(0))
 
 	def test_options_member(self):
 
@@ -41,7 +41,7 @@ class TestfANOVAForest(unittest.TestCase):
 		the_forest.options.num_trees = 7
 		the_forest.options.num_data_points_per_tree = self.data.num_data_points()		
 		the_forest.fit(self.data, self.rng)
-
+		the_forest.predict( self.data.retrieve_data_point(0))
 		self.assertEqual(the_forest.num_trees(), 7)
 
 

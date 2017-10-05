@@ -135,7 +135,7 @@ class mondrian_forest{
 		
 		oob_error = NAN;
 		index_t amount_obb_test = 0;
-		num_t pred,s_d, pred_mean;//
+		num_t pred;
 		bool bootstrapable = false;
 		if (options.compute_oob_error){
 			
@@ -185,7 +185,6 @@ class mondrian_forest{
 
 		// collect the predictions of individual trees
 		rfr::util::running_statistics<num_t> var_stats, mean_stats;
-		num_t standard_deviation, mean;
 		for (auto &tree: the_trees){
 			auto mv = tree.predict_mean_var(feature_vector);
 			mean_stats.push(mv.first);
@@ -208,7 +207,6 @@ class mondrian_forest{
 	response_t predict_median( const std::vector<num_t> &feature_vector){
 
 		// collect the predictions of individual trees
-		index_t top = the_trees.size();
 		response_t pred;
 		std::vector<response_t> preds, means, sds;
 		for (index_t i = 0; i<the_trees.size(); i++){
@@ -219,8 +217,7 @@ class mondrian_forest{
 		std::sort (preds.begin(), preds.end()); 
 
 		if(the_trees.size()%2){
-			index_t first = the_trees.size()/2, second = the_trees.size()/2 + 1;
-			return(preds[the_trees.size()/2] + preds[the_trees.size()/2 + 1])/2;
+			return ((preds[the_trees.size()/2] + preds[the_trees.size()/2 + 1])/2);
 		}
 		else{
 			return(preds[the_trees.size()/2 + 1]);
@@ -331,7 +328,9 @@ class mondrian_forest{
 			t.print_info();
 		}
 	}
-	
+
+
+	virtual unsigned int num_trees (){ return(the_trees.size());}
 };
 
 
