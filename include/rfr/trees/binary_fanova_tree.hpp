@@ -326,7 +326,7 @@ class binary_fANOVA_tree : public k_ary_random_tree<2,  rfr::nodes::k_ary_node_f
 		return active_variables[node_index];
 	}
 
-	const std::vector<rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t>>& get_nodes() const {
+	const std::vector<rfr::nodes::k_ary_node_full<2, split_t, num_t, response_t, index_t, rng_t> >& get_nodes() const {
 		return super::the_nodes;
 	}
 
