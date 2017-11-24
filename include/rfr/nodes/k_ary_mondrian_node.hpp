@@ -29,14 +29,11 @@ namespace rfr{ namespace nodes{
 template <int k, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
 class k_ary_mondrian_node_minimal{
   protected:
-	//index_t parent_index;
-
 	// for internal_nodes
 	std::array<index_t, k> children;
-	std::array<num_t, k> split_fractions;//perhaps can i store the minum and maximum also
 	index_t depth;
 
-	//avergae, variance, etc
+	//average, variance, etc
 	rfr::util::weighted_running_statistics<num_t> response_stat;   //TODO: needs to be serialized!
 	
   public:
@@ -58,7 +55,7 @@ class k_ary_mondrian_node_minimal{
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {
-		archive( /*parent_index,*/ children, split_fractions); 
+		archive(children, depth); 
 	}
 
 	/** \brief to test whether this node is a leaf */
@@ -68,9 +65,6 @@ class k_ary_mondrian_node_minimal{
 	/** \brief get indices of all children */
 	std::array<index_t, k> get_children() const {return(children);}
 	index_t get_child_index (index_t idx) const {return(children[idx]);};
-
-	std::array<num_t, k> get_split_fractions() const {return(split_fractions);}
-	num_t get_split_fraction (index_t idx) const {return(split_fractions[idx]);};
 
 	index_t get_depth() const {return(depth);}
 
@@ -84,12 +78,12 @@ class k_ary_mondrian_node_minimal{
 	 */
 	index_t falls_into_child(const std::vector<num_t> &feature_vector) const {
 		if (is_a_leaf()) return(0);
-		//return(children[split(feature_vector)]);
 		return(1);
 	}
 
 	void set_child (index_t idx, index_t child) { children[idx] = child;}
 	void set_depth(index_t new_depth) {depth = new_depth;}
+	void set_response_stat(rfr::util::weighted_running_statistics<num_t> r_s) {response_stat = r_s;}
 
 	/** \brief prints out some basic information about the node*/
 	virtual void print_info() const {
@@ -132,9 +126,7 @@ class k_ary_mondrian_node_minimal{
 template <int k, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
 class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>{
   protected:
-  	std::vector<response_t> response_values;
-	
-	num_t  sum_E;
+	num_t sum_E;
 	num_t split_cost;
 	int parent_index;//index_t may have not negative numbers
 	num_t split_time;
@@ -142,10 +134,10 @@ class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, res
 	num_t split_value;
 	num_t variance;
 	num_t mean;
-	std::vector<std::pair<num_t,num_t>> min_max;
-	std::array<typename std::vector<index_t>::iterator, 3> info_split_its;
-	std::array<index_t, 3> info_split_its_index;
-	std::vector<index_t> points;
+	std::vector<std::pair<num_t,num_t>> min_max;//
+	std::array<typename std::vector<index_t>::iterator, 3> info_split_its;//
+	std::array<index_t, 3> info_split_its_index;//
+	int number_of_points;
   public:
 	virtual ~k_ary_mondrian_node_full () {};
 	
@@ -169,12 +161,13 @@ class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, res
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {
-		//archive(response_values);
+		archive(sum_E, split_cost, parent_index, split_time, split_dimension, split_value, variance,
+			mean,/* min_max,*/ number_of_points);
 		//super::serialize(archive);
 	}
 	
 	/** \brief get reference to the response values*/	
-	std::vector<response_t> const &responses () const { return( (std::vector<response_t> const &) response_values);}
+	//std::vector<response_t> const &responses () const { return( (std::vector<response_t> const &) response_values);}
 	/** \brief get the sum of the mx-min intervals fo the node*/	
 	num_t const get_sum_of_Min_Max_intervals () const { return( sum_E);}
 	int const get_parent_index () const { return( parent_index);}
@@ -186,9 +179,10 @@ class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, res
 	std::array<index_t, 3> const get_info_split_its_index () const { return( info_split_its_index);}
 	num_t const get_variance() const { return(variance);}
 	num_t const get_mean() const { return(mean);}
-	std::vector<index_t> const get_points() const { return(points);}
+	int const get_number_of_points() const { return(number_of_points);}
+	//std::vector<index_t> const get_points() const { return(points);}
 	num_t const get_split_cost() const { return(split_cost);}
-	std::vector<response_t> const  get_responses () const { return response_values;}
+	//std::vector<response_t> const  get_responses () const { return response_values;}
 
 	void set_sum_of_Min_Max_intervals (num_t sum){ sum_E = sum;}
 	void set_parent_index (index_t parent){ parent_index = parent;}
@@ -200,12 +194,14 @@ class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, res
 	void set_info_split_its_index (std::array<index_t, 3> info_split){ info_split_its_index = info_split;}
 	void set_variance (num_t var){ variance = var;}
 	void set_mean (num_t m){ mean = m;}
-	void set_points (std::vector<index_t> p){ points = p;}
+	//void set_points (std::vector<index_t> p){ points = p;}
+	void set_number_of_points (int p){ number_of_points = p;}
+	
 	void set_split_cost (num_t sc){ split_cost =sc;}
 	
 
 	void add_response (response_t response, num_t weight){ 
-		response_values.emplace_back(response);
+		//response_values.emplace_back(response);
 		k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::response_stat.push(response, weight);
 	}
 
@@ -219,12 +215,12 @@ class k_ary_mondrian_node_full: public k_ary_mondrian_node_minimal<k, num_t, res
 		std::cout << "Split value:" << split_value << std::endl;
 		std::cout << "Split cost:" << get_split_cost() << std::endl;
 		std::cout << "Min max:[" << min_max[0].first << " " << min_max[0].second <<"]" << std::endl;
-		if (k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::is_a_leaf()){
-			rfr::print_vector(response_values);
-		}
+		// if (k_ary_mondrian_node_minimal<k, num_t, response_t, index_t, rng_t>::is_a_leaf()){
+		// 	rfr::print_vector(response_values);
+		// }
 		std::cout << "pred_variance: " << variance << std::endl;
-		std::cout << "points:" << std::endl;
-		rfr::print_vector(points);
+		std::cout << "points: " << number_of_points << std::endl;
+		//rfr::print_vector(points);
 	}
 
 };
