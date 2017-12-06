@@ -119,13 +119,13 @@ class regression_forest{
 			if (options.do_bootstrapping){
                 std::uniform_int_distribution<index_t> dist (0,data.num_data_points()-1);
                 for (auto i=0u; i < options.num_data_points_per_tree; ++i){
-					++bssf[dist(rng)]+=1;
+					bssf[dist(rng)]+=1;
 				}
 			}
 			else{
 				std::shuffle(data_indices.begin(), data_indices.end(), rng);
                 for (auto i=0u; i < options.num_data_points_per_tree; ++i)
-                    ++bssf[data_indices[i]];
+                    bssf[data_indices[i]] += 1;
 			}
 			
 			tree.fit(data, options.tree_opts, bssf, rng);
@@ -152,7 +152,10 @@ class regression_forest{
 				}
 				
 				// compute squared error of prediction
-				oob_error_stat.push(std::pow(prediction_stat.mean() - data.response(i), 2));
+
+				if (prediction_stat.number_of_points() > 0u){
+					oob_error_stat.push(std::pow(prediction_stat.mean() - data.response(i), (num_t) 2));
+				}
 			}
 			oob_error = std::sqrt(oob_error_stat.mean());
 		}

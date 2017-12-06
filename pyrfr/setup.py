@@ -16,7 +16,7 @@ class CustomInstall(install):
 
 include_dirs = ['./include']
 extra_compile_args = ['-O2', '-std=c++11']
-#extra_compile_args = ['-g', '-std=c++11', '-O0']
+#extra_compile_args = ['-g', '-std=c++11', '-O0', '-Wall']
 
 
 
