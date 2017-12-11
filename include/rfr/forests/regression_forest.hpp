@@ -198,9 +198,13 @@ class regression_forest{
 		rfr::util::running_statistics<num_t> mean_stats, var_stats;
 		for (auto &tree: the_trees){
 			auto stat = tree.leaf_statistic(feature_vector);
-			mean_stats.push(stat.mean()); 
-			if (weighted_data) var_stats.push(stat.variance_unbiased_importance());
-			else var_stats.push(stat.variance_unbiased_frequency());
+			mean_stats.push(stat.mean());
+			if (stat.number_of_points() > 1){
+				if (weighted_data) var_stats.push(stat.variance_unbiased_importance());
+				else var_stats.push(stat.variance_unbiased_frequency());
+			} else{
+				var_stats.push(0);
+			}
 		}
 		
 		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance_sample() + var_stats.mean()) ));
