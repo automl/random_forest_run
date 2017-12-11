@@ -32,7 +32,6 @@ namespace rfr{ namespace trees{
 template <const int k,typename node_t, typename num_t = float, typename response_t = float, typename index_t = unsigned int, typename rng_t = std::default_random_engine>
 class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, index_t, rng_t> {
   protected:
-    typedef rfr::splits::data_info_t<num_t, response_t, index_t> info_t;
   
 	std::vector<node_t> the_nodes;
 	index_t num_leafs;
@@ -47,12 +46,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 	index_t min_samples_node;//
 	index_t min_samples_to_split;//
 	
-	
   public:
-  	num_t last_mean;
-   	num_t last_variance;		
-	num_t last_prediction;
-	
   
 	k_ary_mondrian_tree(): the_nodes(0), num_leafs(0), max_depth(0) {}
 
@@ -61,7 +55,8 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
     /* serialize function for saving forests */
   	template<class Archive>
   	void serialize(Archive & archive){
-		archive(the_nodes, num_leafs, max_depth);
+		archive(the_nodes, num_leafs, max_depth, life_time, variance_coef, sigmoid_coef, sfactor, 
+			prior_variance, noise_variance, smooth_hierarchically, min_samples_node, min_samples_to_split);
 	}
 	
 	void set_tree_options(rfr::trees::tree_options<num_t, response_t, index_t> tree_opts){
@@ -177,14 +172,8 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 						min_max[i].second = feature_vector[i];
 				}
 				father_node.set_min_max(min_max);
-				points = tmp_node.get_points();
-				points.push_back(new_point);
-				father_node.set_points(points);
-				std::vector<response_t> original_responses;
-				original_responses = tmp_node.get_responses();
-				for(auto i = 0u; i<original_responses.size(); i++){
-					father_node.add_response(original_responses[i], 1);
-				}
+				father_node.set_number_of_points(tmp_node.get_number_of_points()+1);
+				father_node.set_response_stat(tmp_node.get_response_stat());
 				father_node.add_response(response, 1);
 				addNewNode(father_node, position, true);
 
@@ -233,9 +222,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 
 			}
 			else{
-				points = tmp_node.get_points();
-				points.push_back(new_point);
-				tmp_node.set_points(points);
+				tmp_node.set_number_of_points(tmp_node.get_number_of_points()+1);
 				tmp_node.add_response(response, 1);
 				for(index_t i = 0; i< feature_vector.size(); i++){
 					min_max[i].first = std::min(min_max[i].first, feature_vector[i]);
@@ -385,10 +372,6 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
         //creates an array of lenght num_features from wiht values from 0 to num_features
 		std::vector<index_t> feature_indices(data.num_features());
 		std::iota(feature_indices.begin(), feature_indices.end(), 0);
-		
-        //selects the data to use and stores it in data_infos
-        std::vector<info_t > data_infos;
-        data_infos.reserve(data.num_data_points());
         
 		num_t sum_E, time_node, time_parent, split_value;
 		index_t split_dimension;
@@ -492,12 +475,10 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 		tmp_node.set_split_dimension(split_dimension);
 		tmp_node.set_split_value(split_value);
 		tmp_node.set_min_max(min_max);
-		std::vector<index_t> points;
 		for(index_t i = info_split_its[0]; i<info_split_its[2] ; i++){
-			tmp_node.add_response(data.response(selected_elements[i]), data.weight(selected_elements[i]));
-			points.emplace_back(selected_elements[i]);
+		 	tmp_node.add_response(data.response(selected_elements[i]), data.weight(selected_elements[i]));
 		}
-		tmp_node.set_points(points);
+		tmp_node.set_number_of_points(info_split_its[2]-info_split_its[0]);
 		return tmp_node;
 	}
 
@@ -514,10 +495,6 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
         //creates an array of lenght num_features from wiht values from 0 to num_features
 		std::vector<index_t> feature_indices(data.num_features());
 		std::iota(feature_indices.begin(), feature_indices.end(), 0);
-		
-        //selects the data to use and stores it in data_infos
-        std::vector<info_t > data_infos;
-        data_infos.reserve(data.num_data_points());
         
 		//vector with the indexes of the boostrap items
 		std::vector<index_t> selected_elements;
@@ -525,8 +502,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 
         for (auto i=0u; i<data.num_data_points(); ++i){
             if (sample_weights[i] > 0){
-                data_infos.emplace_back(i, data.response(i), NAN, data.weight(i) * sample_weights[i]);
-
+                
 				//fill a vector with the indexes of the elements in the boostrap
 				selected_elements.emplace_back(i);
 				responses.emplace_back(data.response(i));
@@ -553,7 +529,7 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 	}
 
 	void update_gaussian_parameters(const rfr::data_containers::base<num_t, response_t, index_t> &data){
-		num_t n_points = the_nodes[0].get_points().size();
+		num_t n_points = the_nodes[0].get_number_of_points();//points().size();
 		num_t n_features = data.num_features();
 		num_t coef = std::min(2*n_points, 500.0);
 		prior_variance = the_nodes[0].get_response_stat().variance_population();
@@ -572,12 +548,12 @@ class k_ary_mondrian_tree : public rfr::trees::tree_base<num_t, response_t, inde
 		num_t variance, mean;
 		for(int i = the_nodes.size()-1; i >= 0; i--){
 			if(the_nodes[i].is_a_leaf()){
-				variance = get_sigmoid_variance(i) + noise_variance / the_nodes[i].get_points().size();
+				variance = get_sigmoid_variance(i) + noise_variance / the_nodes[i].get_number_of_points();//points().size();
 				mean = the_nodes[i].get_response_stat().mean();
 				message_to_parent[i].first = mean;
 				message_to_parent[i].second = 1/variance;
 				child_likelihood[i].first = mean;
-				child_likelihood[i].second = (1/ noise_variance) * the_nodes[i].get_points().size() ;//multiply by points
+				child_likelihood[i].second = (1/ noise_variance) * the_nodes[i].get_number_of_points();//multiply by points
 			}
 			else{
 				child_likelihood[i] = multiply_gausian(message_to_parent[the_nodes[i].get_children()[0]],
@@ -727,7 +703,7 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 		bool finished = false;
 		num_t w, mean = 0, variance = 0, second_moment = 0, pred_second_moment_temp, pred_mean_temp, expected_split_time, variance_from_mean, expected_cut_time;
 		num_t sum_W = 0;
-		while (!finished){//what ?
+		while (!finished){
 			old_node = tmp_node;
 			delta_node = tmp_node.get_split_time() - get_parent_split_time(tmp_node);
 			
@@ -788,7 +764,6 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 			}	
 		}
 		variance = second_moment - std::pow(mean,2);
-		last_mean = mean;
 		return(std::pair<num_t, num_t> (mean, variance));
     }
 
@@ -893,16 +868,7 @@ index_t myPartition( index_t it1, index_t it2, std::vector<index_t> &selected_el
 	virtual index_t number_of_leafs() const {return(num_leafs);}
 	virtual index_t depth()           const {return(max_depth);}
 
-	std::vector<index_t> get_used_points(){
-		if(the_nodes.size()==0){
-			return std::vector<index_t>(0);
-		}
-		return the_nodes[0].get_points();
-	}
 	
-	
-
-
 	/* \brief Function to recursively compute the partition induced by the tree
 	 *
 	 * Do not call this function from the outside! Needs become private at some point!
