@@ -9,7 +9,7 @@ A extensible C++ library for random forests with Python bindings.
 
 For the C++ library itself, you need no additional libaries, only a C++11 capable compiler.
 Technically, you need Boost if you want to compile the unit tests.
-The development is done using GCC 5.4 and 6.2.
+The development is done using GCC 7.2.
 You probably have to set CMAKE\_CXX\_FLAGS to -std=c++11 when using older compilers.
 
 ```
@@ -20,21 +20,13 @@ SWIG > 3.0
 
 
 ## Installing the Python Bindings
-Checkout the repo (and the refactor branch), create a build directory, and build them using the following commands:
+We upload the latest version to PYPI, so you can install it via
 ```
-git checkout git@github.com:sfalkner/random_forest_run.git
-cd random_forest_run
-mkdir build
-cd build
-cmake ..
-make
-python setup.py install --user
+pip install pyrfr
 ```
-After the installation finishes (hopefully) sucessfully, you can use the library with the pyrfr module.
-
-The above commands work for Python 3.4 and 3.6 on Gentoo and ArchLinux. With Python 2.7, there have been problems reported. Contact me if you experience any irregularities.
+Development is done with Python 3.6 on ArchLinux, but the unittests run on TravisCI with older version of Python and GCC. There have been problems reported with Python 2.7. Contact us if you experience any irregularities.
 
 ## USAGE
 
-For now, the file `./tests/pyrfr_example.py` inside the repository serves as the
+For now, the file `./tests/pyrfr_unit_test_*.py` inside the repository serve as the
 only real documentation of the Python bindings besides the docstrings.
