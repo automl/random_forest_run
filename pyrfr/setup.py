@@ -6,14 +6,6 @@ import fnmatch
 import os
 
 
-
-
-class CustomInstall(install):
-	def run(self):
-		self.run_command('build_ext')
-		build.run(self)
-		self.do_egg_install()
-
 include_dirs = ['./include']
 extra_compile_args = ['-O2', '-std=c++11']
 #extra_compile_args = ['-g', '-std=c++11', '-O0', '-Wall']
@@ -47,5 +39,4 @@ setup(
 	ext_modules=extensions,
 	python_requires='>=3',
 	package_data = {'pyrfr': ['docstrings.i']},
-	cmdclass={'install': CustomInstall}
 )
