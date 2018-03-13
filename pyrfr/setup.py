@@ -1,6 +1,7 @@
 from distutils.command.build import build
 from setuptools.command.install import install
 from distutils.core import setup, Extension
+import distutils.command.install as orig
 
 
 # Customize installation according to https://stackoverflow.com/a/21236111
@@ -13,7 +14,7 @@ class CustomBuild(build):
 class CustomInstall(install):
 	def run(self):
 		self.run_command('build_ext')
-		self.do_egg_install()
+		orig.install.run(self)
 
 
 include_dirs = ['./include']
