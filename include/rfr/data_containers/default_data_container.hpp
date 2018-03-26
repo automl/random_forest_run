@@ -56,9 +56,14 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
 	}
 
 
-	virtual response_t response (index_t sample_index) const{
-		return(response_values[sample_index]);
-	}
+    virtual response_t response (index_t sample_index) const{
+        return(response_values[sample_index]);
+    }
+
+
+    virtual response_t r2 (index_t sample_index) const{
+        return(predict_values[sample_index]);
+    }
 
     virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight = 1){
 

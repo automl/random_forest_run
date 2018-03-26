@@ -80,7 +80,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 
         for (auto i=0u; i<data.num_data_points(); ++i){
             if (sample_weights[i] > 0){
-                data_infos.emplace_back(i, data.response(i), NAN, data.weight(i) * sample_weights[i]);
+                data_infos.emplace_back(i, data.response(i), data.r2(i), NAN, data.weight(i) * sample_weights[i]);
             }
         }
 

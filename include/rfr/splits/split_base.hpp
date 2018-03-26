@@ -16,11 +16,12 @@ template <typename num_t = float, typename response_t = float, typename index_t 
 struct data_info_t{
 	index_t index;
 	response_t response;
+	response_t pred;
 	num_t feature;
 	num_t weight;
     
-    data_info_t (): index(0), response(0), feature(NAN), weight(NAN) {}
-    data_info_t (index_t i, response_t r, num_t f, num_t w): index(i), response(r), feature(f), weight(w) {}
+    data_info_t (): index(0), response(0), pred(0), feature(NAN), weight(NAN) {}
+    data_info_t (index_t i, response_t r, response_t p, num_t f, num_t w): index(i), response(r), pred(p), feature(f), weight(w) {}
 };
 
 
