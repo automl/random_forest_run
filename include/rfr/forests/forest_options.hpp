@@ -19,6 +19,8 @@ struct forest_options{
 	bool do_bootstrapping;				///< flag to toggle bootstrapping
 	bool compute_oob_error;				///< flag to enable/disable computing the out-of-bag error
 
+	bool compute_law_of_total_variance; ///< flag to enable/disable computation with the lotv
+
 	rfr::trees::tree_options<num_t,response_t,index_t> tree_opts;	///< the options for each tree
 
   	/* serialize function for saving forests */
@@ -39,6 +41,7 @@ struct forest_options{
 
 		do_bootstrapping = true;
 		compute_oob_error = false;
+		compute_law_of_total_variance = true;
 
 	}
 

@@ -206,8 +206,11 @@ class regression_forest{
 				var_stats.push(0);
 			}
 		}
-		
-		return(std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, mean_stats.variance_sample() + var_stats.mean()) ));
+	    num_t var = mean_stats.variance_sample();
+		if (options.compute_law_of_total_variance) {
+			return std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, var + var_stats.mean()) );
+		}
+		return std::pair<num_t, num_t> (mean_stats.mean(), std::max<num_t>(0, var) );
 	}
 
 
