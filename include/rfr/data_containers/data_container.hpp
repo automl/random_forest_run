@@ -58,7 +58,8 @@ class base{
 	 * \param response the corresponding response value
 	 * \param weight the weight of the data point
 	 */
-	virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight) = 0;
+    virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight) = 0;
+    virtual void add_data_point (std::vector<num_t> features, std::vector<response_t> response, num_t weight) = 0;
 
 
 	/** \brief method to retrieve a data point

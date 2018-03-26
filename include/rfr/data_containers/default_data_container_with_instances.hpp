@@ -78,6 +78,10 @@ class default_container_with_instances : public rfr::data_containers::base<num_t
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 
+	virtual void add_data_point (std::vector<num_t>, std::vector<response_t>, num_t){
+		throw std::runtime_error("This container does not support adding a data point with this function");
+	}
+
 	void add_data_point( index_t config_index, index_t instance_index, response_t r, num_t weight = 1){
 		if (config_index >= num_configurations() )
 			throw std::runtime_error("Configuration index too large.");

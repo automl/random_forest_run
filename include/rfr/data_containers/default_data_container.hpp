@@ -25,7 +25,8 @@ template<typename num_t = float, typename response_t = float, typename index_t =
 class default_container : public rfr::data_containers::base<num_t, response_t, index_t>{
   protected:
 	std::vector< std::vector<num_t> > feature_values;	//!< 2d vector to store the feature values
-	std::vector<response_t> response_values;			//!< the associated responses
+	std::vector<response_t> response_values;			//!< the associated responses (fitting)
+	std::vector<response_t> predict_values	;			//!< the associated responses (predicting)
 	std::vector<num_t> weights;							//!< the associated weights
 	response_t response_type;							//!< to discriminate between regression and classification
 	std::vector<std::pair<num_t, num_t> > bounds;		//!< stores the intervals for all continuous variables, stores the number of categories for categoricals
@@ -59,47 +60,89 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
 		return(response_values[sample_index]);
 	}
 
-	virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight = 1){
+    virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight = 1){
 
-		if (weight <= 0)
-			throw std::runtime_error("Weight of a datapoint has to be positive.");
+        if (weight <= 0)
+            throw std::runtime_error("Weight of a datapoint has to be positive.");
 
-		if (num_features() == 0){
-			init_protected(features.size());
-		}
+        if (num_features() == 0){
+            init_protected(features.size());
+        }
 
-		if (num_features() != features.size())
-			throw std::runtime_error("Number of elements does not match.");
+        if (num_features() != features.size())
+            throw std::runtime_error("Number of elements does not match.");
 
-		for (size_t i=0; i<features.size(); i++){
-			if (get_type_of_feature(i) > 0){
-				if ((features[i] >= get_type_of_feature(i)) || features[i] < 0){
-					std::stringstream errMsg;
-					errMsg << "Feature "<<i<<" is categorical with values in {0,...,"<<get_type_of_feature(i)-1<<"}, but datapoint has value "<<features[i]<<" which is inconsistent!";
-					throw std::runtime_error(errMsg.str().c_str());
-				}
-			}
-		}
+        for (size_t i=0; i<features.size(); i++){
+            if (get_type_of_feature(i) > 0){
+                if ((features[i] >= get_type_of_feature(i)) || features[i] < 0){
+                    std::stringstream errMsg;
+                    errMsg << "Feature "<<i<<" is categorical with values in {0,...,"<<get_type_of_feature(i)-1<<"}, but datapoint has value "<<features[i]<<" which is inconsistent!";
+                    throw std::runtime_error(errMsg.str().c_str());
+                }
+            }
+        }
 
+        if (get_type_of_response() > 0){
+            if ((response >= get_type_of_response()) || response < 0){
+                std::stringstream errMsg;
+                errMsg << "Response is categorical with values in {0,...,"<<get_type_of_response()-1<<"}, but datapoint has value "<<response<<" which is inconsistent!";
+                throw std::runtime_error(errMsg.str().c_str());
+            }
+        }
 
-		if (get_type_of_response() > 0){
-			if ((response >= get_type_of_response()) || response < 0){
-				std::stringstream errMsg;
-				errMsg << "Response is categorical with values in {0,...,"<<get_type_of_response()-1<<"}, but datapoint has value "<<response<<" which is inconsistent!";
-				throw std::runtime_error(errMsg.str().c_str());
-			}
-		}
+        for (size_t i=0; i<features.size(); i++){
+            feature_values[i].push_back(features[i]);
+            min_max[i] = std::pair<num_t,num_t> (std::min(min_max[i].first, features[i]), std::max(min_max[i].second, features[i]));
+        }
 
-		
+        response_values.push_back(response);
+        predict_values.push_back(response);
+        weights.push_back(weight);
+    }
 
-		for (size_t i=0; i<features.size(); i++){
-				feature_values[i].push_back(features[i]);
-				min_max[i] = std::pair<num_t,num_t> (std::min(min_max[i].first, features[i]), std::max(min_max[i].second, features[i]));
-		}
+    virtual void add_data_point (std::vector<num_t> features, std::vector<response_t> response, num_t weight = 1){
 
-		response_values.push_back(response);
-		weights.push_back(weight);
-	}
+        if (weight <= 0)
+            throw std::runtime_error("Weight of a datapoint has to be positive.");
+
+        if (num_features() == 0){
+            init_protected(features.size());
+        }
+
+        if (num_features() != features.size())
+            throw std::runtime_error("Number of elements does not match.");
+
+        for (size_t i=0; i<features.size(); i++){
+            if (get_type_of_feature(i) > 0){
+                if ((features[i] >= get_type_of_feature(i)) || features[i] < 0){
+                    std::stringstream errMsg;
+                    errMsg << "Feature "<<i<<" is categorical with values in {0,...,"<<get_type_of_feature(i)-1<<"}, but datapoint has value "<<features[i]<<" which is inconsistent!";
+                    throw std::runtime_error(errMsg.str().c_str());
+                }
+            }
+        }
+
+        if (get_type_of_response() > 0){
+            if ((response[0] >= get_type_of_response()) || response[0] < 0){
+                std::stringstream errMsg;
+                errMsg << "Response is categorical with values in {0,...,"<<get_type_of_response()-1<<"}, but datapoint has value "<<response[0]<<" which is inconsistent!";
+                throw std::runtime_error(errMsg.str().c_str());
+            }
+        }
+
+        for (size_t i=0; i<features.size(); i++){
+            feature_values[i].push_back(features[i]);
+            min_max[i] = std::pair<num_t,num_t> (std::min(min_max[i].first, features[i]), std::max(min_max[i].second, features[i]));
+        }
+
+        response_values.push_back(response[0]);
+        if (response.size() > 1) {
+            predict_values.push_back(response[1]);
+        } else {
+            predict_values.push_back(response[0]);
+        }
+        weights.push_back(weight);
+    }
 
 	virtual std::vector<num_t> retrieve_data_point (index_t index) const {
 		std::vector<num_t> vec(feature_values.size());
