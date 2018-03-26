@@ -109,7 +109,7 @@ class k_ary_node_minimal{
 		
 		for (auto it = tmp_node.begin; it != tmp_node.end; ++it){
 //            std::cout << "Test";
-			push_response_value(std::pow(10, (*it).response), (*it).weight);
+			push_response_value((*it).response, (*it).weight);
 		}
 	}	
 
