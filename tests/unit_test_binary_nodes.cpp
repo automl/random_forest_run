@@ -49,41 +49,6 @@ data_container_type load_toy_data(){
     return(data);
 }
 
-void test_new_input(){
-    // Test response == predict ...
-    auto csv_data = load_toy_data();
-    for (auto i=0; i < csv_data.num_data_points(); i++) {
-        // ... if imported from csv
-        BOOST_REQUIRE_EQUAL(csv_data.response(i), csv_data.predict_value(i));
-    }
-
-    // ... if adding responses directly
-    data_container_type data(3);
-    data.add_data_point(std::vector<num_t>(3, 0.), 3.);
-    BOOST_REQUIRE_EQUAL(data.response(0), data.predict_value(0));
-    BOOST_REQUIRE_EQUAL(data.response(0), 3.);
-
-    data.add_data_point(std::vector<num_t>(3, 1.), 5.);
-    BOOST_REQUIRE_EQUAL(data.response(1), data.predict_value(1));
-    BOOST_REQUIRE_EQUAL(data.response(1), 5.);
-
-    // ... if adding multiple responses. One for fitting one for predicting
-    response_t responses[] = {0., 1.};
-    data.add_data_point(std::vector<num_t>(3, 1.), std::vector<response_t >(responses,responses+2));
-    BOOST_REQUIRE_EQUAL(data.response(2), responses[0]);
-    BOOST_REQUIRE_EQUAL(data.predict_value(2), responses[1]);
-
-    responses[0] = -99.;
-    responses[1] = 6.;
-    data.add_data_point(std::vector<num_t>(3, 1.), std::vector<response_t >(responses,responses+2));
-    BOOST_REQUIRE_EQUAL(data.response(3), responses[0]);
-    BOOST_REQUIRE_EQUAL(data.predict_value(3), responses[1]);
-
-    // ... if adding more than 2 response values
-    response_t responses2[] = {0., 1., 2.};
-    BOOST_REQUIRE_THROW(data.add_data_point(std::vector<num_t>(3, 1.), std::vector<response_t >(responses2,responses2+3)), std::runtime_error);
-}
-
 
 template <typename node_type>
 void test_make_internal_node_and_make_leaf_node(){
@@ -382,8 +347,4 @@ BOOST_AUTO_TEST_CASE( minimal_node_tests ){
 BOOST_AUTO_TEST_CASE( full_node_tests ){
 	test_make_internal_node_and_make_leaf_node<full_node_type>();
 	test_make_internal_node_and_make_leaf_node_differing_values<full_node_type>();
-}
-
-BOOST_AUTO_TEST_CASE( vector_input ) {
-    test_new_input();
 }
