@@ -47,7 +47,7 @@ class k_ary_node_minimal{
   	/* serialize function for saving forests */
   	template<class Archive>
 	void serialize(Archive & archive) {
-		archive( parent_index, children, split_fractions, split, response_stat); 
+		archive( parent_index, children, split_fractions, split, response_stat);
 	}
 
   
@@ -108,7 +108,8 @@ class k_ary_node_minimal{
 		split_fractions.fill(NAN);
 		
 		for (auto it = tmp_node.begin; it != tmp_node.end; ++it){
-			push_response_value((*it).response, (*it).weight);
+//            std::cout << "Test";
+			push_response_value((*it).prediction_value, (*it).weight);
 		}
 	}	
 

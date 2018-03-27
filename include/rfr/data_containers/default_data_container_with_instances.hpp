@@ -73,8 +73,13 @@ class default_container_with_instances : public rfr::data_containers::base<num_t
 	}
 
 	virtual response_t response (index_t sample_index) const{ return(response_values[sample_index]); }
+	virtual response_t predict_value (index_t sample_index) const{ return(response_values[sample_index]); }
 
 	virtual void add_data_point (std::vector<num_t>, response_t, num_t){
+		throw std::runtime_error("This container does not support adding a data point with this function");
+	}
+
+	virtual void add_data_point (std::vector<num_t>, std::vector<response_t>, num_t){
 		throw std::runtime_error("This container does not support adding a data point with this function");
 	}
 

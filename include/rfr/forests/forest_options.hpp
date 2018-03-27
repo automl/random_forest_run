@@ -19,6 +19,8 @@ struct forest_options{
 	bool do_bootstrapping;				///< flag to toggle bootstrapping
 	bool compute_oob_error;				///< flag to enable/disable computing the out-of-bag error
 
+	bool compute_law_of_total_variance; ///< flag to enable/disable computation with the lotv
+
 	rfr::trees::tree_options<num_t,response_t,index_t> tree_opts;	///< the options for each tree
 
   	/* serialize function for saving forests */
@@ -39,6 +41,7 @@ struct forest_options{
 
 		do_bootstrapping = true;
 		compute_oob_error = false;
+		compute_law_of_total_variance = true;
 
 	}
 
@@ -63,11 +66,12 @@ struct forest_options{
 
 	std::string to_string() const {
 		std::string str = "";
-		str += " number   of    trees :" + std::to_string(num_trees) + "\n";
-		str += "number of data points :" + std::to_string(num_data_points_per_tree) + "\n";
-		str += "   do_bootstrapping   :" + std::to_string(do_bootstrapping) + "\n";
-		str += " min samples in leaf  :" + std::to_string(tree_opts.min_samples_in_leaf) + "\n";
-		str += "       life time      :" + std::to_string(tree_opts.life_time) + "\n";
+		str += "  number   of    trees  :" + std::to_string(num_trees) + "\n";
+		str += " number of data points  :" + std::to_string(num_data_points_per_tree) + "\n";
+		str += "    do_bootstrapping    :" + std::to_string(do_bootstrapping) + "\n";
+		str += "  min samples in leaf   :" + std::to_string(tree_opts.min_samples_in_leaf) + "\n";
+		str += "        life time       :" + std::to_string(tree_opts.life_time) + "\n";
+        str += "compute_law_of_total_var:" + std::to_string(compute_law_of_total_variance) + "\n";
 		return str;
 	}
 };

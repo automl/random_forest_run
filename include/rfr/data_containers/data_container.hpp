@@ -42,6 +42,14 @@ class base{
 	 */
 	virtual response_t response (index_t sample_index) const = 0;
 
+    /** \brief member function to query a single response value, consistency checks might be omitted for performance
+     *
+     * \param sample_index the response of which data point
+     *
+     * \return the prediction value
+     */
+	virtual response_t predict_value(index_t sample_index) const = 0;  // Contains the values used to predict
+
 
 	/** \brief function to access the weight attributed to a single data point
 	 *
@@ -58,7 +66,16 @@ class base{
 	 * \param response the corresponding response value
 	 * \param weight the weight of the data point
 	 */
-	virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight) = 0;
+    virtual void add_data_point (std::vector<num_t> features, response_t response, num_t weight) = 0;
+
+    /** \brief method to add a single data point
+     *
+     * \param features a vector containing the features
+     * \param response the corresponding response vector. The first entry is the value used to fit the trees with,
+     *        the second is used to predict.
+     * \param weight the weight of the data point
+     */
+    virtual void add_data_point (std::vector<num_t> features, std::vector<response_t> response, num_t weight) = 0;
 
 
 	/** \brief method to retrieve a data point
