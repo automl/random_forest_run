@@ -61,7 +61,7 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
     }
 
 
-    virtual response_t r2 (index_t sample_index) const{
+    virtual response_t predict_value (index_t sample_index) const{
         return(predict_values[sample_index]);
     }
 

@@ -61,7 +61,7 @@ void test_make_internal_node_and_make_leaf_node(){
 	for (auto i=0u; i<data.num_data_points(); ++i){
 		data_info[i].index=i;
 		data_info[i].response = data.response(i);
-		data_info[i].pred = data.response(i);
+		data_info[i].prediction_value = data.response(i);
 		data_info[i].weight = 1;
 	}
   

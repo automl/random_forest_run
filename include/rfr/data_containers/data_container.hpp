@@ -41,7 +41,7 @@ class base{
 	 * \return the response value
 	 */
 	virtual response_t response (index_t sample_index) const = 0;
-	virtual response_t r2 (index_t sample_index) const = 0;  // Contains the values used to predict
+	virtual response_t predict_value(index_t sample_index) const = 0;  // Contains the values used to predict
 
 
 	/** \brief function to access the weight attributed to a single data point
