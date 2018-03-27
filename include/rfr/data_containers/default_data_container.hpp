@@ -298,6 +298,7 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
 
 		feature_values.swap(tmp_feature_values);
 		response_values.swap(tmp_response_values);
+        predict_values = response_values;
 
 		min_max.clear();
 
