@@ -1,0 +1,17 @@
+steps on how to make a new release on PyPi:
+
+1. make sure unit tests run locally
+2. increase version number in CMakeLists.txt
+3. create a clean build directory
+4. within that execute 'cmake .. && make pyrfr_docstrings'
+5. go into the python_package subdirectory
+6. run 'python setup.py sdist'
+7. upload to PyPi test^1:
+	twine upload --repository testpypi dist/*
+8. try to install it from there
+9. upload to PyPi:
+	twine upload dist/*
+
+
+
+^1 check info at https://packaging.python.org/guides/using-testpypi/
