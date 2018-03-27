@@ -141,7 +141,9 @@ class default_container : public rfr::data_containers::base<num_t, response_t, i
         }
 
         response_values.push_back(response[0]);
-        if (response.size() > 1) {
+        if (response.size() > 2) {
+            throw std::runtime_error("This container does not support adding a responses with more than two columns");
+        } else if (response.size() > 1) {
             predict_values.push_back(response[1]);
         } else {
             predict_values.push_back(response[0]);
