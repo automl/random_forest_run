@@ -66,7 +66,7 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 			[100]
 		]
 		self.y_dual = list(map(lambda x: [math.log10(x[0]), x[0]], self.y))
-		bounds = [(0, math.nan), (0, math.nan), (0, math.nan)]
+		bounds = [(0, float('nan')), (0, float('nan')), (0, float('nan'))]
 		def init_data(X, y, bounds):
 			data = reg.default_data_container(len(X[0]))
 
