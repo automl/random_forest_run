@@ -161,6 +161,14 @@ class regression_forest{
 		}
 	}
 
+	std::vector<num_t> get_largest_values_of_trees() {
+		std::vector<num_t> v = std::vector<num_t>();
+		v.reserve(the_trees.size());
+		for(int i=0; i< the_trees.size(); ++i){
+			v.push_back(the_trees[i].get_largest_output());
+		}
+		return v;
+	}
 
 	/* \brief combines the prediction of all trees in the forest
 	 *

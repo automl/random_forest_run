@@ -172,6 +172,21 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		return(the_nodes[node_index]);
 	}
 
+	num_t get_largest_output() const {
+		num_t cur_max = -1000*1000*1000; // -10^9 should be enough
+		bool first = true;
+
+		for(int i=0; i<the_nodes.size(); ++i) {
+			if(the_nodes[i].is_leaf()){
+				rfr::util::weighted_running_statistics<num_t> const& st = the_nodes[i].leaf_statistic();
+				if(cur_max <= st.mean() || first){
+					cur_max = st.mean();
+					first = false;
+				}
+			}
+		}
+		return cur_max;
+	}
 
 	virtual std::vector<response_t> const &leaf_entries (const std::vector<num_t> &feature_vector) const {
 		index_t i = find_leaf_index(feature_vector);
