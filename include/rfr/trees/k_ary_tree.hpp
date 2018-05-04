@@ -177,7 +177,7 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 		bool first = true;
 
 		for(int i=0; i<the_nodes.size(); ++i) {
-			if(the_nodes[i].is_leaf()){
+			if(the_nodes[i].is_a_leaf()){
 				rfr::util::weighted_running_statistics<num_t> const& st = the_nodes[i].leaf_statistic();
 				if(cur_max <= st.mean() || first){
 					cur_max = st.mean();
