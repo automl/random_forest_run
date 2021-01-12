@@ -53,9 +53,3 @@ jobs:
         lcov --directory . --capture  --rc lcov_branch_coverage=1 --output-file coverage.info
         lcov --remove coverage.info 'tests/*' '/usr/*' '/usr/include/*' '*/include/cereal/*' --output-file coverage.info
         lcov --list coverage.info
-    - name: Upload coverage
-      uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.info
-        fail_ci_if_error: true
-        verbose: true
