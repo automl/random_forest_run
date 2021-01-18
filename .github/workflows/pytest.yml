@@ -1,0 +1,55 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  ubuntu:
+
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        python-version: [3.6, 3.7, 3.8, 3.9]
+      fail-fast:  false
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install test dependencies
+      run: |
+        sudo apt-get install -y build-essential
+        python -m pip install --upgrade pip
+        pip install "numpy<=1.19"
+        sudo apt-get -qq update
+        sudo apt-get install -y libboost-all-dev
+        sudo apt-get remove swig
+        sudo apt-get -y install swig3.0
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+        sudo gem install coveralls-lcov
+        sudo apt-get install -y lcov
+        sudo apt-get install doxygen
+        pip3 install --user -U pip-tools
+        lcov --directory . --zerocounters
+    - name: Setup cmake
+      uses: jwlawson/actions-setup-cmake@v1.5
+      with:
+        cmake-version: '3.10.2'
+    - name: Use cmake
+      run: cmake --version
+    - name: Use g++
+      run: g++ --version
+    - name: Run Ctest
+      run: |
+        mkdir build
+        cd build
+        cmake .. -DSWIG_EXECUTABLE=/usr/bin/swig3.0
+        make
+        ctest --output-on-failure
+    - name: Coverage
+      timeout-minutes: 45
+      run: |
+        lcov --directory . --capture  --rc lcov_branch_coverage=1 --output-file coverage.info
+        lcov --remove coverage.info 'tests/*' '/usr/*' '/usr/include/*' '*/include/cereal/*' --output-file coverage.info
+        lcov --list coverage.info
