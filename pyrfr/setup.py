@@ -44,8 +44,11 @@ setup(
 	version='${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}.${RFR_VERSION_RELEASE}',
 	author='Stefan Falkner',
 	author_email='sfalkner@cs.uni-freiburg.de',
-	license='Use as you wish. No guarantees whatsoever.',
-	classifiers=['Development Status :: 3 - Alpha'],
+	license='BSD3',
+	classifiers=[
+		'Development Status :: 3 - Alpha',
+		'License :: OSI Approved :: BSD3 License',
+	],
 	packages=['pyrfr'],
 	ext_modules=extensions,
 	python_requires='>=3',
