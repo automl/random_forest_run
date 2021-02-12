@@ -3,17 +3,14 @@
 set -e
 set -x
 
+# Test the distribution on an isolated venv
+# Directory structure is such that
+# PWD=random_forest_run/random_forest_run/<repo>
 cd ../../
-pwd
-ls
 
 python -m venv test_env
 source test_env/bin/activate
 
-pwd
-ls
-sudo apt-get install tree
-tree
 python -m pip install pytest "numpy<=1.19"
 python -m pip install random_forest_run/random_forest_run/dist/*.tar.gz
 
