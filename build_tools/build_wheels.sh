@@ -18,3 +18,5 @@ cd build/python_package
 
 python -m pip install cibuildwheel
 python -m cibuildwheel --output-dir ../../wheelhouse
+ls ../../
+ls ../../wheelhouse
