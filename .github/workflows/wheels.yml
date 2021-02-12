@@ -45,7 +45,7 @@ jobs:
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_TEST_REQUIRES: pytest threadpoolctl "numpy<=1.19"
           CIBW_TEST_COMMAND: bash {project}/build_tools/test_wheels.sh
-          CIBW_BEFORE_ALL: bash {project}/build_tools/build_wheels_env.sh
+          CIBW_BEFORE_ALL: {project}/build_tools/build_wheels_env.sh
 
         run: bash build_tools/build_wheels.sh
 
