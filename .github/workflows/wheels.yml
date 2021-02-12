@@ -22,6 +22,14 @@ jobs:
         python: [36, 37, 38]
         bitness: [32, 64]
         manylinux_image: [manylinux1, manylinux2010]
+        include:
+          # Run 32 and 64 bit version in parallel for Linux and Windows
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_x86_64
+          - os: ubuntu-latest
+            bitness: 32
+            platform_id: manylinux_i686
 
     steps:
       - name: Checkout pyrfr
