@@ -4,7 +4,7 @@ set -e
 set -x
 
 # Build the package
-./build_package.sh
+./build_tools/build_package.sh
 
 # The version of the built dependencies are specified
 # in the pyproject.toml file, while the tests are run
