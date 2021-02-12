@@ -116,7 +116,7 @@ jobs:
         id: upload-release-asset
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: |
+        run: |
           python -m pip install --upgrade pip
           set -x
           assets=()
