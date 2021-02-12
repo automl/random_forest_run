@@ -40,12 +40,12 @@ jobs:
 
       - name: Build and test wheels
         env:
-          CIBW_BUILD_VERBOSITY: 3
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_TEST_REQUIRES: pytest threadpoolctl
+          CIBW_TEST_REQUIRES: pytest threadpoolctl "numpy<=1.19"
           CIBW_TEST_COMMAND: bash {project}/build_tools/test_wheels.sh
+          CIBW_BEFORE_ALL: bash {project}/build_tools/build_wheels_env.sh
 
         run: bash build_tools/build_wheels.sh
 
