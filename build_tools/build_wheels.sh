@@ -10,9 +10,11 @@ chmod u+x build_tools/build_package.sh
 # The version of the built dependencies are specified
 # in the pyproject.toml file, while the tests are run
 # against the most recent version of the dependencies
+pwd
 sudo apt-get install tree
-tree ..
-cp ../random_forest_run/pyproject.toml .
+tree
+
+cd build/python_package
 
 python -m pip install cibuildwheel
-python -m cibuildwheel --output-dir wheelhouse
+python -m cibuildwheel --output-dir ../../wheelhouse

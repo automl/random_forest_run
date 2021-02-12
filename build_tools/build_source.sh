@@ -11,13 +11,14 @@ chmod u+x build_tools/build_package.sh
 # in the pyproject.toml file, while the tests are run
 # against the most recent version of the dependencies
 # For debug print CWD contents
+pwd
 sudo apt-get install tree
-tree ..
-cp ../random_forest_run/pyproject.toml .
+tree
 
 # Also build the distribution
+cd build/python_package
 python -m pip install twine
-python setup.py sdist
+python setup.py sdist -d ../../dist
 
 # Check whether the source distribution will render correctly
-twine check dist/*.tar.gz
+twine check ../../dist/*.tar.gz

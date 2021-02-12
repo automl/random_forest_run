@@ -21,3 +21,4 @@ mkdir build
 cd build
 cmake .. && make pyrfr_docstrings
 cd python_package
+cp ../../pyproject.toml .
