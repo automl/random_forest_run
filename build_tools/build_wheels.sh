@@ -4,10 +4,7 @@ set -e
 set -x
 
 # Build the package
-mkdir build
-cd build
-cmake .. && make pyrfr_docstrings
-cd python_package
+./build_package.sh
 
 # The version of the built dependencies are specified
 # in the pyproject.toml file, while the tests are run
