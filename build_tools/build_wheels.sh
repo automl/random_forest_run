@@ -18,8 +18,4 @@ cd build/python_package
 
 python -m pip install cibuildwheel
 docker --version
-ls
-python -m cibuildwheel --output-dir wheelhouse
 python -m cibuildwheel --output-dir ../../wheelhouse
-ls ../../
-ls ../../wheelhouse
