@@ -44,10 +44,10 @@ setup(
 	version='${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}.${RFR_VERSION_RELEASE}',
 	author='Stefan Falkner',
 	author_email='sfalkner@cs.uni-freiburg.de',
-	license='BSD3',
+	license='BSD-3-Clause',
 	classifiers=[
 		'Development Status :: 3 - Alpha',
-		'License :: OSI Approved :: BSD3 License',
+		'License :: OSI Approved :: BSD-3-Clause License',
 	],
 	packages=['pyrfr'],
 	ext_modules=extensions,
