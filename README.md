@@ -1,9 +1,6 @@
 # RFR
 
-[![Build Status](https://travis-ci.org/automl/random_forest_run.svg?branch=master)](https://travis-ci.org/automl/random_forest_run)
-[![Coverage Status](https://coveralls.io/repos/github/automl/random_forest_run/badge.svg?branch=master)](https://coveralls.io/github/automl/random_forest_run?branch=master)
-
-A extensible C++ library for random forests with Python bindings.
+A extensible C++ library for random forests with Python bindings with a BSD3 license.
 
 ## Requirements
 
