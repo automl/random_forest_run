@@ -3,5 +3,4 @@
 requires = [
     "setuptools",
     "wheel",
-    "Cython>=0.28.5",
 ]

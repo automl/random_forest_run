@@ -8,18 +8,10 @@ set -x
 # This file setups the environment and copy over the required
 # files to the build/python_package directory that will contain
 # the python distribution directory
-sudo apt-get install -y build-essential
-python -m pip install --upgrade pip
-pip install "numpy<=1.19"
-sudo apt-get -qq update
-sudo apt-get install -y libboost-all-dev
-sudo apt-get remove swig
-sudo apt-get -y install swig3.0
-sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-sudo gem install coveralls-lcov
-sudo apt-get install -y lcov
-sudo apt-get install doxygen
-pip3 install --user -U pip-tools
+
+# Install the environment
+chmod u+x ./build_tools/env.sh
+./build_tools/env.sh
 
 # Build the package
 mkdir build
@@ -30,5 +22,12 @@ cd python_package
 # Copy required files, which will be
 # available to a docker image that
 # will build wheel files
+# This docker image will copy the contents
+# of CWD into itself, so any build requirement
+# for wheels should be available
+# Directory Structure where docker image runs:
+# REPO/build/python_package/
 cp ../../pyproject.toml .
 cp -r ../../build_tools .
+# make the test data available for unit test
+cp -r ../../test_data_sets .
