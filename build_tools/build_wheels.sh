@@ -1,5 +1,5 @@
 # The wheels are built on a centos docker image
-# To complain with many-linux support, we employ
+# To comply with many-linux support, we employ
 # cibuildwheel which build the wheels in a
 # Docker image quay.io with minimal support. Following files are required
 # for the pyrfr to be compiled on the desired target
