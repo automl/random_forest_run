@@ -2,11 +2,9 @@
 name: Wheel builder
 
 on:
-  push:
-    branches:
-      - master
-      # Release branches
-      - "[0-9]+.[0-9]+.X"
+  create:
+    tags:
+      - v*
 
 jobs:
   # Build the wheels for Linux
