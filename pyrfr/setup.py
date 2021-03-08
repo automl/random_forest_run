@@ -39,6 +39,7 @@ extensions = [	Extension(
 				)
 			]
 
+
 setup(
 	name='pyrfr',
 	version='${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}.${RFR_VERSION_RELEASE}',
@@ -47,7 +48,7 @@ setup(
 	license='BSD-3-Clause',
 	classifiers=[
 		'Development Status :: 3 - Alpha',
-		'License :: OSI Approved :: BSD-3-Clause License',
+		'License :: OSI Approved :: BSD License',
 	],
 	packages=['pyrfr'],
 	ext_modules=extensions,
@@ -55,4 +56,6 @@ setup(
 	package_data={'pyrfr': ['docstrings.i']},
 	py_modules=['pyrfr'],
 	cmdclass={'build': CustomBuild, 'install': CustomInstall},
+	long_description='',
+	long_description_content_type='text/markdown',
 )
