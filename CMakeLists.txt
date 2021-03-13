@@ -48,7 +48,11 @@ if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 	configure_file(${PROJECT_SOURCE_DIR}/pyrfr/pyrfr/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/python_package/pyrfr/__init__.py)
 
 	file(COPY ${PROJECT_SOURCE_DIR}/include DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
 	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_cereal-1.2.2 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_doxy2swig DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_rapidjson DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_rapidxml DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
 
 
 	add_custom_target(pyrfr_docstrings
