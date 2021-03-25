@@ -10,7 +10,7 @@ on:
 jobs:
   ubuntu:
 
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
@@ -38,11 +38,13 @@ jobs:
       run: cmake --version
     - name: Use g++
       run: g++ --version
+    - name: Use boost
+      run: whereis boost && dpkg -s libboost-dev | grep 'Version'
     - name: Run Ctest
       run: |
         mkdir build
         cd build
-        cmake .. -DSWIG_EXECUTABLE=/usr/bin/swig3.0
+        cmake .. -DSWIG_EXECUTABLE=/usr/bin/swig
         make
         ctest --output-on-failure
     - name: Coverage
