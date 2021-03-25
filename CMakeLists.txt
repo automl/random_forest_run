@@ -16,6 +16,15 @@ IF(NOT CMAKE_BUILD_TYPE)
  #SET(CMAKE_BUILD_TYPE "MINSIZEREL")
 ENDIF()
 
+
+if(DEFINED ENV{BOOST_ROOT_1_72_0})
+    file(TO_CMAKE_PATH $ENV{BOOST_ROOT_1_72_0} CMAKE_BOOST_ROOT)
+    list(APPEND BOOST_ROOT "$ENV{CMAKE_BOOST_ROOT}")
+    list(APPEND BOOST_INCLUDEDIR "$ENV{CMAKE_BOOST_ROOT}/boost/include")
+    list(APPEND BOOST_LIBRARYDIR "$ENV{CMAKE_BOOST_ROOT}/lib")
+endif()
+
+
 # required libaries
 find_package(Boost COMPONENTS unit_test_framework)
 find_package(Doxygen)
