@@ -7,14 +7,14 @@ pip3 install cmake numpy==1.11.0 scipy==0.17.0
 echo 'echo "pyuic5 $@"' > /usr/local/bin/pyuic5
 chmod +x /usr/local/bin/pyuic5
 yum install -y curl gsl-devel pcre-devel
-curl -LO http://prdownloads.sourceforge.net/swig/swig-3.0.12.tar.gz
-tar xzvf swig-3.0.12.tar.gz
-cd swig-3.0.12
+curl -LO https://downloads.sourceforge.net/swig/swig-4.0.2.tar.gz
+tar xzvf swig-4.0.2.tar.gz
+cd swig-4.0.2
 ./configure
 make
 make install
 cd ..
-rm -rf swig-3.0.12*
+rm -rf swig-4.0.2*
 swig -version
 
 # Install the package building dependencies -- one line at

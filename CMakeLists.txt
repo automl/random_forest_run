@@ -6,6 +6,9 @@ set (RFR_VERSION_MAJOR 0)
 set (RFR_VERSION_MINOR 8)
 set (RFR_VERSION_RELEASE 1)
 
+# Print debug information about boost
+set(Boost_DEBUG 1)
+
 IF(NOT CMAKE_BUILD_TYPE)
  SET(CMAKE_BUILD_TYPE "DEBUG")
  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
