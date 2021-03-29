@@ -14,6 +14,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.6, 3.7, 3.8, 3.9]
+        swig: ['3.0', '4.0']
       fail-fast:  false
 
     steps:
@@ -30,6 +31,15 @@ jobs:
         chmod u+x ./build_tools/env.sh
         ./build_tools/env.sh
         lcov --directory . --zerocounters
+    - name: Overwrite Swig
+      if: ${{ matrix.swig == '3.0'}}
+      run: |
+        sudo apt-get update
+        sudo apt-get remove swig
+        sudo apt-get install swig3.0
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+    - name: Use swig
+      run: /usr/bin/swig -version
     - name: Use cmake
       run: cmake --version
     - name: Use g++
