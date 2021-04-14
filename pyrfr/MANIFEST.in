@@ -2,4 +2,7 @@ recursive-include include *
 recursive-include pyrfr *.i
 include LICENSE_cereal-1.2.2
 include LICENSE.txt
+include LICENSE_doxy2swig  
+include LICENSE_rapidjson  
+include LICENSE_rapidxml 
 include pyproject.toml

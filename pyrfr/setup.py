@@ -27,14 +27,14 @@ extensions = [	Extension(
 					name = 'pyrfr._regression',
 					sources=['pyrfr/regression.i'],
 					include_dirs = include_dirs,
-					swig_opts=['-c++', '-modern', '-features', 'nondynamic'] + ['-I{}'.format(s) for s in include_dirs],
+					swig_opts=['-c++', '-modern', '-py3', '-features', 'nondynamic'] + ['-I{}'.format(s) for s in include_dirs],
 					extra_compile_args = extra_compile_args
 				),
 				Extension(
 					name = 'pyrfr._util',
 					sources=['pyrfr/util.i'],
 					include_dirs = include_dirs,
-					swig_opts=['-c++', '-modern', '-features', 'nondynamic'] + ['-I{}'.format(s) for s in include_dirs],
+					swig_opts=['-c++', '-modern', '-py3', '-features', 'nondynamic'] + ['-I{}'.format(s) for s in include_dirs],
 					extra_compile_args = extra_compile_args
 				)
 			]

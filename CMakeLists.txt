@@ -6,6 +6,9 @@ set (RFR_VERSION_MAJOR 0)
 set (RFR_VERSION_MINOR 8)
 set (RFR_VERSION_RELEASE 2)
 
+# Print debug information about boost
+set(Boost_DEBUG 1)
+
 IF(NOT CMAKE_BUILD_TYPE)
  SET(CMAKE_BUILD_TYPE "DEBUG")
  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage") # enabling coverage
@@ -48,7 +51,11 @@ if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 	configure_file(${PROJECT_SOURCE_DIR}/pyrfr/pyrfr/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/python_package/pyrfr/__init__.py)
 
 	file(COPY ${PROJECT_SOURCE_DIR}/include DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE.txt DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
 	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_cereal-1.2.2 DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_doxy2swig DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_rapidjson DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/LICENSE_rapidxml DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
 
 
 	add_custom_target(pyrfr_docstrings

@@ -15,8 +15,8 @@ cmake .. && make pyrfr_docstrings
 cd python_package
 
 # Also build the distribution
-python -m pip install twine
-python setup.py sdist -d ../../dist
+python3 -m pip install twine
+python3 setup.py sdist -d ../../dist
 
 # Check whether the source distribution will render correctly
 twine check ../../dist/*.tar.gz
