@@ -21,7 +21,8 @@ We upload the latest version to PYPI, so you can install it via
 ```
 pip install pyrfr
 ```
-Development is done with Python 3.6 on ArchLinux, but the unittests run on TravisCI with older version of Python and GCC. There have been problems reported with Python 2.7. Contact us if you experience any irregularities.
+Development is done with Python 3.6-3.9 on Ubuntu and the unittests are executed via github actions.
+We do no longer support Python 2. Contact us if you experience any irregularities.
 
 ## USAGE
 
