@@ -375,7 +375,22 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 
 	index_t get_feature_index() const {return(feature_index);}
 	num_t get_num_split_value() const {return(num_split_value);}
-	std::bitset<max_num_categories> get_cat_split_set() const {return(cat_split_set);}
+    std::bitset<max_num_categories> get_cat_split_set() const {return(cat_split_set);}
+
+	std::vector<num_t> get_cat_split() const
+    {
+	    index_t cat_num = cat_split_set.count();
+	    std::vector<num_t> vCat;
+        vCat.reserve(cat_num);
+	    for(index_t i=0; i<max_num_categories; ++i)
+        {
+	        if(cat_split_set[i])
+                vCat.push_back(i);
+	            if (vCat.size() == cat_num)
+                    break;
+        }
+	    return vCat;
+    }
 
 	/* \brief takes a subspace and returns the 2 corresponding subspaces after the split is applied
 	 *

@@ -2,6 +2,7 @@
 #define RFR_BINARY_NODES_HPP
 
 #include <vector>
+#include <bitset>
 #include <deque>
 #include <array>
 #include <tuple>
@@ -22,7 +23,6 @@
 
 #include <iostream>
 
-
 namespace rfr{ namespace nodes{
 
 
@@ -31,6 +31,11 @@ template <int k, typename split_type, typename num_t = float, typename response_
 class k_ary_node_minimal{
   protected:
 	index_t parent_index;
+	index_t depth; // current depth of the node
+
+	index_t num_data; // number of data points stored in this node
+	//TODO do we need to store all the data indices in all nodes or only in leaf nodes
+    std::vector<index_t> data_indices; //vector containing the indices of all allowed datapoints (set to individual entries to zero for subsampling), only tored in leaf nodes
 
 	// for leaf nodes
 	rfr::util::weighted_running_statistics<num_t> response_stat;
@@ -74,7 +79,10 @@ class k_ary_node_minimal{
 							 num_t min_weight_in_leaf,
 							 rng_t &rng){
 		parent_index = tmp_node.parent_index;
-		std::array<typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t> >::iterator, k+1> split_indices_it;
+		depth = tmp_node.node_level;
+        num_data = std::distance(tmp_node.begin, tmp_node.end);
+
+        std::array<typename std::vector<rfr::splits::data_info_t<num_t, response_t, index_t> >::iterator, k+1> split_indices_it;
 		num_t best_loss = split.find_best_split(data, features_to_try, tmp_node.begin, tmp_node.end, split_indices_it, min_samples_in_leaf, min_weight_in_leaf, rng);
 		//check if a split was found
 		// note: if the number of features to try is too small, there is a chance that the data cannot be split any further
@@ -106,12 +114,16 @@ class k_ary_node_minimal{
 		parent_index = tmp_node.parent_index;
 		children.fill(0);
 		split_fractions.fill(NAN);
-		
-		for (auto it = tmp_node.begin; it != tmp_node.end; ++it){
+        num_data = std::distance(tmp_node.begin, tmp_node.end);
+		depth = tmp_node.node_level;
+        data_indices.reserve(num_data);
+
+        for (auto it = tmp_node.begin; it != tmp_node.end; ++it){
 //            std::cout << "Test";
 			push_response_value((*it).prediction_value, (*it).weight);
+			data_indices.push_back((*it).index);
 		}
-	}	
+	}
 
 	/* \brief function to check if a feature vector can be splitted */
 	bool can_be_split(const std::vector<num_t> &feature_vector) const {
@@ -164,18 +176,28 @@ class k_ary_node_minimal{
 	rfr::util::weighted_running_statistics<num_t> const & leaf_statistic()  const { return (response_stat);}
 
 	/** \brief to test whether this node is a leaf */
-	bool is_a_leaf() const {return(children[0] == 0);}
+    virtual bool is_a_leaf() const {return(children[0] == 0);}
 	/** \brief get the index of the node's parent */
-	index_t parent() const {return(parent_index);}
+    virtual index_t parent() const {return(parent_index);}
 	
 	/** \brief get indices of all children*/
-	std::array<index_t, k> get_children() const {return(children);}
-	index_t get_child_index (index_t idx) const {return(children[idx]);};
+    virtual std::array<index_t, k> get_children() const {return(children);}
+    virtual index_t get_child_index (index_t idx) const {return(children[idx]);};
+    virtual index_t get_parent_index () const {return(parent_index);}
+
 
 	std::array<num_t, k> get_split_fractions() const {return(split_fractions);}
 	num_t get_split_fraction (index_t idx) const {return(split_fractions[idx]);};
 
-	const split_type & get_split() const {return(split);}
+    virtual index_t get_depth() const {return depth;}
+
+    virtual index_t get_feature_index() const {return(split.get_feature_index());}
+    virtual num_t get_num_split_value() const {return(split.get_num_split_value());}
+    virtual std::vector<num_t> get_cat_split() const {return(split.get_cat_split());}
+
+    virtual index_t get_num_data() const{return num_data;}
+
+    const split_type & get_split() const {return(split);}
 
 	/** \brief prints out some basic information about the node*/
 	virtual void print_info() const {
@@ -183,9 +205,15 @@ class k_ary_node_minimal{
 			std::cout << "N = "<<response_stat.sum_of_weights()<<std::endl;
 			std::cout <<"mean = "<< response_stat.mean()<<std::endl;
 			std::cout <<"variance = " << response_stat.variance_unbiased_frequency()<<std::endl;
-		}
+			std::cout <<"depth = " << depth<<"\n";
+            std::cout<<"stored data indices: ";
+            for (auto i=0; i<data_indices.size(); i++)
+                std::cout<<data_indices[i]<<" ";
+            std::cout<<std::endl;
+        }
 		else{
 			std::cout<<"status: internal node\n";
+            std::cout <<"depth = " << depth <<"\n";
 			std::cout<<"children: ";
 			for (auto i=0; i < k; i++)
 				std::cout<<children[i]<<" ";
@@ -283,8 +311,43 @@ class k_ary_node_full: public k_ary_node_minimal<k, split_type, num_t, response_
 		}
 	}
 
+    /** \brief returns the index of the child into which the provided sample falls
+   *
+   * \param feature_vector a feature vector of the appropriate size (not checked!)
+   *
+   * \return index_t index of the child
+   */
+    index_t falls_into_child(const std::vector<num_t> &feature_vector) const {
+        return super::falls_into_child(feature_vector);
+    }
+
+    /** \brief to test whether this node is a leaf */
+    virtual bool is_a_leaf() const {return(super::children[0] == 0);}
+    /** \brief get the index of the node's parent */
+    virtual index_t parent() const {return(super::parent_index);}
+
+    /** \brief get indices of all children*/
+    virtual std::array<index_t, k> get_children() const {return(super::children);}
+    virtual index_t get_child_index (index_t idx) const {return(super::children[idx]);};
+
+    virtual index_t get_depth() const {return super::depth;}
+
+    /** \brief get feature index of the current node, e.g. which feaure will be split at this node*/
+    virtual index_t get_feature_index() const {return(super::split.get_feature_index());}
+
+    /** \brief get the numerical split value of this node, if feature is smaller than this value,
+     * the feature should fall into the left node and vice versa*/
+    virtual num_t get_num_split_value() const {return(super::split.get_num_split_value());}
+
+    /** \brief get the catigorical split value of this node, if feature is insides the set,
+    * the feature should fall into the left node and vice versa*/
+    virtual std::vector<num_t> get_cat_split() const {return(super::split.get_cat_split());}
+
+    /** \brief get the number of data points stored in the tree derived from this node*/
+    virtual index_t get_num_data() const{return super::num_data;}
+
 };
 
 
 }} // namespace rfr::nodes
-#endif
+#endif":wq"

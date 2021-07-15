@@ -4,7 +4,7 @@ project (RFR CXX)
 # add a version number
 set (RFR_VERSION_MAJOR 0)
 set (RFR_VERSION_MINOR 8)
-set (RFR_VERSION_RELEASE 2)
+set (RFR_VERSION_RELEASE 3)
 
 # Print debug information about boost
 set(Boost_DEBUG 1)
@@ -29,7 +29,7 @@ enable_testing()
 
 # define all include directories within the project for different splits, data containers, node types etc...
 include_directories ("${PROJECT_SOURCE_DIR}/include")
-include_directories ("${Boost_INCLUDE_DIR}")
+include_directories ("${Boost_INCLUDE_DIRS}")
 
 
 # the documentation

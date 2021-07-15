@@ -52,10 +52,10 @@ typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,inde
 
 
 class std::default_random_engine{
-	public:
-		default_random_engine ();
-		default_random_engine (unsigned int seed);
-		void seed (unsigned int);
+        public:
+        default_random_engine ();
+        default_random_engine (unsigned int seed);
+        void seed (unsigned int);
 };
 
 typedef double num_t;
@@ -74,7 +74,7 @@ typedef std::default_random_engine rng_t;
 %template(num_vector_vector) std::vector< std::vector<num_t> >;
 %template(num_vector_vector_vector) std::vector<std::vector< std::vector<num_t> > >;
 %template(num_num_pair) std::pair<num_t, num_t>;
-
+%template(num_num_pair_vector) std::vector<std::pair<num_t, num_t>>;
 
 // put everything here that should be ignored globally
 %ignore rfr::*::serialize;
@@ -111,6 +111,7 @@ typedef std::default_random_engine rng_t;
 // NODES
 %include "rfr/nodes/k_ary_node.hpp"
 typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t> binary_full_node_rss_t;
+%template (bindary_node) rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss_loss<num_t, response_t, index_t, rng_t, 128>, num_t, response_t, index_t, rng_t>;
 
 %include "rfr/nodes/k_ary_mondrian_node.hpp"
 typedef rfr::nodes::k_ary_mondrian_node_full<2, num_t, response_t, index_t, rng_t> binary_mondrian_node_t;
@@ -126,7 +127,7 @@ typedef rfr::nodes::k_ary_mondrian_node_full<2, num_t, response_t, index_t, rng_
 
 %include "rfr/trees/k_ary_tree.hpp"
 %template(binary_full_tree_rss) rfr::trees::k_ary_random_tree<2, binary_full_node_rss_t, num_t, response_t, index_t, rng_t>;
-typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rss_split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t;
+typedef rfr::trees::k_ary_random_tree<2,binary_full_node_rss_t, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t;
 
 %include "rfr/trees/binary_fanova_tree.hpp"
 typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,index_t,rng_t > binary_fanova_tree_t;
@@ -139,13 +140,13 @@ typedef rfr::trees::k_ary_mondrian_tree<2, binary_mondrian_node_t, num_t, respon
 %template(forest_opts) rfr::forests::forest_options<num_t, response_t, index_t>;
 %include "rfr/forests/regression_forest.hpp"
 %template(binary_rss_forest) rfr::forests::regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
-
+%template(binary_rss_vectors) std::vector<binary_full_tree_rss_t>;
 
 %include "rfr/forests/quantile_regression_forest.hpp"
 %template(qr_forest) rfr::forests::quantile_regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
 
 %include "rfr/forests/fanova_forest.hpp"
-%template(fanova_forest_prototype) rfr::forests::regression_forest< binary_fanova_tree_t,num_t, response_t, index_t, rng_t >; 
+%template(fanova_forest_prototype) rfr::forests::regression_forest< binary_fanova_tree_t,num_t, response_t, index_t, rng_t >;
 %template(fanova_forest) rfr::forests::fANOVA_forest<binary_rss_split_t, num_t, response_t, index_t, rng_t>;
 
 
