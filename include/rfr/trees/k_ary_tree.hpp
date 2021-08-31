@@ -253,7 +253,6 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 			for (auto i=0u; i<k; i++){
 				partition_recursor(the_partition, subs[i], the_nodes[node_index].get_child_index(i));
 			}
-
 		}
 	}
 

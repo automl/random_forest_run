@@ -34,10 +34,11 @@ class k_ary_node_minimal{
 	index_t depth; // current depth of the node
 
 	index_t num_data; // number of data points stored in this node
-	//TODO do we need to store all the data indices in all nodes or only in leaf nodes
-    std::vector<index_t> data_indices; //vector containing the indices of all allowed datapoints (set to individual entries to zero for subsampling), only tored in leaf nodes
 
-	// for leaf nodes
+    std::vector<index_t> data_indices; //vector containing the indices of all allowed data points that can be accessed by the node
+
+
+    // for leaf nodes
 	rfr::util::weighted_running_statistics<num_t> response_stat;
 
 	// for internal_nodes
@@ -97,7 +98,6 @@ class k_ary_node_minimal{
 			}
 			for (auto &sf: split_fractions)
                 sf /= total_weight;
-
 		}
 		else
 			make_leaf_node(tmp_node, data);
@@ -119,7 +119,6 @@ class k_ary_node_minimal{
         data_indices.reserve(num_data);
 
         for (auto it = tmp_node.begin; it != tmp_node.end; ++it){
-//            std::cout << "Test";
 			push_response_value((*it).prediction_value, (*it).weight);
 			data_indices.push_back((*it).index);
 		}
@@ -141,7 +140,6 @@ class k_ary_node_minimal{
 		if (is_a_leaf()) return(0);
 		return(children[split(feature_vector)]);
 	}
-
 
 	/** \brief adds an observation to the leaf node
 	 *
@@ -177,14 +175,16 @@ class k_ary_node_minimal{
 
 	/** \brief to test whether this node is a leaf */
     virtual bool is_a_leaf() const {return(children[0] == 0);}
+
 	/** \brief get the index of the node's parent */
     virtual index_t parent() const {return(parent_index);}
 	
 	/** \brief get indices of all children*/
     virtual std::array<index_t, k> get_children() const {return(children);}
+
+    /** \brief get index of the idx's child*/
     virtual index_t get_child_index (index_t idx) const {return(children[idx]);};
     virtual index_t get_parent_index () const {return(parent_index);}
-
 
 	std::array<num_t, k> get_split_fractions() const {return(split_fractions);}
 	num_t get_split_fraction (index_t idx) const {return(split_fractions[idx]);};
@@ -350,4 +350,4 @@ class k_ary_node_full: public k_ary_node_minimal<k, split_type, num_t, response_
 
 
 }} // namespace rfr::nodes
-#endif":wq"
+#endif
