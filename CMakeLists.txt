@@ -29,7 +29,7 @@ enable_testing()
 
 # define all include directories within the project for different splits, data containers, node types etc...
 include_directories ("${PROJECT_SOURCE_DIR}/include")
-include_directories ("${Boost_INCLUDE_DIRS}")
+include_directories ("${Boost_INCLUDE_DIR}")
 
 
 # the documentation

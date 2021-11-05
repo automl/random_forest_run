@@ -3,7 +3,6 @@
 
 #include <cmath>
 #include <vector>
-#include <set>
 #include <algorithm>
 #include <iostream>
 #include <stdexcept>
@@ -489,58 +488,6 @@ class running_covariance{
 
 	long unsigned int number_of_points(){return(N);}
 	num_t covariance(){return(num_t(N)/num_t(N-1)*cov);}
-};
-
-template <typename index_t>
-void set_intersect(std::set<index_t>& s1, const std::set<index_t>& s2)
-{
-    // inplace intersection
-    // https://stackoverflow.com/a/1773620
-    auto it1 = s1.begin();
-    auto it2 = s2.begin();
-    while ( (it1 != s1.end()) && (it2 != s2.end()) )
-    {
-        if (*it1 < *it2)
-            s1.erase(it1++);
-        else if (*it2 < *it1)
-            ++it2;
-        else// *it1 == *it2
-        {
-            ++it1;
-            ++it2;
-        }
-    }
-    // Anything left in set_1 from here on did not appear in set_2,
-    // so we remove it.
-    s1.erase(it1, s1.end());
-};
-
-template <typename index_t>
-void set_union (std::set<index_t>& s1, const std::set<index_t>& s2)
-{
-    // inplace union, result is stored in s1
-    for (auto it2:s2)
-        s1.insert(it2);
-};
-
-template <typename index_t>
-void set_difference (std::set<index_t>& s1, const std::set<index_t>& s2)
-{
-    // if the element in s2 appear in s1, delete it.
-    auto it1 = s1.begin();
-    auto it2 = s2.begin();
-    while ( (it1 != s1.end()) && (it2 != s2.end()) )
-    {
-        if (*it1 < *it2)
-            ++it1;
-        else if (*it2 < *it1)
-            ++it2;
-        else
-        {
-            s1.erase(it1++);
-            ++it2;
-        }
-    }
 };
 
 }}//namespace rfr::util

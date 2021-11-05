@@ -37,7 +37,6 @@ class k_ary_node_minimal{
 
     std::vector<index_t> data_indices; //vector containing the indices of all allowed data points that can be accessed by the node
 
-
     // for leaf nodes
 	rfr::util::weighted_running_statistics<num_t> response_stat;
 
