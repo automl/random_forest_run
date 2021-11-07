@@ -202,7 +202,13 @@ BOOST_AUTO_TEST_CASE(binary_split_one_feature_rss_loss_categorical_split_test){
 	BOOST_REQUIRE(!split2.can_be_split(eevee));
 
 	split2.print_info();
-	
+
+	auto vCat_values = split2.get_cat_split();
+	BOOST_REQUIRE_EQUAL(vCat_values.size(), split_set.count());
+	for (index_t i =0; i< vCat_values.size(); i++)
+    {
+        BOOST_REQUIRE(split_set[int(vCat_values[i])]);
+    }
 }
 
 

@@ -377,6 +377,11 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	num_t get_num_split_value() const {return(num_split_value);}
     std::bitset<max_num_categories> get_cat_split_set() const {return(cat_split_set);}
 
+    /** \brief transform bitset to numerical values representing feature index
+     *         for instance, for a bitset 1000 1100, we return 0, 4, 5
+	 *
+	 * \return std::vector<num_t> a vector containing all the split value
+	 */
 	std::vector<num_t> get_cat_split() const
     {
 	    index_t cat_num = cat_split_set.count();
@@ -385,7 +390,8 @@ class binary_split_one_feature_rss_loss: public rfr::splits::k_ary_split_base<2,
 	    for(index_t i=0; i<max_num_categories; ++i)
         {
 	        if(cat_split_set[i])
-                vCat.push_back(i);
+                vCat.push_back(num_t(i));
+
 	            if (vCat.size() == cat_num)
                     break;
         }
