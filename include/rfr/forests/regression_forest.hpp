@@ -337,9 +337,10 @@ class regression_forest{
 		return(stat.mean());
 	}
 
+	
+	std::vector<tree_type> get_all_trees() const {return the_trees;}
 
 
-    
 	std::vector< std::vector<num_t> > all_leaf_values (const std::vector<num_t> &feature_vector) const {
 		std::vector< std::vector<num_t> > rv;
 		rv.reserve(the_trees.size());

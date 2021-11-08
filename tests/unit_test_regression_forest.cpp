@@ -87,6 +87,8 @@ BOOST_AUTO_TEST_CASE( regression_forest_serialize_test ){
 
 	BOOST_REQUIRE(!std::isnan(the_forest.out_of_bag_error()));
 
+	BOOST_REQUIRE_EQUAL(the_forest.get_all_trees().size(), 16);
+
     auto tmp = the_forest.predict(data.retrieve_data_point(5));
 
 	std::ostringstream oss;

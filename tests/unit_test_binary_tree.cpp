@@ -83,8 +83,14 @@ BOOST_AUTO_TEST_CASE( binary_tree_test ){
     for (auto i = 0; i <1; i++){
 	tree_t the_tree;
 	the_tree.fit(data, tree_opts, std::vector<num_t>(data.num_data_points(), 1), rng_engine);
-	
-	char filename[100];
+
+	auto node_root = the_tree.get_node(0);
+	auto node_leaf = the_tree.get_node(the_tree.number_of_nodes() -1);
+
+	BOOST_REQUIRE_EQUAL(node_root.get_depth(), 0);
+	BOOST_REQUIRE(node_leaf.is_a_leaf());
+
+        char filename[100];
 		sprintf(filename, "/tmp/tree_%i.tex", i);
 		the_tree.save_latex_representation(filename);
     }

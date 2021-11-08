@@ -490,10 +490,5 @@ class running_covariance{
 	num_t covariance(){return(num_t(N)/num_t(N-1)*cov);}
 };
 
-
-
-
-
-
 }}//namespace rfr::util
 #endif

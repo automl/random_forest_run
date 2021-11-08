@@ -234,7 +234,8 @@ class k_ary_random_tree : public rfr::trees::tree_base<num_t, response_t, index_
 	virtual index_t number_of_nodes() const {return(the_nodes.size());}
 	virtual index_t number_of_leafs() const {return(num_leafs);}
 	virtual index_t depth()           const {return(actual_depth);}
-
+	virtual const node_type & get_node(index_t node_index) const {return(the_nodes[node_index]);}
+    
 	/* \brief Function to recursively compute the partition induced by the tree
 	 *
 	 * Do not call this function from the outside! Needs become private at some point!
