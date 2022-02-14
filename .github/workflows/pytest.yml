@@ -1,11 +1,22 @@
 name: Tests
 
 on:
+  # Allow to manually trigger through github API
+  workflow_dispatch:
+
+  # Triggers with push to master
   push:
+    branches:
+      - master
+
+  # Triggers with push to a pr aimed at master
   pull_request:
+    branches:
+      - master
+
   schedule:
-    # Every Monday at 7AM UTC
-    - cron: '0 07 * * 5'
+    # Every day at 7AM UTC
+    - cron: '0 07 * * *'
 
 jobs:
   ubuntu:
