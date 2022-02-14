@@ -2,7 +2,6 @@
 
 %pythonnondynamic;
 
-
 %{
 #include <random>
 #include "rfr/data_containers/data_container.hpp"
