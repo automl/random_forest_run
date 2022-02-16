@@ -29,17 +29,19 @@ typedef rfr::nodes::k_ary_node_full<2, rfr::splits::binary_split_one_feature_rss
 typedef rfr::nodes::k_ary_mondrian_node_full<2, num_t, response_t, index_t, rng_t> binary_mondrian_node_t;
 
 typedef rfr::trees::k_ary_random_tree<2, binary_full_node_rss_t, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t;
+typedef rfr::trees::k_ary_random_tree<2, binary_full_node_rss_t, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t_;
 typedef rfr::trees::k_ary_mondrian_tree<2, binary_mondrian_node_t, num_t, response_t, index_t, rng_t> binary_mondrian_tree_t;
 typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,index_t,rng_t > binary_fanova_tree_t;
 
 %}
 
 
+
 %include "docstrings.i"
 
 
 // vanilla exeption handling for everything
-%include "exception.i" 
+%include "exception.i"
 %exception {
   try {
     $action
@@ -48,7 +50,7 @@ typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,inde
   } catch (const std::string& e) {
     SWIG_exception(SWIG_RuntimeError, e.c_str());
   }
-} 
+}
 
 
 class std::default_random_engine{
@@ -78,8 +80,6 @@ typedef std::default_random_engine rng_t;
 
 // put everything here that should be ignored globally
 %ignore rfr::*::serialize;
-
-
 
 // DATA CONTAINERS
 %include "rfr/data_containers/data_container.hpp";
@@ -128,6 +128,9 @@ typedef rfr::nodes::k_ary_mondrian_node_full<2, num_t, response_t, index_t, rng_
 %include "rfr/trees/k_ary_tree.hpp"
 %template(binary_full_tree_rss) rfr::trees::k_ary_random_tree<2, binary_full_node_rss_t, num_t, response_t, index_t, rng_t>;
 typedef rfr::trees::k_ary_random_tree<2,binary_full_node_rss_t, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t;
+typedef rfr::trees::k_ary_random_tree<2,rfr::nodes::k_ary_node_full<2, binary_rss_split_t, num_t, response_t, index_t, rng_t>, num_t, response_t, index_t, rng_t> binary_full_tree_rss_t_;
+%template(binary_rss_vectors) std::vector<binary_full_tree_rss_t>;
+
 
 %include "rfr/trees/binary_fanova_tree.hpp"
 typedef rfr::trees::binary_fANOVA_tree< binary_rss_split_t,num_t,response_t,index_t,rng_t > binary_fanova_tree_t;
@@ -138,19 +141,23 @@ typedef rfr::trees::k_ary_mondrian_tree<2, binary_mondrian_node_t, num_t, respon
 // FOREST(S)
 %include "rfr/forests/forest_options.hpp"
 %template(forest_opts) rfr::forests::forest_options<num_t, response_t, index_t>;
+
 %include "rfr/forests/regression_forest.hpp"
 %template(binary_rss_forest) rfr::forests::regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
-%template(binary_rss_vectors) std::vector<binary_full_tree_rss_t>;
+%ignore rfr::forests::regression_forest< binary_full_tree_rss_t_, num_t, response_t, index_t, rng_t>::get_all_trees;
+%template(qr_forest_prototype) rfr::forests::regression_forest< binary_full_tree_rss_t_, num_t, response_t, index_t, rng_t>;
 
 %include "rfr/forests/quantile_regression_forest.hpp"
-%template(qr_forest) rfr::forests::quantile_regression_forest< binary_full_tree_rss_t, num_t, response_t, index_t, rng_t>;
+%template(qr_forest) rfr::forests::quantile_regression_forest< binary_full_tree_rss_t_, num_t, response_t, index_t, rng_t>;
 
 %include "rfr/forests/fanova_forest.hpp"
+%ignore rfr::forests::regression_forest< binary_fanova_tree_t, num_t, response_t, index_t, rng_t>::get_all_trees;
 %template(fanova_forest_prototype) rfr::forests::regression_forest< binary_fanova_tree_t,num_t, response_t, index_t, rng_t >;
 %template(fanova_forest) rfr::forests::fANOVA_forest<binary_rss_split_t, num_t, response_t, index_t, rng_t>;
 
 
 %include "rfr/forests/mondrian_forest.hpp"
+%ignore rfr::forests::regression_forest< binary_mondrian_tree_t, num_t, response_t, index_t, rng_t>::get_all_trees;
 %template(binary_mondrian_forest) rfr::forests::mondrian_forest< binary_mondrian_tree_t, num_t, response_t, index_t, rng_t>;
 
 
@@ -166,7 +173,7 @@ typedef rfr::trees::k_ary_mondrian_tree<2, binary_mondrian_node_t, num_t, respon
 			d = {}
 			d['str_representation'] = self.ascii_string_representation()
 			return (d)
-		
+
 		def __setstate__(self, sState):
 			self.__init__()
 			self.load_from_ascii_string(sState['str_representation'])
