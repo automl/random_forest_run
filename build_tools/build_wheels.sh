@@ -3,7 +3,7 @@
 # cibuildwheel which build the wheels in a
 # Docker image quay.io with minimal support. Following files are required
 # for the pyrfr to be compiled on the desired target
-pip3 install cmake numpy==1.11.0 scipy==0.17.0
+pip3 install cmake numpy scipy
 echo 'echo "pyuic5 $@"' > /usr/local/bin/pyuic5
 chmod +x /usr/local/bin/pyuic5
 yum install -y curl gsl-devel pcre-devel
