@@ -24,24 +24,24 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
         swig: ['3.0', '4.0']
       fail-fast:  false
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+
     - name: Setup Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      # A note on checkout: When checking out the repository that
-      # triggered a workflow, this defaults to the reference or SHA for that event.
-      # Otherwise, uses the default branch (main) is used.
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install test dependencies
       run: |
         chmod u+x ./build_tools/env.sh
         ./build_tools/env.sh
         lcov --directory . --zerocounters
+
     - name: Overwrite Swig
       if: ${{ matrix.swig == '3.0'}}
       run: |
@@ -49,14 +49,19 @@ jobs:
         sudo apt-get remove swig
         sudo apt-get install swig3.0
         sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+
     - name: Use swig
       run: /usr/bin/swig -version
+
     - name: Use cmake
       run: cmake --version
+
     - name: Use g++
       run: g++ --version
+
     - name: Use boost
       run: whereis boost && dpkg -s libboost-dev | grep 'Version'
+
     - name: Run Ctest
       run: |
         mkdir build
@@ -64,6 +69,7 @@ jobs:
         cmake .. -DSWIG_EXECUTABLE=/usr/bin/swig
         make
         ctest --output-on-failure
+
     - name: Coverage
       timeout-minutes: 45
       run: |

@@ -1,5 +1,5 @@
 # Building and Testing locally
-For now, please refer to `build_tools/build_source.sh`. TODO
+For now, please refer to `.github/workflows/pytest.yml`. TODO
 
 # Releasing
 First we create release files through github actions.
