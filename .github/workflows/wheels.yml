@@ -1,5 +1,5 @@
 # Workflow to build and test wheels
-name: Wheel builder
+name:  builder
 
 on:
   push:
@@ -35,10 +35,12 @@ jobs:
 
     steps:
       - name: Checkout pyrfr
-        uses: actions/checkout@v1
+        uses: actions/checkout@v3
 
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{  }}
 
       - name: Build and test wheels
         env:

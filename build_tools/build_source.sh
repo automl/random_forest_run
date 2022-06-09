@@ -1,7 +1,6 @@
 #!/bin/bash
-
-set -e
-set -x
+set -e  # Immediatly exit on any error
+set -x  # Print each command before running
 
 # Build the package
 # Install the environment
@@ -19,4 +18,4 @@ python3 -m pip install twine
 python3 setup.py sdist -d ../../dist
 
 # Check whether the source distribution will render correctly
-twine check ../../dist/*.tar.gz
+twine check ../../dist/*.tar.gz --strict

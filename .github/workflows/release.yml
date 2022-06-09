@@ -1,0 +1,142 @@
+# Workflow to build and test wheels
+#
+# Wheels:
+#   This uses `cibuildhwheel` to build wheels. Each version is built inside a docker
+#   container downloded by `cibuildwheel`. The steps are as follows:
+#   1. Compile the CPP
+#   2. Use `cibuildwheel` to build the wheels from the compiled code
+#   3. Test the wheels
+#
+# Source dist:
+#   We use regular python, there are 2 steps:
+#   1. Build the sdist
+#   2. Test the sdist
+#
+# If the commit is tagged with something like `v*`, the final files are uploaded to github
+# as a release and can be downloaded locally and uploaded to PYPI using `twine`.
+name: Release Builder
+
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+      # Release branches
+      - "[0-9]+.[0-9]+.X"
+
+  create:
+    tags:
+      - v*
+
+env:
+  package-name: pyrfr
+
+  # Wheels (.whl):
+  wheel-compile: "bash {project}/build_tools/compile.sh"  # Compiles cpp
+  wheel-test-req: pytest threadpoolctl numpy  # Needed for testing
+  wheel-test-cmd: "bash {project}/build_tools/test_wheels.sh"  # Script to test wheels
+
+  # Source sdist (.tar.gz):
+  sdist-build-cmd: "bash build_tools/build_source.sh"  # Build source
+  sdist-tests-cmd: "bash build_tools/test_source.sh"  # Test source
+
+  # Minimum python version, the lowest one supported
+  min-python: "3.7"  # Used when making sdist
+
+jobs:
+
+  build_linux_wheels:
+    name: ${{ matrix.py }}-linux-${{ matrix.system }}-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        py: [cp37, cp38, cp39, cp310]
+        arch: ["x86_64", "i686", "aarch64"]
+        system: ["manylinux"]
+
+        exclude:
+
+          # Scipy doesn't have a wheel for cp310 i686
+          - py: cp310
+            arch: "i686"
+
+    steps:
+      - name: Checkout ${{ env.package-name }}
+        uses: actions/checkout@v3
+
+      # This allows us to build for 'aarch64' on linux
+      - if: ${{ matrix.arch == 'aarch64' }}
+        uses: docker/setup-qemu-action@v1
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.py }}
+
+      - name: Build wheels with cibuildwheel to wheelhouse/*.whl
+        uses: pypa/cibuildwheel@v2.6.1
+        env:
+          CIBW_BUILD: ${{ matrix.py }}-${{ matrix.system }}_*
+          CIBW_ARCHS: ${{ matrix.arch }}
+          CIBW_BEFORE_ALL: ${{ env.wheel-compile}}
+          CIBW_TEST_REQUIRES: ${{ env.wheel-test-reqs }}
+          CIBW_TEST_COMMAND: ${{ env.wheel-test-cmd }}
+
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          path: wheelhouse/*.whl
+
+  # Build the source distribution under Linux
+  build_sdist:
+    name: Source distribution
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout ${{ env.package-name }}
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.min-python }}
+
+      - name: Build source distribution
+        run: ${{ env.sdist-build-cmd }}
+
+      - name: Test source distribution
+        run: ${{ env.sdist-tests-cmd }}
+
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
+
+  # Upload the wheels and the source distribution
+  # ... if all wheels/sdist build and pass all tests
+  release_assets:
+    name: Upload Release
+    runs-on: ubuntu-latest
+    needs: [build_linux_wheels, build_sdist]
+    # Only on a tagged release, push
+    if: startsWith(github.ref, 'refs/tags/v')  && github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout ${{ env.package-name }}
+        uses: actions/checkout@v3
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: dist
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/*.whl
