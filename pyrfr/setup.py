@@ -50,7 +50,7 @@ print(extensions)
 setup(
     name="pyrfr",
     version="${RFR_VERSION_MAJOR}.${RFR_VERSION_MINOR}.${RFR_VERSION_RELEASE}",
-    author="Stefan Falkner",
+    author="Stefan Falkner, Matthias Feurer, Rene Sass, Eddie Bergman",
     author_email="sfalkner@cs.uni-freiburg.de",
     license="BSD-3-Clause",
     classifiers=[
@@ -59,10 +59,11 @@ setup(
     ],
     packages=["pyrfr"],
     ext_modules=extensions,
-    python_requires=">=3",
+    python_requires=">=3.7",
     package_data={"pyrfr": ["docstrings.i"]},
     py_modules=["pyrfr"],
     cmdclass={"build": CustomBuild, "install": CustomInstall},
-    long_description="",
+    long_description="# Pyrfr\nhttps://github.com/automl/random_forest_run",
     long_description_content_type="text/markdown",
+    url="https://github.com/automl/random_forest_run",
 )
