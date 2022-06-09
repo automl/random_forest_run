@@ -4,15 +4,15 @@ on:
   # Allow to manually trigger through github API
   workflow_dispatch:
 
-  # Triggers with push to master
+  # Triggers with push to main
   push:
     branches:
-      - master
+      - main
 
-  # Triggers with push to a pr aimed at master
+  # Triggers with push to a pr aimed at main
   pull_request:
     branches:
-      - master
+      - main
 
   schedule:
     # Every day at 7AM UTC
@@ -34,7 +34,7 @@ jobs:
       uses: actions/setup-python@v2
       # A note on checkout: When checking out the repository that
       # triggered a workflow, this defaults to the reference or SHA for that event.
-      # Otherwise, uses the default branch (master) is used.
+      # Otherwise, uses the default branch (main) is used.
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install test dependencies
