@@ -85,8 +85,8 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		self.forest.fit(self.data, self.rng)
 		trees = self.forest.get_all_trees()
 		self.assertEqual(len(trees), self.forest.options.num_trees)
-		self.assertAlmostEqual(trees[0].get_node(0).get_num_split_value(), -0.20652545999380345)
-		self.assertAlmostEqual(trees[1].get_node(1).get_num_split_value(), -0.8857842741236657)
+		self.assertAlmostEqual(trees[0].get_node(0).get_num_split_value(), -0.20652545999380345, 2)
+		self.assertAlmostEqual(trees[1].get_node(1).get_num_split_value(), -0.8857842741236657, 2)
 
 	def test_pickling(self):
 		
