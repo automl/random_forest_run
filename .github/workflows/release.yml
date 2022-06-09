@@ -76,8 +76,8 @@ jobs:
         env:
           CIBW_BUILD: ${{ matrix.py }}-${{ matrix.system }}_*
           CIBW_ARCHS: ${{ matrix.arch }}
-          CIBW_BEFORE_ALL: ${{ env.wheel-compile}}
-          CIBW_TEST_REQUIRES: ${{ env.wheel-test-reqs }}
+          CIBW_BEFORE_ALL: ${{ env.wheel-compile }}
+          CIBW_TEST_REQUIRES: ${{ env.wheel-test-req }}
           CIBW_TEST_COMMAND: ${{ env.wheel-test-cmd }}
 
       - name: Store artifacts
