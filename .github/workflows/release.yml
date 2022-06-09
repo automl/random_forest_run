@@ -71,11 +71,6 @@ jobs:
       - if: ${{ matrix.arch == 'aarch64' }}
         uses: docker/setup-qemu-action@v1
 
-      - name: Setup Python
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.py }}
-
       - name: Build wheels with cibuildwheel to wheelhouse/*.whl
         uses: pypa/cibuildwheel@v2.6.1
         env:
