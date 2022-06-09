@@ -1,8 +1,11 @@
+# Setuptools must go above distutils
+# https://stackoverflow.com/a/53356077/5332072
+from setuptools.command.install import install
+
 import distutils.command.install as orig
 from distutils.command.build import build
 from distutils.core import Extension, setup
 
-from setuptools.command.install import install
 
 
 # Customize installation according to https://stackoverflow.com/a/21236111
@@ -42,6 +45,7 @@ extensions = [
     ),
 ]
 
+print(extensions)
 
 setup(
     name="pyrfr",
