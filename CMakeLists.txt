@@ -45,7 +45,7 @@ endif(DOXYGEN_FOUND)
 
 if(PYTHONINTERP_FOUND AND SWIG_FOUND)
 	file(COPY ${PROJECT_SOURCE_DIR}/pyrfr DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-	file(RENAME ${CMAKE_CURRENT_BINARY_DIR}/pyrfr ${CMAKE_CURRENT_BINARY_DIR}/python_package)
+	file(COPY ${PROJECT_SOURCE_DIR}/pyrfr/pyrfr DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/python_package)
 
 	configure_file(${PROJECT_SOURCE_DIR}/pyrfr/setup.py ${CMAKE_CURRENT_BINARY_DIR}/python_package/setup.py)
 	configure_file(${PROJECT_SOURCE_DIR}/pyrfr/pyrfr/__init__.py ${CMAKE_CURRENT_BINARY_DIR}/python_package/pyrfr/__init__.py)
