@@ -88,9 +88,9 @@ add_subdirectory(tests)
 
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  ADD_DEFINITIONS("-Wall -O0 -g")
+  ADD_DEFINITIONS("-Wall -O3 -g")
 ELSEIF(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-  ADD_DEFINITIONS("-Wall -fPIC -pg -std=c++11")
+  ADD_DEFINITIONS("-Wall -fPIC -pg -O3 -std=c++11")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()

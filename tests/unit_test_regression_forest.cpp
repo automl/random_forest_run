@@ -182,6 +182,34 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 		BOOST_CHECK_EQUAL_COLLECTIONS( before[i].begin(), before[i].end(), after_downdate[i].begin(), after_downdate[i].end());
 	
 	auto m = the_forest.predict(data.retrieve_data_point(0));
+
+	// compute marginal cost over set of feature vectors
+	const int n_samples = 10;
+	std::vector<std::vector<num_t>> feature_matrix(n_samples);
+	for(int i=0; i<n_samples; i++){
+	    feature_matrix.push_back(data.retrieve_data_point(i));
+	}
+	the_forest.all_leaf_values_marginalized_over_instances(feature_matrix, false);
+
+    // predict_marginalized_over_instances
+
+    int vectorsize = feature_matrix[0].size();
+    int splitpoint = vectorsize / 2;
+    int i,j;
+    std::vector<std::vector<num_t>> config_matrix(n_samples, std::vector<num_t>(splitpoint));
+    std::vector<std::vector<num_t>> feature_matrix2(n_samples, std::vector<num_t>(vectorsize - splitpoint));
+    for(i=0;i<n_samples;i++){
+        for(j=0;j<vectorsize;j++){
+            if (j < splitpoint){
+                config_matrix[i][j] = feature_matrix[i][j];
+            }
+            else {
+                feature_matrix2[i][j-splitpoint] = feature_matrix[i][j];
+            }
+        }
+    }
+
+    the_forest.predict_marginalized_over_instances(config_matrix, feature_matrix2, false);
 }
 
 
