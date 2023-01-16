@@ -367,29 +367,25 @@ class regression_forest{
 	 * \return The predicted cost marginalized over all the input vectors for each tree in the forest.
 	 */
 	std::vector<num_t> all_leaf_values_marginalized_over_instances(const std::vector<std::vector<num_t>> &feature_matrix, const bool log_y = false) const{
-	    // Create vector for values
-
 	    std::vector<num_t> tree_values(the_trees.size(), 0.0);
-	    int counter = 0, entry_counter;
-		for (auto &t: the_trees){
+	    int tree_id, entry_counter;
+		for (tree_id = the_trees.size()-1; tree_id >= 0; tree_id--){
 		    entry_counter = 0;
 	        for (auto &feature_vector: feature_matrix){
-	            for (auto val: t.leaf_entries(feature_vector)){
-	                tree_values[counter] += log_y ? std::exp(val) : val;
+	            for (auto val: the_trees[tree_id].leaf_entries(feature_vector)){
+	                tree_values[tree_id] += log_y ? std::exp(val) : val;
 	                entry_counter++;
 	            }
             }
 
             // Compute mean
-            tree_values[counter] /= entry_counter;
+            tree_values[tree_id] /= entry_counter;
             if(log_y){
-                tree_values[counter] = std::log(tree_values[counter]);
+                tree_values[tree_id] = std::log(tree_values[tree_id]);
             }
-
-            counter++;
 	    }
 
-	    return(tree_values);
+	    return (tree_values);
 	}
 
     /* \brief Collects the predictions for each tree in the forest for multiple configurations over a
@@ -408,19 +404,17 @@ class regression_forest{
 	 */
 	std::vector<std::vector<num_t>> predict_marginalized_over_instances(const std::vector<std::vector<num_t>> configuration_matrix, const std::vector<std::vector<num_t>> feature_matrix, const bool log_y = false) const{
 	    int configuration_length = configuration_matrix[0].size();
-
 	    std::vector<num_t> features(configuration_length + feature_matrix[0].size());
-
 	    std::vector<std::vector<num_t>> predictions(configuration_matrix.size(), std::vector<num_t>(the_trees.size(), 0.0));
 
         int config_id, tree_id, entry_counter;
 
-	    for(config_id = configuration_matrix.size()-1; config_id >= 0;config_id--){
+	    for(config_id = configuration_matrix.size()-1; config_id >= 0; config_id--){
 	        std::copy(configuration_matrix[config_id].begin(), configuration_matrix[config_id].end(), features.begin());
-	        for(tree_id = the_trees.size()-1; tree_id >= 0;tree_id--){
+	        for(tree_id = the_trees.size()-1; tree_id >= 0; tree_id--){
                 entry_counter = 0;
 	            for (auto &feature_vector: feature_matrix){
-	                std::copy(feature_vector.begin(), feature_vector.end(), features.begin()+configuration_length);
+	                std::copy(feature_vector.begin(), feature_vector.end(), features.begin() + configuration_length);
                     for (auto val: the_trees[tree_id].leaf_entries(features)){
                         predictions[config_id][tree_id] += log_y ? std::exp(val) : val;
                         entry_counter++;
