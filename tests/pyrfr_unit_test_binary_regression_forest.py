@@ -9,6 +9,9 @@ import math
 
 import pyrfr.regression as reg
 
+# Helper function
+def flatten(lists):
+	return [i for l in lists for i in l]
 
 class TestBinaryRssRegressionForest(unittest.TestCase):
 
@@ -89,9 +92,6 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		self.assertAlmostEqual(trees[1].get_node(1).get_num_split_value(), -0.8857842741236657, 2)
 
 	def test_marginalized_over_instances(self):
-		def flatten(lists):
-			return [i for l in lists for i in l]
-
 		self.forest.options.num_trees = 10
 		self.forest.fit(self.data, self.rng)
 
@@ -106,11 +106,7 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		for mean_test, mean_gt in zip(mean_per_tree, gt_means):
 			self.assertAlmostEqual(mean_test, mean_gt, 6)
 
-
 	def test_marginalized_over_instances_batch(self):
-		def flatten(lists):
-			return [i for l in lists for i in l]
-
 		self.forest.options.num_trees = 10
 		self.forest.fit(self.data, self.rng)
 
