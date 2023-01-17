@@ -189,10 +189,9 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
 	for(int i=0; i<n_samples; i++){
 	    feature_matrix.push_back(data.retrieve_data_point(i));
 	}
-	the_forest.all_leaf_values_marginalized_over_instances(feature_matrix, false);
+	the_forest.predict_marginalized_over_instances(feature_matrix, false);
 
-    // predict_marginalized_over_instances
-
+    // predict_marginalized_over_instances_batch
     int vectorsize = feature_matrix[0].size();
     int splitpoint = vectorsize / 2;
     int i,j;
@@ -209,7 +208,7 @@ BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
         }
     }
 
-    the_forest.predict_marginalized_over_instances(config_matrix, feature_matrix2, false);
+    the_forest.predict_marginalized_over_instances_batch(config_matrix, feature_matrix2, false);
 }
 
 
