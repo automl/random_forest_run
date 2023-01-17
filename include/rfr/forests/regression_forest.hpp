@@ -356,7 +356,7 @@ class regression_forest{
 		return(rv);
 	}
 
-    /* \brief Collects the response values of the trees for several feature vectors and then
+    /* \brief Collects the response values of the trees for a set of instance feature vectors and then
      *        for each tree takes the average over all the collected response values.
      *
      *        In the case of log transformation the response values are decompressed before averaging.
@@ -366,7 +366,7 @@ class regression_forest{
 	 *
 	 * \return The predicted cost marginalized over all the input vectors for each tree in the forest.
 	 */
-	std::vector<num_t> all_leaf_values_marginalized_over_instances(const std::vector<std::vector<num_t>> &feature_matrix, const bool log_y = false) const{
+	std::vector<num_t> predict_marginalized_over_instances(const std::vector<std::vector<num_t>> &feature_matrix, const bool log_y = false) const{
 	    std::vector<num_t> tree_values(the_trees.size(), 0.0);
 	    int tree_id, entry_counter;
 		for (tree_id = the_trees.size()-1; tree_id >= 0; tree_id--){
@@ -402,7 +402,7 @@ class regression_forest{
 	 *
 	 * \return For each configuration the predicted cost marginalized over the instances of each tree in the forest
 	 */
-	std::vector<std::vector<num_t>> predict_marginalized_over_instances(const std::vector<std::vector<num_t>> configuration_matrix, const std::vector<std::vector<num_t>> feature_matrix, const bool log_y = false) const{
+	std::vector<std::vector<num_t>> predict_marginalized_over_instances_batch(const std::vector<std::vector<num_t>> configuration_matrix, const std::vector<std::vector<num_t>> feature_matrix, const bool log_y = false) const{
 	    int configuration_length = configuration_matrix[0].size();
 	    std::vector<num_t> features(configuration_length + feature_matrix[0].size());
 	    std::vector<std::vector<num_t>> predictions(configuration_matrix.size(), std::vector<num_t>(the_trees.size(), 0.0));
