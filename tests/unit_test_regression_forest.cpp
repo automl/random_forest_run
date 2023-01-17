@@ -16,9 +16,9 @@
 #include <cereal/archives/xml.hpp>
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/binary.hpp>
+
 typedef cereal::PortableBinaryInputArchive iarch_type;
 typedef cereal::PortableBinaryOutputArchive oarch_type;
-
 
 
 typedef double num_t;
@@ -36,280 +36,306 @@ typedef rfr::nodes::temporary_node<num_t, index_t> tmp_node_type;
 typedef rfr::trees::k_ary_random_tree<2, node_type, num_t, response_t, index_t, rng_t> tree_type;
 
 
-typedef rfr::forests::regression_forest< tree_type, num_t, response_t, index_t, rng_t> forest_type;
+typedef rfr::forests::regression_forest<tree_type, num_t, response_t, index_t, rng_t> forest_type;
 
-typedef rfr::forests::quantile_regression_forest< tree_type, num_t, response_t, index_t, rng_t> qrf_type;
+typedef rfr::forests::quantile_regression_forest<tree_type, num_t, response_t, index_t, rng_t> qrf_type;
 
 
 typedef rfr::forests::fANOVA_forest<split_type, num_t, response_t, index_t, rng_t> fANOVAf_type;
 
 
+data_container_type load_diabetes_data() {
+  data_container_type data(10);
 
-data_container_type load_diabetes_data(){
-	data_container_type data(10);
-	
-    std::string feature_file, response_file;
-    
-    feature_file  = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_features.csv";
-    response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_responses.csv";
+  std::string feature_file, response_file;
 
-    data.import_csv_files(feature_file, response_file);
-    return(data);
+  feature_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_features.csv";
+  response_file = std::string(boost::unit_test::framework::master_test_suite().argv[1]) + "diabetes_responses.csv";
+
+  data.import_csv_files(feature_file, response_file);
+  return (data);
 }
 
-BOOST_AUTO_TEST_CASE( regression_forest_serialize_test ){
-    
-    
-    auto data = load_diabetes_data();
-
-	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
-	tree_opts.min_samples_to_split = 2;
-	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = data.num_features()*3/4;
-	tree_opts.max_depth=5;
-	tree_opts.max_num_nodes=2048;
-
-	
-	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
-
-	forest_opts.num_data_points_per_tree = data.num_data_points()/2;
-	forest_opts.num_trees = 16;
-	forest_opts.do_bootstrapping = true;
-	forest_opts.compute_oob_error= true;
-	
-	forest_type the_forest(forest_opts);
-	
-	rng_t rng;
-
-	BOOST_REQUIRE(std::isnan(the_forest.out_of_bag_error()));
-
-	the_forest.fit(data, rng);
-
-	BOOST_REQUIRE(!std::isnan(the_forest.out_of_bag_error()));
-
-	BOOST_REQUIRE_EQUAL(the_forest.get_all_trees().size(), 16);
-
-    auto tmp = the_forest.predict(data.retrieve_data_point(5));
-
-	std::ostringstream oss;
-	
-	{
-		oarch_type oarchive(oss);
-		oarchive(the_forest);
-	}
-
-	
-	the_forest.save_to_binary_file("regression_forest_test.bin");
-	
-	forest_type the_forest2;
-
-	auto s = the_forest.ascii_string_representation();
-
-	the_forest2.load_from_ascii_string(s);
-
-	
-	forest_type the_forest3;
-	the_forest3.load_from_binary_file("regression_forest_test.bin");
+BOOST_AUTO_TEST_CASE(regression_forest_serialize_test) {
 
 
-	for (auto i=0u; i < data.num_data_points(); ++i){
-		auto v1 = the_forest.predict(data.retrieve_data_point(i));
-		auto v2 = the_forest2.predict(data.retrieve_data_point(i));
-		auto v3 = the_forest3.predict(data.retrieve_data_point(i));
+  auto data = load_diabetes_data();
 
-		BOOST_REQUIRE_EQUAL(v1,v2);
-		BOOST_REQUIRE_EQUAL(v1,v3);
-	}
+  rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+  tree_opts.min_samples_to_split = 2;
+  tree_opts.min_samples_in_leaf = 1;
+  tree_opts.max_features = data.num_features() * 3 / 4;
+  tree_opts.max_depth = 5;
+  tree_opts.max_num_nodes = 2048;
 
 
-	
+  rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+  forest_opts.num_data_points_per_tree = data.num_data_points() / 2;
+  forest_opts.num_trees = 16;
+  forest_opts.do_bootstrapping = true;
+  forest_opts.compute_oob_error = true;
+
+  forest_type the_forest(forest_opts);
+
+  rng_t rng;
+
+  BOOST_REQUIRE(std::isnan(the_forest.out_of_bag_error()));
+
+  the_forest.fit(data, rng);
+
+  BOOST_REQUIRE(!std::isnan(the_forest.out_of_bag_error()));
+
+  BOOST_REQUIRE_EQUAL(the_forest.get_all_trees().size(), 16);
+
+  auto tmp = the_forest.predict(data.retrieve_data_point(5));
+
+  std::ostringstream oss;
+
+  {
+    oarch_type oarchive(oss);
+    oarchive(the_forest);
+  }
+
+
+  the_forest.save_to_binary_file("regression_forest_test.bin");
+
+  forest_type the_forest2;
+
+  auto s = the_forest.ascii_string_representation();
+
+  the_forest2.load_from_ascii_string(s);
+
+
+  forest_type the_forest3;
+  the_forest3.load_from_binary_file("regression_forest_test.bin");
+
+
+  for (auto i = 0u; i < data.num_data_points(); ++i) {
+    auto v1 = the_forest.predict(data.retrieve_data_point(i));
+    auto v2 = the_forest2.predict(data.retrieve_data_point(i));
+    auto v3 = the_forest3.predict(data.retrieve_data_point(i));
+
+    BOOST_REQUIRE_EQUAL(v1, v2);
+    BOOST_REQUIRE_EQUAL(v1, v3);
+  }
+
 
 }
 
 
+BOOST_AUTO_TEST_CASE(regression_forest_update_downdate_tests) {
+
+  double unique_value = 42.424242;
+
+  auto data = load_diabetes_data();
+
+  rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+  tree_opts.min_samples_to_split = 2;
+  tree_opts.min_samples_in_leaf = 1;
+  tree_opts.max_features = 10;
+
+  rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+  forest_opts.num_data_points_per_tree = data.num_data_points();
+  forest_opts.num_trees = 10;
+  forest_opts.do_bootstrapping = true;
 
 
-BOOST_AUTO_TEST_CASE( regression_forest_update_downdate_tests ){
-	
-	double unique_value = 42.424242;
-	
-	auto data = load_diabetes_data();
+  forest_type the_forest(forest_opts);
 
-	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
-	tree_opts.min_samples_to_split = 2;
-	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = 10;
+  rng_t rng;
 
-	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+  //fit forest
+  the_forest.fit(data, rng);
 
-	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 10;
-	forest_opts.do_bootstrapping = true;
+  // get reference leaf values for one configuration
+  std::vector<std::vector<num_t> > before = the_forest.all_leaf_values(data.retrieve_data_point(0));
+
+  // update forest with that configuration and a unique response value
+  the_forest.pseudo_update(data.retrieve_data_point(0), unique_value, 1);
+
+  // get new leaf values
+  std::vector<std::vector<num_t> > after_update = the_forest.all_leaf_values(data.retrieve_data_point(0));
+
+  // compare them to ensure the data point has been added correctly
+
+  for (auto i = 0u; i < before.size(); ++i) {
+    BOOST_REQUIRE(before[i].size() == after_update[i].size() - 1);
+    BOOST_CHECK_EQUAL_COLLECTIONS(before[i].begin(), before[i].end(), after_update[i].begin(), --after_update[i].end());
+    BOOST_REQUIRE(after_update[i].back() == unique_value);
+  }
+
+  // downdate the tree
+  the_forest.pseudo_downdate(data.retrieve_data_point(0), unique_value, 1);
+
+  // get new leaf values
+  std::vector<std::vector<num_t> > after_downdate = the_forest.all_leaf_values(data.retrieve_data_point(0));
+
+  // compare them to ensure the last data point has been removed
+  for (auto i = 0u; i < before.size(); ++i)
+    BOOST_CHECK_EQUAL_COLLECTIONS(before[i].begin(), before[i].end(), after_downdate[i].begin(),
+                                  after_downdate[i].end());
+
+  auto m = the_forest.predict(data.retrieve_data_point(0));
+
+}
+
+BOOST_AUTO_TEST_CASE(regression_forest_predict_marginalized) {
+  auto data = load_diabetes_data();
+
+  rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+  tree_opts.min_samples_to_split = 2;
+  tree_opts.min_samples_in_leaf = 1;
+  tree_opts.max_features = 10;
+
+  rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+  forest_opts.num_data_points_per_tree = data.num_data_points();
+  forest_opts.num_trees = 10;
+  forest_opts.do_bootstrapping = true;
 
 
-	forest_type the_forest(forest_opts);
-	
-	rng_t rng;
+  forest_type the_forest(forest_opts);
 
-	//fit forest
-	the_forest.fit(data, rng);
+  rng_t rng;
 
-	// get reference leaf values for one configuration
-	std::vector<std::vector< num_t> > before = the_forest.all_leaf_values(data.retrieve_data_point(0));
+  // fit forest
+  the_forest.fit(data, rng);
 
-	// update forest with that configuration and a unique response value
-	the_forest.pseudo_update(data.retrieve_data_point(0), unique_value, 1);
-	
-	// get new leaf values
-	std::vector<std::vector< num_t> > after_update = the_forest.all_leaf_values(data.retrieve_data_point(0));
-	
-	// compare them to ensure the data point has been added correctly
-	
-	for (auto i=0u; i < before.size(); ++i){
-		BOOST_REQUIRE(before[i].size() == after_update[i].size() -1);
-		BOOST_CHECK_EQUAL_COLLECTIONS( before[i].begin(), before[i].end(), after_update[i].begin(), --after_update[i].end());
-		BOOST_REQUIRE( after_update[i].back() == unique_value);
-	}
-	
-	// downdate the tree
-	the_forest.pseudo_downdate(data.retrieve_data_point(0), unique_value, 1);
-	
-	// get new leaf values
-	std::vector<std::vector< num_t> > after_downdate = the_forest.all_leaf_values(data.retrieve_data_point(0));
-	
-	// compare them to ensure the last data point has been removed
-	for (auto i=0u; i < before.size(); ++i)
-		BOOST_CHECK_EQUAL_COLLECTIONS( before[i].begin(), before[i].end(), after_downdate[i].begin(), after_downdate[i].end());
-	
-	auto m = the_forest.predict(data.retrieve_data_point(0));
+  // compute marginal cost over set of feature vectors
+  const int n_samples = 4;
+  std::vector<std::vector<num_t>> feature_matrix(n_samples);
+  for (int i = 0; i < n_samples; i++) {
+    feature_matrix.push_back(data.retrieve_data_point(i));
+  }
 
-	// compute marginal cost over set of feature vectors
-	const int n_samples = 10;
-	std::vector<std::vector<num_t>> feature_matrix(n_samples);
-	for(int i=0; i<n_samples; i++){
-	    feature_matrix.push_back(data.retrieve_data_point(i));
-	}
-	the_forest.predict_marginalized_over_instances(feature_matrix, false);
+  std::vector<num_t> mean_per_tree = the_forest.predict_marginalized_over_instances(feature_matrix, false);
+  BOOST_CHECK_EQUAL(mean_per_tree.size(), 10);
 
-    // predict_marginalized_over_instances_batch
-    int vectorsize = feature_matrix[0].size();
-    int splitpoint = vectorsize / 2;
-    int i,j;
-    std::vector<std::vector<num_t>> config_matrix(n_samples, std::vector<num_t>(splitpoint));
-    std::vector<std::vector<num_t>> feature_matrix2(n_samples, std::vector<num_t>(vectorsize - splitpoint));
-    for(i=0;i<n_samples;i++){
-        for(j=0;j<vectorsize;j++){
-            if (j < splitpoint){
-                config_matrix[i][j] = feature_matrix[i][j];
-            }
-            else {
-                feature_matrix2[i][j-splitpoint] = feature_matrix[i][j];
-            }
-        }
+
+  // predict_marginalized_over_instances_batch
+  int vectorsize = feature_matrix[0].size();
+  int splitpoint = vectorsize / 2;
+  int i, j;
+  std::vector<std::vector<num_t>> config_matrix(n_samples, std::vector<num_t>(splitpoint));
+  std::vector<std::vector<num_t>> feature_matrix2(n_samples, std::vector<num_t>(vectorsize - splitpoint));
+  for (i = 0; i < n_samples; i++) {
+    for (j = 0; j < vectorsize; j++) {
+      if (j < splitpoint) {
+        config_matrix[i][j] = feature_matrix[i][j];
+      } else {
+        feature_matrix2[i][j - splitpoint] = feature_matrix[i][j];
+      }
     }
+  }
 
-    the_forest.predict_marginalized_over_instances_batch(config_matrix, feature_matrix2, false);
+  std::vector<std::vector<num_t>> config_means = the_forest.predict_marginalized_over_instances_batch(config_matrix,
+                                                                                                      feature_matrix2,
+                                                                                                      false);
+  BOOST_CHECK_EQUAL(config_means.size(), n_samples);
+  for (auto &mean_per_tree: config_means) {
+    BOOST_CHECK_EQUAL(mean_per_tree.size(), 10);
+  }
 }
 
 
-BOOST_AUTO_TEST_CASE( regression_forest_exceptions_tests ){
-    
-    auto data = load_diabetes_data();
+BOOST_AUTO_TEST_CASE(regression_forest_exceptions_tests) {
 
-	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
-	tree_opts.min_samples_to_split = 2;
-	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = data.num_data_points()*3/4;
+  auto data = load_diabetes_data();
 
-	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+  rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+  tree_opts.min_samples_to_split = 2;
+  tree_opts.min_samples_in_leaf = 1;
+  tree_opts.max_features = data.num_data_points() * 3 / 4;
 
-	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 8;
-	forest_opts.do_bootstrapping = false;
-	forest_opts.compute_oob_error= true;
-	
-	forest_type the_forest(forest_opts);
-	
-	rng_t rng;
+  rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
 
-	// no trees in the forest
-	the_forest.options.num_trees = 0;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+  forest_opts.num_data_points_per_tree = data.num_data_points();
+  forest_opts.num_trees = 8;
+  forest_opts.do_bootstrapping = false;
+  forest_opts.compute_oob_error = true;
 
-	// no datapoints in any trees
-	the_forest.options.num_trees = 8;
-	the_forest.options.num_data_points_per_tree = 0;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+  forest_type the_forest(forest_opts);
 
-	// not enough datapoints and no bootstrapping
-	the_forest.options.num_data_points_per_tree = 32768;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+  rng_t rng;
 
-	// a successful training without bootstrapping for covarage
-	the_forest.options.num_data_points_per_tree = 128;
-	the_forest.fit(data, rng);
+  // no trees in the forest
+  the_forest.options.num_trees = 0;
+  BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
 
-	// no features to split
-	the_forest.options.num_data_points_per_tree = 128;
-	the_forest.options.tree_opts.max_features = 0;
-	BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+  // no datapoints in any trees
+  the_forest.options.num_trees = 8;
+  the_forest.options.num_data_points_per_tree = 0;
+  BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+
+  // not enough datapoints and no bootstrapping
+  the_forest.options.num_data_points_per_tree = 32768;
+  BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
+
+  // a successful training without bootstrapping for covarage
+  the_forest.options.num_data_points_per_tree = 128;
+  the_forest.fit(data, rng);
+
+  // no features to split
+  the_forest.options.num_data_points_per_tree = 128;
+  the_forest.options.tree_opts.max_features = 0;
+  BOOST_REQUIRE_THROW(the_forest.fit(data, rng), std::runtime_error);
 }
 
 
+BOOST_AUTO_TEST_CASE(quantile_regression_forest_test) {
+
+  auto data = load_diabetes_data();
+
+  rng_t rng;
+
+  rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
+  tree_opts.min_samples_to_split = 2;
+  tree_opts.min_samples_in_leaf = 1;
+  tree_opts.max_features = 10;
+
+  // don't split anything
+
+  tree_opts.max_num_nodes = 1;
+  tree_opts.max_depth = 0;
+
+  rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+
+  forest_opts.num_data_points_per_tree = data.num_data_points();
+  forest_opts.num_trees = 1;
+  forest_opts.do_bootstrapping = false;
 
 
-BOOST_AUTO_TEST_CASE( quantile_regression_forest_test ){
-	
-	auto data = load_diabetes_data();
+  // just to test the default constructor
+  qrf_type sudowoodo;
+  BOOST_REQUIRE_THROW(sudowoodo.fit(data, rng), std::runtime_error);
 
-	rng_t rng;
+  qrf_type the_forest(forest_opts);
 
-	rfr::trees::tree_options<num_t, response_t, index_t> tree_opts;
-	tree_opts.min_samples_to_split = 2;
-	tree_opts.min_samples_in_leaf = 1;
-	tree_opts.max_features = 10;
+  //fit forest
+  the_forest.fit(data, rng);
 
-	// don't split anything
+  auto mew = data.retrieve_data_point(0);
+  std::vector<num_t> mew2 = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1};
 
-	tree_opts.max_num_nodes = 1;
-	tree_opts.max_depth = 0;
+  auto qv1 = the_forest.predict_quantiles(mew, mew2);
 
-	rfr::forests::forest_options<num_t, response_t, index_t> forest_opts(tree_opts);
+  BOOST_REQUIRE_EQUAL(qv1.size(), mew2.size());
 
-	forest_opts.num_data_points_per_tree = data.num_data_points();
-	forest_opts.num_trees = 1;
-	forest_opts.do_bootstrapping = false;
+  // check that shuffling doesn't affect the outcome
+  std::shuffle(mew2.begin(), mew2.end(), rng);
+  auto qv2 = the_forest.predict_quantiles(mew, mew2);
+  BOOST_CHECK_EQUAL_COLLECTIONS (qv1.begin(), qv1.end(), qv2.begin(), qv2.end());
 
+  //
+  std::vector<num_t> qv_numpy_ref = {25., 60., 77., 94., 115., 141., 168., 197., 233., 268., 346.};
 
-	// just to test the default constructor
-	qrf_type sudowoodo;
-	BOOST_REQUIRE_THROW(sudowoodo.fit(data, rng), std::runtime_error);
-
-	qrf_type the_forest(forest_opts);
-
-	//fit forest
-	the_forest.fit(data, rng);
-
-	auto mew = data.retrieve_data_point(0);
-	std::vector<num_t> mew2 = {0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1};
-
-	auto qv1 = the_forest.predict_quantiles(mew , mew2);
-
-	BOOST_REQUIRE_EQUAL(qv1.size(), mew2.size());
-
-	// check that shuffling doesn't affect the outcome
-	std::shuffle(mew2.begin(), mew2.end(), rng);
-	auto qv2 = the_forest.predict_quantiles(mew , mew2);
-	BOOST_CHECK_EQUAL_COLLECTIONS ( qv1.begin(), qv1.end(), qv2.begin(), qv2.end());
-
-	//
-	std::vector<num_t> qv_numpy_ref = {  25.,   60.,   77.,   94.,  115.,  141.,  168.,  197.,  233., 268.,  346.};
-
-	BOOST_CHECK_EQUAL_COLLECTIONS ( qv1.begin(), qv1.end(), qv_numpy_ref.begin(), qv_numpy_ref.end());
+  BOOST_CHECK_EQUAL_COLLECTIONS (qv1.begin(), qv1.end(), qv_numpy_ref.begin(), qv_numpy_ref.end());
 
 
-	BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {0,-0.5,1}) ,std::runtime_error);
-	BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {1.1,0.5}) ,std::runtime_error);
+  BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {0, -0.5, 1}), std::runtime_error);
+  BOOST_REQUIRE_THROW(the_forest.predict_quantiles(mew, {1.1, 0.5}), std::runtime_error);
 }
 
 /* not interesting right now!
