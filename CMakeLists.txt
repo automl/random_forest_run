@@ -4,7 +4,7 @@ project (RFR CXX)
 # add a version number
 set (RFR_VERSION_MAJOR 0)
 set (RFR_VERSION_MINOR 8)
-set (RFR_VERSION_RELEASE 3)
+set (RFR_VERSION_RELEASE 4)
 
 # Print debug information about boost
 set(Boost_DEBUG 1)
@@ -88,9 +88,9 @@ add_subdirectory(tests)
 
 
 IF(CMAKE_COMPILER_IS_GNUCXX)
-  ADD_DEFINITIONS("-Wall -O0 -g")
+  ADD_DEFINITIONS("-Wall -O3 -g")
 ELSEIF(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-  ADD_DEFINITIONS("-Wall -fPIC -pg -std=c++11")
+  ADD_DEFINITIONS("-Wall -fPIC -pg -O3 -std=c++11")
 ELSE()
   MESSAGE(FATAL_ERROR "CMakeLists.txt has not been tested/written for your compiler.")
 ENDIF()

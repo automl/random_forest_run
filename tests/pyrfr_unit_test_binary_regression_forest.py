@@ -9,6 +9,9 @@ import math
 
 import pyrfr.regression as reg
 
+# Helper function
+def flatten(lists):
+	return [i for l in lists for i in l]
 
 class TestBinaryRssRegressionForest(unittest.TestCase):
 
@@ -87,6 +90,43 @@ class TestBinaryRssRegressionForest(unittest.TestCase):
 		self.assertEqual(len(trees), self.forest.options.num_trees)
 		self.assertAlmostEqual(trees[0].get_node(0).get_num_split_value(), -0.20652545999380345, 2)
 		self.assertAlmostEqual(trees[1].get_node(1).get_num_split_value(), -0.8857842741236657, 2)
+
+	def test_marginalized_over_instances(self):
+		self.forest.options.num_trees = 10
+		self.forest.fit(self.data, self.rng)
+
+		data = [self.data.retrieve_data_point(i) for i in range(4)]
+		leaf_entries = [self.forest.all_leaf_values(x) for x in data]
+		leaf_entries = list(zip(*leaf_entries))  # Entries per tree
+		leaf_entries = [flatten(e) for e in leaf_entries]
+		gt_means = [sum(entries) / len(entries) for entries in leaf_entries]  # Ground truth
+
+		mean_per_tree = self.forest.predict_marginalized_over_instances(data, False)
+		self.assertEqual(len(mean_per_tree), 10)
+		for mean_test, mean_gt in zip(mean_per_tree, gt_means):
+			self.assertAlmostEqual(mean_test, mean_gt, 6)
+
+	def test_marginalized_over_instances_batch(self):
+		self.forest.options.num_trees = 10
+		self.forest.fit(self.data, self.rng)
+
+		split = len(self.data.retrieve_data_point(0)) // 2
+		data_conf = [self.data.retrieve_data_point(i)[:split] for i in range(4)]
+		data_instances = [self.data.retrieve_data_point(i)[split:] for i in range(4)]
+
+		config_means = self.forest.predict_marginalized_over_instances_batch(data_conf, data_instances, False)
+		self.assertEqual(len(config_means), 4)
+		for conf_id, mean_per_tree in enumerate(config_means):
+			self.assertEqual(len(mean_per_tree), 10)
+
+			data = [data_conf[conf_id] + inst for inst in data_instances]
+			leaf_entries = [self.forest.all_leaf_values(x) for x in data]
+			leaf_entries = list(zip(*leaf_entries))  # Entries per tree
+			leaf_entries = [flatten(e) for e in leaf_entries]
+			gt_means = [sum(entries) / len(entries) for entries in leaf_entries]  # Ground truth
+
+			for mean_test, mean_gt in zip(mean_per_tree, gt_means):
+				self.assertAlmostEqual(mean_test, mean_gt, 6)
 
 	def test_pickling(self):
 		
