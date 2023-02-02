@@ -204,9 +204,10 @@ BOOST_AUTO_TEST_CASE(regression_forest_predict_marginalized) {
   the_forest.fit(data, rng);
 
   // compute marginal cost over set of feature vectors
-  const int n_samples = 4;
-  std::vector<std::vector<num_t>> feature_matrix(n_samples);
-  for (int i = 0; i < n_samples; i++) {
+  const index_t n_samples = 4;
+  std::vector<std::vector<num_t>> feature_matrix;
+  feature_matrix.reserve(n_samples);
+  for (index_t i = 0; i < n_samples; i++) {
     feature_matrix.push_back(data.retrieve_data_point(i));
   }
 
