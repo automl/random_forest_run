@@ -3,8 +3,8 @@ project (RFR CXX)
 
 # add a version number
 set (RFR_VERSION_MAJOR 0)
-set (RFR_VERSION_MINOR 8)
-set (RFR_VERSION_RELEASE 4)
+set (RFR_VERSION_MINOR 9)
+set (RFR_VERSION_RELEASE 0)
 
 # Print debug information about boost
 set(Boost_DEBUG 1)
