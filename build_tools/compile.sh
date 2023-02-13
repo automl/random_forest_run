@@ -9,8 +9,7 @@ set -e  # Immediatly exit on any error
 set -x  # Print each command before running
 
 # Build dependancies
-pip3 install cmake numpy
-pip3 install scipy
+pip3 install cmake numpy scipy
 
 # Not sure why this is needed
 echo 'echo "pyuic5 $@"' > /usr/local/bin/pyuic5
